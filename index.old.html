@@ -1,0 +1,2051 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hmiao · Vibecoding</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🫧</text></svg>">
+
+    <script async src="https://unpkg.com/es-module-shims@1.8.0/dist/es-module-shims.js"></script>
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+                "lil-gui": "https://unpkg.com/lil-gui@0.19.1/dist/lil-gui.esm.js"
+            }
+        }
+    </script>
+
+    <style>
+        /* ============================================================
+           全局 Reset & Base（亮色调）
+           ============================================================ */
+        *, *::before, *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        :root {
+            --bg: #F2F2F7;
+            --screen-bg: #C0C0C8;
+            --titlebar-bg: #ECECF0;
+            --titlebar-hover: rgba(0,0,0,0.06);
+            --text: #1D1D1F;
+            --text-secondary: rgba(0,0,0,0.55);
+            --text-muted: rgba(0,0,0,0.35);
+            --shadow-line: rgba(0,0,0,0.12);
+            --glass-bg: rgba(255,255,255,0.65);
+            --glass-border: rgba(0,0,0,0.08);
+        }
+
+        html, body {
+            margin: 0;
+            padding: 0;
+            overscroll-behavior: none;
+            font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', Roboto, sans-serif;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* ============================================================
+           首页 Landing（参考 jiho.work index.html）
+           ============================================================ */
+        body.landing-page {
+            background: #F2F2F7;
+            overflow: hidden;
+        }
+
+        .bg-gradient {
+            position: fixed;
+            inset: 0;
+            z-index: 0;
+            pointer-events: none;
+            background:
+                radial-gradient(ellipse 60% 50% at 50% 40%, #EBEBF5 0%, #E0E0EC 40%, #D0D0DC 100%);
+        }
+
+        .bg-blob {
+            position: fixed;
+            border-radius: 50%;
+            filter: blur(100px);
+            pointer-events: none;
+            z-index: 0;
+            opacity: 0.45;
+        }
+        .bg-blob:nth-child(2) {
+            width: 500px; height: 500px;
+            background: #D6E4FF;
+            top: -8%; right: -8%;
+            animation: blobFloat 14s ease-in-out infinite;
+        }
+        .bg-blob:nth-child(3) {
+            width: 400px; height: 400px;
+            background: #FFE0D6;
+            bottom: -6%; left: -6%;
+            animation: blobFloat 16s ease-in-out infinite reverse;
+        }
+        .bg-blob:nth-child(4) {
+            width: 350px; height: 350px;
+            background: #D6FFE8;
+            top: 40%; left: 40%;
+            animation: blobFloat 18s ease-in-out infinite 5s;
+        }
+        @keyframes blobFloat {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            33%  { transform: translate(40px, -30px) scale(1.06); }
+            66%  { transform: translate(-25px, 20px) scale(0.94); }
+        }
+
+        /* 导航栏（参考 jiho navbar，亮色） */
+        .navbar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            z-index: 100;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 20px 48px;
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--glass-border);
+        }
+        .landing-page .navbar {
+            background: transparent;
+            backdrop-filter: none;
+            -webkit-backdrop-filter: none;
+            border-bottom-color: transparent;
+        }
+        .nav-logo {
+            display: flex;
+            align-items: center;
+            text-decoration: none;
+            flex-shrink: 0;
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--text);
+            letter-spacing: -0.02em;
+            transition: opacity 0.2s;
+        }
+        .landing-page .nav-logo { color: var(--text); }
+        .nav-logo:hover { opacity: 0.65; }
+        .nav-links {
+            display: flex;
+            align-items: center;
+            gap: 40px;
+            list-style: none;
+        }
+        .nav-links a {
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--text-secondary);
+            letter-spacing: 0.02em;
+            position: relative;
+            transition: color 0.25s;
+        }
+        .nav-links a::after {
+            content: '';
+            position: absolute;
+            bottom: -4px;
+            left: 0;
+            width: 0;
+            height: 1px;
+            background: var(--text);
+            transition: width 0.3s;
+        }
+        .nav-links a:hover { color: var(--text); }
+        .nav-links a:hover::after { width: 100%; }
+
+        /* ============================================================
+           底部水印
+           ============================================================ */
+        .hero-watermark {
+            position: fixed;
+            bottom: 40px;
+            left: 48px;
+            z-index: 10;
+            pointer-events: none;
+            font-size: 11px;
+            font-weight: 400;
+            color: rgba(0,0,0,0.18);
+            letter-spacing: 0.06em;
+        }
+
+        /* ============================================================
+           登录区（iOS 风格 — 无卡片，浮动元素）
+           ============================================================ */
+        .login-section {
+            position: fixed;
+            inset: 0;
+            z-index: 10;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 0;
+            pointer-events: none;
+            background: rgba(242,242,247,0.15);
+            backdrop-filter: blur(2px);
+            -webkit-backdrop-filter: blur(2px);
+        }
+        .login-section > * {
+            pointer-events: auto;
+        }
+        .login-avatar {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #0b0e14, #1a1f2e);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 17px;
+            margin-bottom: 18px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+            transition: transform 0.4s cubic-bezier(0.16,1,0.3,1), box-shadow 0.4s ease;
+            animation: avatarIn 0.8s cubic-bezier(0.16,1,0.3,1) 0.2s both;
+        }
+        @keyframes avatarIn {
+            0% { opacity: 0; transform: scale(0.8); }
+            100% { opacity: 1; transform: scale(1); }
+        }
+        .login-section:hover .login-avatar {
+            transform: scale(1.06);
+            box-shadow: 0 4px 16px rgba(0,0,0,0.10);
+        }
+        .login-name {
+            font-size: 26px;
+            font-weight: 500;
+            color: #1D1D1F;
+            letter-spacing: -0.015em;
+            margin-bottom: 6px;
+            animation: nameIn 0.7s cubic-bezier(0.16,1,0.3,1) 0.3s both;
+        }
+        @keyframes nameIn {
+            0% { opacity: 0; transform: translateY(6px); }
+            100% { opacity: 1; transform: translateY(0); }
+        }
+        .login-sub {
+            font-size: 13px;
+            font-weight: 400;
+            color: rgba(0,0,0,0.35);
+            margin-bottom: 32px;
+            letter-spacing: 0.005em;
+            animation: subIn 0.7s cubic-bezier(0.16,1,0.3,1) 0.4s both;
+        }
+        @keyframes subIn {
+            0% { opacity: 0; transform: translateY(6px); }
+            100% { opacity: 1; transform: translateY(0); }
+        }
+        .login-btn {
+            padding: 10px 28px;
+            border-radius: 20px;
+            border: none;
+            background: #1D1D1F;
+            color: #fff;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            font-family: inherit;
+            transition: all 0.25s cubic-bezier(0.16,1,0.3,1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+            letter-spacing: 0.01em;
+            animation: btnIn 0.7s cubic-bezier(0.16,1,0.3,1) 0.5s both;
+        }
+        @keyframes btnIn {
+            0% { opacity: 0; transform: translateY(8px); }
+            100% { opacity: 1; transform: translateY(0); }
+        }
+        .login-btn:hover {
+            background: #000;
+            transform: scale(1.03);
+            box-shadow: 0 4px 20px rgba(0,0,0,0.12);
+        }
+        .login-btn:active {
+            transform: scale(0.97);
+        }
+        .login-btn svg {
+            width: 14px;
+            height: 14px;
+            transition: transform 0.3s cubic-bezier(0.16,1,0.3,1);
+        }
+        .login-btn:hover svg {
+            transform: translateX(3px);
+        }
+        .login-hint {
+            font-size: 9px;
+            color: rgba(0,0,0,0.15);
+            margin-top: 28px;
+            letter-spacing: 0.08em;
+            animation: hintIn 0.7s cubic-bezier(0.16,1,0.3,1) 0.6s both;
+        }
+        @keyframes hintIn {
+            0% { opacity: 0; }
+            100% { opacity: 1; }
+        }
+
+        /* ============================================================
+           欢迎浮层（iOS 通知中心风格）
+           ============================================================ */
+        .welcome-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 200;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            background: rgba(0,0,0,0.04);
+            backdrop-filter: blur(4px);
+            -webkit-backdrop-filter: blur(4px);
+        }
+        .welcome-overlay.active {
+            display: flex;
+        }
+        .welcome-card {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            padding: 34px 48px 30px;
+            background: rgba(255,255,255,0.22);
+            backdrop-filter: blur(80px) saturate(1.6);
+            -webkit-backdrop-filter: blur(80px) saturate(1.6);
+            border-radius: 36px;
+            border: 1px solid rgba(255,255,255,0.6);
+            box-shadow: 0 0 0 0.5px rgba(0,0,0,0.015), 0 16px 56px rgba(0,0,0,0.05);
+            animation: welcomeSpring 0.6s cubic-bezier(0.16,1,0.3,1) both;
+        }
+        @keyframes welcomeSpring {
+            0%   { opacity: 0; transform: scale(0.86) translateY(20px); }
+            100% { opacity: 1; transform: scale(1) translateY(0); }
+        }
+        @keyframes welcomeOut {
+            0%   { opacity: 1; transform: scale(1); }
+            100% { opacity: 0; transform: scale(0.92) translateY(-8px); }
+        }
+        .welcome-title {
+            font-size: 22px;
+            font-weight: 600;
+            color: #1D1D1F;
+            letter-spacing: -0.01em;
+        }
+        .welcome-sub {
+            font-size: 13px;
+            font-weight: 400;
+            color: rgba(0,0,0,0.4);
+            letter-spacing: 0.005em;
+        }
+        .welcome-spinner {
+            margin-top: 10px;
+            width: 18px;
+            height: 18px;
+            border: 2px solid rgba(0,0,0,0.08);
+            border-top-color: rgba(0,0,0,0.5);
+            border-radius: 50%;
+            animation: spin 0.7s linear infinite;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* ============================================================
+           Desktop 工作区（参考 jiho works.html，亮色调）
+           ============================================================ */
+        body.desktop-page {
+            background: #F2F2F7;
+            margin: 0;
+            overflow: hidden;
+        }
+
+        #transition-overlay {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100vw; height: 100vh;
+            background: #F2F2F7;
+            z-index: 999;
+            opacity: 1;
+            transition: opacity 0.5s ease;
+        }
+
+        #webgl-canvas {
+            position: fixed;
+            inset: 0;
+            z-index: 1;
+            pointer-events: none;
+        }
+
+        /* 柔光叠层（替代 CRT 暗色效果，改为亮色柔光） */
+        .glow-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 20;
+            pointer-events: none;
+        }
+        .glow-scanlines {
+            position: absolute;
+            inset: 0;
+            background: repeating-linear-gradient(
+                to bottom,
+                transparent 0px,
+                transparent 3px,
+                rgba(255, 255, 255, 0.10) 3px,
+                rgba(255, 255, 255, 0.10) 4px
+            );
+        }
+        .glow-scan-beam {
+            position: absolute;
+            left: 0;
+            right: 0;
+            height: 80px;
+            background: linear-gradient(
+                to bottom,
+                transparent 0%,
+                rgba(255, 255, 255, 0.08) 40%,
+                rgba(255, 255, 255, 0.12) 50%,
+                rgba(255, 255, 255, 0.08) 60%,
+                transparent 100%
+            );
+            animation: scanBeam 6s linear infinite;
+            top: -80px;
+        }
+        @keyframes scanBeam {
+            0%   { top: -80px; }
+            100% { top: 100%; }
+        }
+        .glow-vignette {
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(
+                ellipse at center,
+                transparent 55%,
+                rgba(0, 0, 0, 0.12) 100%
+            );
+        }
+
+        /* ============================================================
+           睡眠按钮（Win11 风格 — 右下角）
+           ============================================================ */
+        .sleep-btn {
+            position: fixed;
+            bottom: 28px;
+            right: 28px;
+            z-index: 100;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 7px 12px;
+            border-radius: 20px;
+            border: 1px solid rgba(255,255,255,0.15);
+            background: rgba(255,255,255,0.06);
+            backdrop-filter: blur(16px) saturate(1.3);
+            -webkit-backdrop-filter: blur(16px) saturate(1.3);
+            color: rgba(255,255,255,0.5);
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.16,1,0.3,1);
+            font-family: inherit;
+            user-select: none;
+        }
+        .sleep-btn:hover {
+            background: rgba(255,255,255,0.14);
+            color: #fff;
+            border-color: rgba(255,255,255,0.3);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 20px rgba(0,0,0,0.10);
+        }
+        .sleep-btn:active {
+            transform: scale(0.95);
+        }
+        .sleep-btn svg {
+            width: 17px;
+            height: 17px;
+            opacity: 0.7;
+            transition: opacity 0.3s;
+        }
+        .sleep-btn:hover svg {
+            opacity: 1;
+        }
+        .sleep-btn span {
+            font-size: 11px;
+            font-weight: 500;
+            letter-spacing: 0.03em;
+            opacity: 0;
+            max-width: 0;
+            overflow: hidden;
+            transition: all 0.3s cubic-bezier(0.16,1,0.3,1);
+            white-space: nowrap;
+        }
+        .sleep-btn:hover span {
+            opacity: 1;
+            max-width: 60px;
+        }
+
+        /* ============================================================
+           电脑屏幕容器（参考原版 computer-screen）
+           ============================================================ */
+        .computer-screen {
+            position: fixed;
+            top: 90px;
+            left: 40px;
+            right: 40px;
+            bottom: 40px;
+            background: #C0C0C8;
+            border-radius: 14px;
+            z-index: 5;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            clip-path: circle(3px at 56.6% 39.0%);
+            animation: screenExpand 0.5s cubic-bezier(0.4,0,0.2,1) 0.05s forwards;
+            box-shadow: 0 4px 32px rgba(0,0,0,0.10);
+        }
+        @keyframes screenExpand {
+            from { clip-path: circle(3px at 56.6% 39.0%); }
+            to   { clip-path: none; }
+        }
+
+        /* ============================================================
+           状态栏
+           ============================================================ */
+        .screen-titlebar {
+            flex-shrink: 0;
+            height: 32px;
+            background: #ECECF0;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 16px;
+            user-select: none;
+        }
+        .titlebar-left {
+            display: flex;
+            align-items: center;
+            gap: 0;
+        }
+        .titlebar-logo {
+            width: 26px;
+            height: 20px;
+            margin-right: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: default;
+            font-size: 14px;
+            opacity: 0.7;
+            transition: opacity 0.15s;
+        }
+        .titlebar-logo:hover { opacity: 1; }
+        .titlebar-menu {
+            display: flex;
+            align-items: center;
+        }
+        .titlebar-menu span {
+            font-size: 11px;
+            font-weight: 500;
+            color: var(--text);
+            padding: 2px 12px;
+            cursor: default;
+            transition: background 0.15s;
+            white-space: nowrap;
+            border-radius: 3px;
+        }
+        .titlebar-menu span:hover {
+            background: rgba(0,0,0,0.08);
+        }
+        .titlebar-clock {
+            font-size: 11px;
+            font-weight: 500;
+            color: var(--text);
+            min-width: 70px;
+            text-align: right;
+        }
+
+        /* 详情标题栏 */
+        .detail-titlebar {
+            flex-shrink: 0;
+            height: 32px;
+            background: #ECECF0;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 16px;
+            user-select: none;
+        }
+        .detail-titlebar.hidden,
+        .desktop-titlebar.hidden { display: none; }
+        .detail-title-name {
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--text);
+        }
+        .detail-close-btn {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            cursor: default;
+            font-size: 11px;
+            font-weight: 500;
+            color: var(--text-secondary);
+            padding: 2px 4px;
+            border-radius: 3px;
+            transition: background 0.15s;
+            background: none;
+            border: none;
+            font-family: inherit;
+        }
+        .detail-close-btn:hover {
+            background: rgba(0,0,0,0.08);
+            color: var(--text);
+        }
+        .detail-close-btn svg {
+            width: 14px;
+            height: 14px;
+            flex-shrink: 0;
+        }
+
+        /* 状态栏下方分割线 */
+        .screen-shadow {
+            flex-shrink: 0;
+            height: 2px;
+            background: rgba(0,0,0,0.10);
+        }
+
+        /* ============================================================
+           屏幕主内容区
+           ============================================================ */
+        .screen-content {
+            flex: 1;
+            position: relative;
+            overflow: auto;
+        }
+
+        .screen-noise {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+        }
+
+        /* ============================================================
+           详情视图
+           ============================================================ */
+        .detail-view {
+            position: absolute;
+            inset: 0;
+            z-index: 3;
+            display: none;
+            flex-direction: column;
+            background: #FFFFFF;
+        }
+        .detail-view.active { display: flex; }
+        .detail-content {
+            flex: 1;
+            position: relative;
+            overflow-y: auto;
+            padding: 32px 40px;
+            display: flex;
+            flex-direction: column;
+        }
+        .detail-content .d-title {
+            font-size: 22px;
+            font-weight: 700;
+            color: var(--text);
+            margin: 0 0 4px;
+            line-height: 1.4;
+            letter-spacing: -0.02em;
+        }
+        .detail-content .d-subtitle {
+            font-size: 13px;
+            font-weight: 400;
+            color: var(--text-secondary);
+            margin: 0 0 20px;
+            line-height: 1.5;
+        }
+        .detail-content .d-body {
+            font-size: 14px;
+            font-weight: 400;
+            color: var(--text);
+            margin: 0 0 12px;
+            line-height: 1.8;
+        }
+        .detail-content .d-desc {
+            font-size: 12px;
+            font-weight: 400;
+            color: var(--text-muted);
+            margin: 0 0 20px;
+            line-height: 1.8;
+        }
+        .detail-content .d-tag {
+            display: inline-block;
+            padding: 4px 12px;
+            background: rgba(0,122,255,0.08);
+            color: #007AFF;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 500;
+            margin-right: 6px;
+            margin-bottom: 6px;
+        }
+        .detail-content .d-placeholder {
+            width: 100%;
+            max-width: 480px;
+            aspect-ratio: 16/10;
+            background: linear-gradient(135deg, #F2F2F7, #E5E5EA);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 52px;
+            margin: 4px 0 24px;
+        }
+
+        .contact-card-wrap {
+            display: flex; flex-direction: column;
+            align-items: center; padding-top: 16px;
+        }
+        .contact-card {
+            width: 100%; max-width: 400px;
+            background: #FFFFFF;
+            border: 1px solid rgba(0,0,0,0.06);
+            border-radius: 18px;
+            padding: 36px 32px 28px;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.04), 0 8px 32px rgba(0,0,0,0.05);
+            display: flex; flex-direction: column;
+            align-items: center;
+        }
+        .cc-avatar {
+            width: 72px; height: 72px; border-radius: 50%;
+            background: linear-gradient(145deg, #0b0e14, #1a1f2e);
+            display: flex; align-items: center; justify-content: center;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.10);
+        }
+        .cc-avatar-inner {
+            font-size: 22px; font-weight: 700; letter-spacing: 0.06em;
+            background: linear-gradient(135deg, #6c8cff, #c084fc);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .cc-name {
+            font-size: 22px; font-weight: 700; color: var(--text);
+            letter-spacing: -0.02em; margin-bottom: 6px;
+        }
+        .cc-bio {
+            font-size: 13px; color: var(--text-secondary);
+            text-align: center; line-height: 1.6; margin-bottom: 0;
+        }
+        .cc-divider {
+            width: 100%; height: 1px; background: rgba(0,0,0,0.05);
+            margin: 24px 0;
+        }
+        .cc-lines {
+            width: 100%; display: flex; flex-direction: column; gap: 0;
+        }
+        .cc-line {
+            display: flex; align-items: center; gap: 14px;
+            padding: 16px 12px; border-radius: 12px;
+            transition: background 0.2s;
+            cursor: default;
+        }
+        .cc-line:hover {
+            background: rgba(0,0,0,0.02);
+        }
+        .cc-line-icon {
+            width: 40px; height: 40px; border-radius: 12px;
+            background: rgba(0,0,0,0.03);
+            display: flex; align-items: center; justify-content: center;
+            color: var(--text); flex-shrink: 0;
+        }
+        .cc-line-body { flex: 1; min-width: 0; }
+        .cc-line-label {
+            font-size: 11px; color: var(--text-muted); margin-bottom: 2px;
+            font-weight: 500;
+        }
+        .cc-line-value {
+            font-size: 15px; font-weight: 500; color: var(--text);
+            letter-spacing: 0.01em;
+        }
+        .cc-copy-btn {
+            width: 36px; height: 36px; border-radius: 10px;
+            border: 1px solid rgba(0,0,0,0.08);
+            background: transparent; color: var(--text-secondary);
+            cursor: pointer; display: flex; align-items: center;
+            justify-content: center; flex-shrink: 0;
+            transition: all 0.2s;
+        }
+        .cc-copy-btn:hover {
+            background: rgba(0,0,0,0.04); color: var(--text);
+            border-color: rgba(0,0,0,0.15);
+        }
+        .cc-copy-btn.cc-copied {
+            background: #e8f5e9; color: #2e7d32;
+            border-color: #a5d6a7;
+        }
+        .cc-footer {
+            margin-top: 24px; font-size: 11px;
+            color: var(--text-muted); letter-spacing: 0.04em;
+            text-align: center;
+        }
+
+        /* ============================================================
+           图标网格
+           ============================================================ */
+        .icon-grid {
+            position: absolute;
+            inset: 0;
+            z-index: 2;
+            display: flex;
+            flex-direction: column;
+            flex-wrap: wrap;
+            align-content: flex-start;
+            gap: 28px 40px;
+            padding: 24px 28px;
+        }
+
+        .icon-item {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 6px;
+            cursor: default;
+            padding: 4px;
+            border-radius: 5px;
+            transition: background 0.1s;
+            flex-shrink: 0;
+            width: 90px;
+            height: 100px;
+        }
+        .icon-item.hidden { display: none; }
+        .icon-item.selected {
+            background: rgba(0, 122, 255, 0.10);
+        }
+        .icon-item-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            margin: 0 auto;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+        }
+        .icon-item span {
+            font-size: 10px;
+            font-weight: 500;
+            color: var(--text);
+            text-align: center;
+            line-height: 1.3;
+            word-break: break-word;
+            max-width: 86px;
+            width: 100%;
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        /* 图标入场动画 */
+        @keyframes iconPop {
+            0%   { opacity: 0; transform: scale(0.6); }
+            70%  { opacity: 1; transform: scale(1.08); }
+            100% { opacity: 1; transform: scale(1); }
+        }
+        .icon-item { opacity: 0; }
+        .icon-item:nth-child(1)  { animation: iconPop 0.28s cubic-bezier(0.34,1.56,0.64,1) 0.60s forwards; }
+        .icon-item:nth-child(2)  { animation: iconPop 0.28s cubic-bezier(0.34,1.56,0.64,1) 0.70s forwards; }
+        .icon-item:nth-child(3)  { animation: iconPop 0.28s cubic-bezier(0.34,1.56,0.64,1) 0.80s forwards; }
+        .icon-item:nth-child(4)  { animation: iconPop 0.28s cubic-bezier(0.34,1.56,0.64,1) 0.90s forwards; }
+        .icon-item:nth-child(5)  { animation: iconPop 0.28s cubic-bezier(0.34,1.56,0.64,1) 1.00s forwards; }
+        .icon-item:nth-child(6)  { animation: iconPop 0.28s cubic-bezier(0.34,1.56,0.64,1) 1.10s forwards; }
+        .icon-item:nth-child(7)  { animation: iconPop 0.28s cubic-bezier(0.34,1.56,0.64,1) 1.20s forwards; }
+        .icon-item:nth-child(8)  { animation: iconPop 0.28s cubic-bezier(0.34,1.56,0.64,1) 1.30s forwards; }
+
+        /* ============================================================
+           Info 弹窗
+           ============================================================ */
+        .info-popup-overlay {
+            position: absolute;
+            inset: 0;
+            z-index: 100;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            background: rgba(0,0,0,0.15);
+            backdrop-filter: blur(4px);
+            -webkit-backdrop-filter: blur(4px);
+        }
+        .info-popup-overlay.active { display: flex; }
+        .info-popup {
+            background: #FFFFFF;
+            border-radius: 10px;
+            width: 480px;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            box-shadow: 0 4px 28px rgba(0,0,0,0.12);
+            border: 1px solid rgba(0,0,0,0.06);
+            animation: popupIn 0.22s cubic-bezier(0.34,1.56,0.64,1);
+        }
+        @keyframes popupIn {
+            from { opacity: 0; transform: scale(0.92); }
+            to   { opacity: 1; transform: scale(1); }
+        }
+        .info-popup-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 12px;
+            height: 28px;
+            background: #F5F5F7;
+            flex-shrink: 0;
+        }
+        .info-popup-title {
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--text);
+        }
+        .info-popup-close {
+            display: flex;
+            align-items: center;
+            cursor: default;
+            padding: 2px 4px;
+            border-radius: 3px;
+            transition: background 0.15s;
+            color: var(--text-secondary);
+            background: none;
+            border: none;
+        }
+        .info-popup-close:hover { background: rgba(0,0,0,0.06); }
+        .info-popup-close svg {
+            width: 12px;
+            height: 12px;
+            display: block;
+        }
+        .info-popup-shadow {
+            height: 2px;
+            background: rgba(0,0,0,0.06);
+            flex-shrink: 0;
+        }
+        .info-popup-body {
+            padding: 24px 28px 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0;
+            overflow: hidden;
+        }
+        .info-logo-row {
+            display: flex;
+            align-items: flex-end;
+            gap: 8px;
+            margin-bottom: 20px;
+        }
+        .info-logo-row span {
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--text);
+            letter-spacing: -0.02em;
+            line-height: 1;
+            padding-bottom: 2px;
+        }
+        .info-logo-emoji {
+            font-size: 18px;
+            line-height: 1;
+            padding-bottom: 1px;
+        }
+        .info-lines {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 4px;
+            margin-bottom: 20px;
+            width: 100%;
+        }
+        .info-line {
+            font-size: 10px;
+            color: var(--text-secondary);
+            text-align: left;
+            white-space: nowrap;
+        }
+        .info-copyright {
+            font-size: 10px;
+            color: var(--text-muted);
+            text-align: center;
+            white-space: nowrap;
+        }
+
+        /* ============================================================
+           反馈表单样式
+           ============================================================ */
+        .fb-wrap {
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            padding: 20px 0;
+            min-height: 100%;
+        }
+        .fb-card {
+            background: #FFFFFF;
+            border-radius: 12px;
+            width: 100%;
+            max-width: 500px;
+            overflow: hidden;
+            animation: fbIn 0.25s ease;
+        }
+        @keyframes fbIn {
+            from { opacity: 0; transform: translateY(8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .fb-icon { font-size: 36px; text-align: center; margin-bottom: 8px; }
+        .fb-title { font-size: 22px; font-weight: 700; color: #1D1D1F; text-align: center; margin: 0 0 4px; letter-spacing: -0.02em; }
+        .fb-sub { font-size: 13px; color: rgba(0,0,0,0.55); text-align: center; margin: 0 0 16px; line-height: 1.5; }
+        .fb-divider { height: 1px; background: rgba(0,0,0,0.06); margin-bottom: 20px; }
+        .fb-types {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+        .fb-type-btn {
+            padding: 10px 8px;
+            border-radius: 8px;
+            border: 1px solid rgba(0,0,0,0.08);
+            background: #fff;
+            color: rgba(0,0,0,0.55);
+            font-size: 12px;
+            font-weight: 500;
+            cursor: pointer;
+            font-family: inherit;
+            transition: all 0.2s;
+            text-align: center;
+        }
+        .fb-type-btn:hover {
+            border-color: rgba(0,0,0,0.2);
+            background: #f5f5f7;
+        }
+        .fb-type-btn.active {
+            border-color: #1D1D1F;
+            background: #1D1D1F;
+            color: #fff;
+        }
+        .fb-field {
+            margin-bottom: 14px;
+            position: relative;
+        }
+        .fb-field input,
+        .fb-field textarea {
+            width: 100%;
+            padding: 12px 16px;
+            border-radius: 8px;
+            border: 1px solid rgba(0,0,0,0.08);
+            font-size: 13px;
+            font-family: inherit;
+            outline: none;
+            transition: all 0.2s;
+            color: #1D1D1F;
+            background: #fff;
+            box-sizing: border-box;
+        }
+        .fb-field input:focus,
+        .fb-field textarea:focus {
+            border-color: #1D1D1F;
+            box-shadow: 0 0 0 3px rgba(0,0,0,0.06);
+        }
+        .fb-field textarea {
+            resize: vertical;
+            min-height: 80px;
+            line-height: 1.6;
+        }
+        .fb-counter {
+            text-align: right;
+            font-size: 11px;
+            color: rgba(0,0,0,0.35);
+            margin-top: 4px;
+        }
+        .fb-error {
+            padding: 10px 14px;
+            border-radius: 8px;
+            background: #fef2f2;
+            color: #dc2626;
+            font-size: 13px;
+            margin-bottom: 14px;
+            border: 1px solid #fecaca;
+        }
+        .fb-submit {
+            width: 100%;
+            padding: 13px 20px;
+            border-radius: 8px;
+            border: none;
+            background: #1D1D1F;
+            color: #fff;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            font-family: inherit;
+            transition: all 0.2s;
+        }
+        .fb-submit:hover {
+            background: #000;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+        }
+        .fb-submit:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        .fb-success {
+            text-align: center;
+            padding: 40px 20px;
+        }
+        .fb-success-icon { font-size: 48px; margin-bottom: 12px; }
+        .fb-success-title { font-size: 20px; font-weight: 700; color: #1D1D1F; margin-bottom: 8px; }
+        .fb-success-text { font-size: 13px; color: rgba(0,0,0,0.55); line-height: 1.6; }
+
+        /* ============================================================
+           移动端适配
+           ============================================================ */
+        @media (max-width: 768px) {
+            .navbar {
+                padding: 16px 24px;
+            }
+            .nav-links { gap: 24px; }
+            .nav-links a { font-size: 13px; }
+            .hero-watermark {
+                bottom: 28px;
+                left: 24px;
+            }
+            .login-avatar {
+                width: 38px;
+                height: 38px;
+                font-size: 14px;
+                margin-bottom: 14px;
+            }
+            .login-name {
+                font-size: 22px;
+                margin-bottom: 4px;
+            }
+            .login-sub {
+                font-size: 12px;
+                margin-bottom: 26px;
+            }
+            .login-btn {
+                padding: 8px 24px;
+                font-size: 12px;
+                border-radius: 18px;
+            }
+            .login-hint {
+                margin-top: 22px;
+            }
+            .welcome-card {
+                 padding: 26px 36px 24px;
+             }
+             .welcome-title { font-size: 20px; }
+            .computer-screen {
+                top: 80px;
+                left: 20px;
+                right: 20px;
+                bottom: 20px;
+                border-radius: 10px;
+            }
+            .titlebar-menu span {
+                padding: 3px 20px;
+                font-size: 11px;
+            }
+            .sleep-btn {
+                bottom: 16px;
+                right: 16px;
+                padding: 6px 10px;
+            }
+            .sleep-btn svg {
+                width: 15px;
+                height: 15px;
+            }
+            .sleep-btn span {
+                font-size: 10px;
+            }
+        }
+    </style>
+</head>
+<body class="landing-page">
+
+    <!-- ============================================================
+         首页 Landing（参考 jiho.work index.html 结构）
+         ============================================================ -->
+    <div class="bg-gradient"></div>
+    <div class="bg-blob"></div>
+    <div class="bg-blob"></div>
+    <div class="bg-blob"></div>
+    <div id="landing-root">
+
+        <nav class="navbar">
+            <a href="#" class="nav-logo">Hmiao</a>
+            <ul class="nav-links">
+                <li><a href="#" id="nav-works">Works</a></li>
+                <li><a href="#" id="nav-about">About</a></li>
+            </ul>
+        </nav>
+
+        <div class="hero-watermark">Vibecoding Explorer</div>
+
+        <div class="login-section">
+                <div class="login-avatar">🫧</div>
+                <div class="login-name">Hmiao</div>
+                <div class="login-sub">点击登录进入桌面</div>
+                <button class="login-btn" id="login-btn">
+                    登录
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
+                </button>
+                <div class="login-hint">VibeOS 1.0 · Hmiao Studio</div>
+            </div>
+
+        <div class="welcome-overlay" id="welcome-overlay">
+            <div class="welcome-card" id="welcome-card">
+                <div class="welcome-title">欢迎回来</div>
+                <div class="welcome-sub">正在载入桌面…</div>
+                <div class="welcome-spinner"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================================
+         过渡动画层
+         ============================================================ -->
+    <div id="transition-overlay" style="display:none;"></div>
+
+    <!-- ============================================================
+         桌面视图（参考 jiho.work works.html 结构，亮色调）
+         ============================================================ -->
+    <div id="desktop-root" style="display:none;">
+        <canvas id="webgl-canvas"></canvas>
+
+        <nav class="navbar">
+            <a href="#" class="nav-logo" id="nav-logo-home">Hmiao</a>
+            <ul class="nav-links">
+                <li><a href="#" id="nav-works2">Works</a></li>
+                <li><a href="#" id="nav-about2">About</a></li>
+            </ul>
+        </nav>
+
+        <div class="computer-screen" id="computer-screen">
+            <div class="screen-titlebar desktop-titlebar" id="desktop-titlebar">
+                <div class="titlebar-left">
+                    <div class="titlebar-logo" id="info-logo-btn" title="关于本机">🫧</div>
+                    <div class="titlebar-menu">
+                        <span id="menu-refresh">Refresh</span>
+                    </div>
+                </div>
+                <div class="titlebar-clock" id="titlebar-clock">00:00:00</div>
+            </div>
+
+            <div class="detail-titlebar hidden" id="detail-titlebar">
+                <div class="detail-title-name" id="detail-title-name"></div>
+                <button class="detail-close-btn" id="detail-close-btn">
+                    <span>Close</span>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                </button>
+            </div>
+
+            <div class="screen-shadow" id="screen-shadow"></div>
+
+            <div class="screen-content" id="screen-content">
+                <canvas class="screen-noise" id="noise-canvas"></canvas>
+
+                <div class="icon-grid" id="icon-grid">
+                    <div class="icon-item" data-work="prompts" data-url="/prompts/">
+                        <div class="icon-item-icon" style="background:linear-gradient(145deg,#E0E7FF,#C7D2FE);border-radius:12px;overflow:hidden;box-shadow:0 2px 12px rgba(79,70,229,0.12);">
+                            <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" style="display:block;">
+                                <rect width="48" height="48" rx="12" fill="url(#pgrad)"/>
+                                <defs><linearGradient id="pgrad" x1="0" y1="0" x2="48" y2="48"><stop offset="0%" stop-color="#E0E7FF"/><stop offset="100%" stop-color="#C7D2FE"/></linearGradient></defs>
+                                <path d="M16 18h16M16 24h12M16 30h8" stroke="#4F46E5" stroke-width="2" stroke-linecap="round"/>
+                                <circle cx="36" cy="30" r="6" fill="#4F46E5"/>
+                                <path d="M33 30l2 2 4-4" stroke="#fff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                        </div>
+                        <span>提示词库</span>
+                    </div>
+                    <div class="icon-item" data-work="lifesim" data-url="/life-sim/">
+                        <div class="icon-item-icon" style="background:#fef3c7;border-radius:12px;overflow:hidden;box-shadow:0 2px 12px rgba(245,158,11,0.15);">
+                            <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" style="display:block;">
+                                <rect width="48" height="48" rx="12" fill="#fef3c7"/>
+                                <path d="M24 10c0 0-8 6-8 14s8 6 8 14" stroke="#f59e0b" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+                                <path d="M24 10c0 0 8 6 8 14s-8 6-8 14" stroke="#d97706" stroke-width="2.5" stroke-linecap="round" fill="none" opacity="0.5"/>
+                                <circle cx="24" cy="10" r="3" fill="#f59e0b"/>
+                                <circle cx="24" cy="38" r="3" fill="#d97706"/>
+                                <circle cx="16" cy="20" r="2" fill="#f59e0b" opacity="0.6"/>
+                                <circle cx="32" cy="28" r="2" fill="#d97706" opacity="0.6"/>
+                            </svg>
+                        </div>
+                        <span>人生重开</span>
+                    </div>
+                    <div class="icon-item" data-work="contact">
+                        <div class="icon-item-icon" style="background:transparent;border-radius:12px;overflow:hidden;">
+                            <img src="logo/%E8%81%94%E7%B3%BB%E6%88%91.png" alt="联系我" style="width:48px;height:48px;object-fit:contain;display:block;">
+                        </div>
+                        <span>联系我</span>
+                    </div>
+                    <div class="icon-item" data-work="feedback">
+                        <div class="icon-item-icon" style="background:linear-gradient(145deg,#f0f4ff,#e8eeff);border-radius:12px;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,0.06);">
+                            <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" style="display:block;">
+                                <rect width="48" height="48" rx="12" fill="url(#fbgrad)"/>
+                                <defs><linearGradient id="fbgrad" x1="0" y1="0" x2="48" y2="48"><stop offset="0%" stop-color="#f0f4ff"/><stop offset="100%" stop-color="#e8eeff"/></linearGradient></defs>
+                                <path d="M15 18h18v2H15zm0 6h14v2H15zm0 6h10v2H15z" fill="#4a5568" opacity="0.8"/>
+                                <path d="M34 28l4 4v-4h1a1 1 0 001-1V17a1 1 0 00-1-1H17a1 1 0 00-1 1v10a1 1 0 001 1h17z" fill="none" stroke="#4a5568" stroke-width="1.2" stroke-linejoin="round"/>
+                                <path d="M34 28v5a1 1 0 001 1h2" stroke="#4a5568" stroke-width="1.2" stroke-linecap="round"/>
+                            </svg>
+                        </div>
+                        <span>用户反馈</span>
+                    </div>
+                </div>
+
+                <div class="detail-view" id="detail-view">
+                    <div class="detail-content" id="detail-content"></div>
+                </div>
+
+                <div class="info-popup-overlay" id="info-popup">
+                    <div class="info-popup">
+                        <div class="info-popup-header">
+                            <span class="info-popup-title">Info</span>
+                            <button class="info-popup-close" id="info-close-btn">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                            </button>
+                        </div>
+                        <div class="info-popup-shadow"></div>
+                        <div class="info-popup-body">
+                            <div class="info-logo-row">
+                                <span>Hmiao Studio</span>
+                                <span class="info-logo-emoji">🫧</span>
+                            </div>
+                            <div class="info-lines">
+                                <div class="info-line">System：VibeOS 1.0</div>
+                                <div class="info-line">Design Version：Version 2026</div>
+                                <div class="info-line">Memory：Infinite</div>
+                                <div class="info-line">Disk：Curiosity Overflow</div>
+                            </div>
+                            <div class="info-copyright">Copyright 2026 Hmiao Vibecoding Studio.</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="glow-overlay">
+            <div class="glow-scanlines"></div>
+            <div class="glow-scan-beam"></div>
+            <div class="glow-vignette"></div>
+        </div>
+
+        <div class="sleep-btn" id="sleep-btn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+            <span>睡眠</span>
+        </div>
+    </div>
+
+    <!-- ============================================================
+         Mouse Effect（参考 jiho mouse-effect.js）
+         ============================================================ -->
+    <script type="module">
+        let THREE;
+        try { THREE = await import('three'); } catch { document.getElementById('webgl-canvas')?.remove(); throw new Error('Three.js CDN 加载失败'); }
+
+        const params = {
+            pointsNumber: 10,
+            spring: 0.4,
+            friction: 0.5,
+            thickness: 8,
+            strength: 0.05,
+            rgbShift: 0.05,
+        };
+
+        let scene, camera, renderer, material;
+        let dispTexture, dispCanvas, dispCtx;
+        let mouseMoved = false;
+        const pointer = { x: 0.5 * window.innerWidth, y: 0.5 * window.innerHeight };
+        let trail = [];
+
+        const isMobile = window.matchMedia('(pointer: coarse)').matches || window.innerWidth < 768;
+        if (!isMobile) {
+            setupWebgl();
+        } else {
+            const c = document.getElementById('webgl-canvas');
+            if (c) c.style.display = 'none';
+        }
+
+        function setupWebgl() {
+            const dpr = Math.min(window.devicePixelRatio, 2);
+            setupDisplacementCanvas(dpr);
+            initTrail();
+
+            dispTexture = new THREE.CanvasTexture(dispCanvas);
+            dispTexture.minFilter = THREE.LinearFilter;
+            dispTexture.magFilter = THREE.LinearFilter;
+            dispTexture.generateMipmaps = false;
+
+            scene = new THREE.Scene();
+            camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
+
+            let mainCanvas = document.getElementById('webgl-canvas');
+            const newCanvas = document.createElement('canvas');
+            newCanvas.id = 'webgl-canvas';
+            if (mainCanvas && mainCanvas.parentNode) {
+                mainCanvas.parentNode.replaceChild(newCanvas, mainCanvas);
+            }
+            mainCanvas = newCanvas;
+
+            renderer = new THREE.WebGLRenderer({ canvas: mainCanvas, antialias: true, alpha: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setPixelRatio(dpr);
+
+            material = new THREE.ShaderMaterial({
+                transparent: true,
+                uniforms: {
+                    u_disp: { value: dispTexture },
+                    u_resolution: { value: new THREE.Vector2(window.innerWidth * dpr, window.innerHeight * dpr) },
+                    u_strength: { value: params.strength },
+                    u_rgbShift: { value: params.rgbShift }
+                },
+                vertexShader: `
+                    varying vec2 vUv;
+                    void main() {
+                        vUv = uv;
+                        gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+                    }
+                `,
+                fragmentShader: `
+                    varying vec2 vUv;
+                    uniform sampler2D u_disp;
+                    uniform vec2 u_resolution;
+                    uniform float u_strength;
+                    uniform float u_rgbShift;
+
+                    void main() {
+                        vec2 uv = vUv;
+                        vec2 texel = vec2(3.0 / u_resolution.x, 3.0 / u_resolution.y);
+
+                        float right  = texture2D(u_disp, uv + vec2(texel.x,  0.0)).r;
+                        float left   = texture2D(u_disp, uv - vec2(texel.x,  0.0)).r;
+                        float top    = texture2D(u_disp, uv + vec2(0.0,  texel.y)).r;
+                        float bottom = texture2D(u_disp, uv - vec2(0.0,  texel.y)).r;
+                        float center = texture2D(u_disp, uv).r;
+
+                        float dx = right - left;
+                        float dy = top - bottom;
+                        float dispMag = length(vec2(dx, dy));
+
+                        if (center < 0.01 && dispMag < 0.005) {
+                            gl_FragColor = vec4(0.0);
+                            return;
+                        }
+
+                        vec3 colorA = vec3(0.20, 0.55, 0.95);
+                        vec3 colorB = vec3(0.45, 0.70, 1.00);
+                        vec3 colorC = vec3(0.10, 0.30, 0.60);
+
+                        float t = clamp(dx * 2.5 + 0.5, 0.0, 1.0);
+                        vec3 refractColor = mix(colorC, colorA, t);
+                        refractColor = mix(refractColor, colorB, clamp(center * 1.8, 0.0, 1.0));
+
+                        vec3 highlight = vec3(0.75, 0.88, 1.00);
+                        refractColor = mix(refractColor, highlight, pow(center, 2.5));
+
+                        float shift = dispMag * u_rgbShift * 6.0;
+                        float rShift = texture2D(u_disp, uv + vec2( shift,  shift * 0.5)).r;
+                        float bShift = texture2D(u_disp, uv + vec2(-shift, -shift * 0.5)).r;
+                        refractColor.r = mix(refractColor.r, 1.0, rShift * 0.4);
+                        refractColor.b = mix(refractColor.b, 0.6, bShift * 0.3);
+
+                        float alpha = clamp(center * 2.8, 0.0, 0.92);
+                        alpha = max(alpha, clamp(dispMag * u_strength * 80.0, 0.0, 0.5));
+
+                        gl_FragColor = vec4(refractColor * (0.7 + center * 0.5), alpha);
+                    }
+                `
+            });
+
+            const geometry = new THREE.PlaneGeometry(2, 2);
+            const mesh = new THREE.Mesh(geometry, material);
+            scene.add(mesh);
+
+            window.addEventListener('resize', onWindowResize);
+            window.addEventListener('mousemove', onPointerMove);
+            window.addEventListener('touchmove', onPointerMove, { passive: false });
+
+            animate(0);
+        }
+
+        function setupDisplacementCanvas(dpr) {
+            if (!dispCanvas) {
+                dispCanvas = document.createElement('canvas');
+                dispCtx = dispCanvas.getContext('2d');
+            }
+            dispCanvas.width = window.innerWidth * dpr;
+            dispCanvas.height = window.innerHeight * dpr;
+        }
+
+        function initTrail() {
+            trail = new Array(params.pointsNumber);
+            for (let i = 0; i < params.pointsNumber; i++) {
+                trail[i] = { x: pointer.x, y: pointer.y, dx: 0, dy: 0 };
+            }
+        }
+
+        function onPointerMove(e) {
+            mouseMoved = true;
+            if (e.touches) {
+                pointer.x = e.touches[0].clientX;
+                pointer.y = e.touches[0].clientY;
+            } else {
+                pointer.x = e.clientX;
+                pointer.y = e.clientY;
+            }
+        }
+
+        function onWindowResize() {
+            const w = window.innerWidth;
+            const h = window.innerHeight;
+            const dpr = Math.min(window.devicePixelRatio, 2);
+            renderer.setSize(w, h);
+            material.uniforms.u_resolution.value.set(w * dpr, h * dpr);
+            setupDisplacementCanvas(dpr);
+        }
+
+        function animate(t) {
+            requestAnimationFrame(animate);
+            if (!material) return;
+
+            const dpr = Math.min(window.devicePixelRatio, 2);
+
+            if (!mouseMoved) {
+                pointer.x = (0.5 + 0.3 * Math.cos(0.002 * t) * Math.sin(0.005 * t)) * window.innerWidth;
+                pointer.y = (0.5 + 0.2 * Math.cos(0.005 * t) + 0.1 * Math.cos(0.01 * t)) * window.innerHeight;
+            }
+
+            trail.forEach((p, pIdx) => {
+                const prev = pIdx === 0 ? pointer : trail[pIdx - 1];
+                const s = pIdx === 0 ? 0.4 * params.spring : params.spring;
+                p.dx += (prev.x - p.x) * s;
+                p.dy += (prev.y - p.y) * s;
+                p.dx *= params.friction;
+                p.dy *= params.friction;
+                p.x += p.dx;
+                p.y += p.dy;
+            });
+
+            dispCtx.fillStyle = 'black';
+            dispCtx.fillRect(0, 0, dispCanvas.width, dispCanvas.height);
+
+            dispCtx.lineCap = 'round';
+            dispCtx.lineJoin = 'round';
+            dispCtx.shadowBlur = params.thickness * 0.2 * dpr;
+            dispCtx.shadowColor = 'white';
+            dispCtx.strokeStyle = 'white';
+
+            dispCtx.beginPath();
+            dispCtx.moveTo(trail[0].x * dpr, trail[0].y * dpr);
+
+            for (let i = 1; i < trail.length - 1; i++) {
+                const xc = 0.5 * (trail[i].x + trail[i + 1].x);
+                const yc = 0.5 * (trail[i].y + trail[i + 1].y);
+                dispCtx.quadraticCurveTo(trail[i].x * dpr, trail[i].y * dpr, xc * dpr, yc * dpr);
+                dispCtx.lineWidth = Math.max(1, params.thickness * dpr * ((trail.length - i) / trail.length));
+                dispCtx.stroke();
+            }
+            dispCtx.lineTo(trail[trail.length - 1].x * dpr, trail[trail.length - 1].y * dpr);
+            dispCtx.stroke();
+
+            dispTexture.needsUpdate = true;
+            renderer.render(scene, camera);
+        }
+    </script>
+
+    <!-- ============================================================
+         实时时钟
+         ============================================================ -->
+    <script>
+        (function () {
+            function updateClock() {
+                const now = new Date();
+                const h = String(now.getHours()).padStart(2, '0');
+                const m = String(now.getMinutes()).padStart(2, '0');
+                const s = String(now.getSeconds()).padStart(2, '0');
+                const el = document.getElementById('titlebar-clock');
+                if (el) el.textContent = `${h}:${m}:${s}`;
+            }
+            updateClock();
+            setInterval(updateClock, 1000);
+        })();
+    </script>
+
+    <!-- ============================================================
+         噪波马赛克效果（参考原版，亮色调）
+         ============================================================ -->
+    <script>
+        (function () {
+            const canvas = document.getElementById('noise-canvas');
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+
+            function resize() {
+                const parent = canvas.parentElement;
+                if (!parent) return;
+                const rect = parent.getBoundingClientRect();
+                const w = rect.width;
+                const h = rect.height;
+                if (w <= 0 || h <= 0) return;
+                canvas.width  = w;
+                canvas.height = h;
+                drawNoise();
+            }
+
+            function drawNoise() {
+                const w = canvas.width;
+                const h = canvas.height;
+                if (w <= 0 || h <= 0) return;
+                const imageData = ctx.createImageData(w, h);
+                const data = imageData.data;
+                const base = 192;
+
+                for (let i = 0; i < data.length; i += 4) {
+                    const n = (Math.random() - 0.5) * 24;
+                    const val = Math.max(0, Math.min(255, Math.round(base + n)));
+                    data[i]     = val;
+                    data[i + 1] = val;
+                    data[i + 2] = val;
+                    data[i + 3] = 255;
+                }
+                ctx.putImageData(imageData, 0, 0);
+            }
+
+            window.addEventListener('load', () => { resize(); });
+            window.addEventListener('resize', () => { resize(); });
+
+            const observer = new MutationObserver(() => { resize(); });
+            const desktopRoot = document.getElementById('desktop-root');
+            if (desktopRoot) {
+                observer.observe(desktopRoot, { attributes: true, attributeFilter: ['style'] });
+            }
+        })();
+    </script>
+
+    <!-- ============================================================
+         页面切换 & 交互逻辑
+         ============================================================ -->
+    <script>
+        (function () {
+            const landingRoot = document.getElementById('landing-root');
+            const desktopRoot = document.getElementById('desktop-root');
+            const overlay = document.getElementById('transition-overlay');
+            const loginBtn = document.getElementById('login-btn');
+            const welcomeOverlay = document.getElementById('welcome-overlay');
+            const welcomeCard = document.getElementById('welcome-card');
+            const body = document.body;
+
+            function showDesktop(skipTransition) {
+                sessionStorage.setItem('desktop_logged_in', '1');
+                
+                if (skipTransition) {
+                    landingRoot.style.display = 'none';
+                    desktopRoot.style.display = '';
+                    body.classList.remove('landing-page');
+                    body.classList.add('desktop-page');
+                    return;
+                }
+                
+                overlay.style.display = 'block';
+                overlay.style.transition = 'none';
+                overlay.style.opacity = '1';
+
+                requestAnimationFrame(() => {
+                    requestAnimationFrame(() => {
+                        landingRoot.style.display = 'none';
+                        desktopRoot.style.display = '';
+                        body.classList.remove('landing-page');
+                        body.classList.add('desktop-page');
+
+                        overlay.style.transition = 'opacity 0.5s ease';
+                        overlay.style.opacity = '0';
+                        setTimeout(() => {
+                            overlay.style.display = 'none';
+                        }, 600);
+                    });
+                });
+            }
+
+            function handleLogin() {
+                welcomeOverlay.classList.add('active');
+                setTimeout(() => {
+                    welcomeCard.style.animation = 'welcomeOut 0.4s cubic-bezier(0.22,1,0.36,1) forwards';
+                    setTimeout(() => {
+                        welcomeOverlay.classList.remove('active');
+                        welcomeCard.style.animation = '';
+                        showDesktop();
+                    }, 450);
+                }, 1800);
+            }
+
+            function showLanding() {
+                sessionStorage.removeItem('desktop_logged_in');
+                closeDetail();
+                body.classList.remove('desktop-page');
+                body.classList.add('landing-page');
+                desktopRoot.style.display = 'none';
+                landingRoot.style.display = '';
+            }
+
+            if (loginBtn) loginBtn.addEventListener('click', handleLogin);
+
+            if (sessionStorage.getItem('desktop_logged_in') === '1') {
+                showDesktop(true);
+            }
+            const sleepBtn = document.getElementById('sleep-btn');
+            if (sleepBtn) sleepBtn.addEventListener('click', showLanding);
+            document.getElementById('nav-logo-home').addEventListener('click', (e) => {
+                e.preventDefault();
+                showLanding();
+            });
+
+            // ============================================================
+            // 菜单 - Refresh
+            // ============================================================
+            document.getElementById('menu-refresh').addEventListener('click', () => {
+                document.querySelectorAll('.icon-item').forEach(el => el.classList.remove('selected'));
+                closeDetail();
+            });
+
+            // ============================================================
+            // 作品数据
+            // ============================================================
+            const WORKS = {
+                'contact': {
+                    title: '联系我',
+                    subtitle: 'Hmiao',
+                    body: '一起 vibecoding，或者聊聊你的想法。',
+                    desc: '',
+                    tags: [],
+                    isContact: true,
+                    wechat: '18006172919',
+                    phone: '18006172919',
+                    email: ''
+                },
+                'imagegen': {
+                    title: 'image2生图',
+                    subtitle: 'AI 绘图 · 文本生成图片',
+                    body: '基于 OpenAI API 的文本生成图片工具。支持用户注册、积分系统、站内充值、生图历史记录，管理员确认充值等功能。Next.js 14 全栈应用。',
+                    desc: 'Vibecoding 项目 · Next.js + OpenAI API',
+                    tags: ['AI绘图', '全栈', 'Next.js']
+                },
+                'feedback': {
+                    title: '用户反馈',
+                    subtitle: '你的想法很重要',
+                    body: '遇到问题？有新的想法？告诉我们，一起让产品变得更好。',
+                    desc: '',
+                    tags: [],
+                    isFeedback: true
+                },
+                'portfolio': {
+                    title: '个人主页',
+                    subtitle: '黄淼 · 个人作品集',
+                    body: 'AE动画 · 视频剪辑 · 视觉特效 · AIGC生图。湖南农业大学教育技术学在读，院学生会视频部干事，抖音392W+播放自媒体创作者，承接商业视频制作。',
+                    desc: '作品集 · 简历 · 合作联系',
+                    tags: ['AE', '剪辑', 'PS', 'AIGC', '运营']
+                }
+            };
+
+            // ============================================================
+            // 元素引用
+            // ============================================================
+            const desktopTitlebar = document.getElementById('desktop-titlebar');
+            const detailTitlebar  = document.getElementById('detail-titlebar');
+            const detailTitleName = document.getElementById('detail-title-name');
+            const iconGrid       = document.getElementById('icon-grid');
+            const detailView     = document.getElementById('detail-view');
+            const detailContent  = document.getElementById('detail-content');
+            const closeBtn       = document.getElementById('detail-close-btn');
+
+            function openDetail(id) {
+                const work = WORKS[id];
+                if (!work) return;
+
+                detailTitleName.textContent = work.title;
+
+                let html = '';
+
+                if (work.isContact) {
+                    html = renderContactCard(work);
+                } else if (work.isFeedback) {
+                    html = renderFeedbackForm(work);
+                } else {
+                    html += `<h1 class="d-title">${work.title}</h1>`;
+                    html += `<p class="d-subtitle">${work.subtitle}</p>`;
+                    html += `<div class="d-placeholder">${work.title.slice(0, 2)}</div>`;
+                    html += `<p class="d-body">${work.body}</p>`;
+                    html += `<p class="d-desc">${work.desc}</p>`;
+                    html += '<div>';
+                    work.tags.forEach(tag => {
+                        html += `<span class="d-tag">${tag}</span>`;
+                    });
+                    html += '</div>';
+                }
+                detailContent.innerHTML = html;
+
+                if (work.isContact) {
+                    bindContactEvents();
+                }
+                if (work.isFeedback) {
+                    bindFeedbackEvents();
+                }
+
+                desktopTitlebar.classList.add('hidden');
+                detailTitlebar.classList.remove('hidden');
+                iconGrid.style.display = 'none';
+                detailView.classList.add('active');
+                detailContent.scrollTop = 0;
+            }
+
+            function renderContactCard(work) {
+                return `
+                <div class="contact-card-wrap">
+                    <div class="contact-card">
+                        <div class="cc-avatar">
+                            <div class="cc-avatar-inner">HM</div>
+                        </div>
+                        <h2 class="cc-name">Hmiao</h2>
+                        <p class="cc-bio">一起 vibecoding，或者聊聊你的想法。</p>
+                        <div class="cc-divider"></div>
+                        <div class="cc-lines">
+                            <div class="cc-line">
+                                <div class="cc-line-icon">
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M8 10.9c3.3 0 6 2.2 6 4.9s-2.7 4.9-6 4.9c-.8 0-1.5-.1-2.2-.3l-1.8.7.5-1.7C3.5 18.5 3 17.2 3 15.8c0-2.4 2.3-4.4 5-4.9z"/><path d="M14.5 8.5C18 8.5 21 10.5 21 13c0 1-.4 2-1 2.8l.5 1.5-1.6-.6c-.6.2-1.3.3-1.9.3-1.6 0-3-.6-4-1.5"/></svg>
+                                </div>
+                                <div class="cc-line-body">
+                                    <div class="cc-line-label">微信</div>
+                                    <div class="cc-line-value">18006172919</div>
+                                </div>
+                                <button class="cc-copy-btn" data-value="18006172919">
+                                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+                                </button>
+                            </div>
+                            <div class="cc-line">
+                                <div class="cc-line-icon">
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z"/></svg>
+                                </div>
+                                <div class="cc-line-body">
+                                    <div class="cc-line-label">电话</div>
+                                    <div class="cc-line-value">18006172919</div>
+                                </div>
+                                <button class="cc-copy-btn" data-value="18006172919">
+                                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <p class="cc-footer">期待与你的连接</p>
+                </div>`;
+            }
+
+            function bindContactEvents() {
+                document.querySelectorAll('.cc-copy-btn').forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        const val = btn.dataset.value;
+                        navigator.clipboard.writeText(val).then(() => {
+                            btn.classList.add('cc-copied');
+                            btn.querySelector('svg').outerHTML = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>';
+                            setTimeout(() => {
+                                btn.classList.remove('cc-copied');
+                                btn.querySelector('svg').outerHTML = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>';
+                            }, 1800);
+                        });
+                    });
+                });
+            }
+
+            function renderFeedbackForm(work) {
+                return `
+                <div class="fb-wrap">
+                    <div class="fb-card">
+                        <div class="fb-icon">💬</div>
+                        <h2 class="fb-title">${work.title}</h2>
+                        <p class="fb-sub">${work.body}</p>
+                        <div class="fb-divider"></div>
+                        <div id="fb-form">
+                            <div class="fb-types">
+                                <button type="button" class="fb-type-btn active" data-value="feature">✨ 功能建议</button>
+                                <button type="button" class="fb-type-btn" data-value="bug">🔧 问题反馈</button>
+                                <button type="button" class="fb-type-btn" data-value="improvement">🚀 优化建议</button>
+                                <button type="button" class="fb-type-btn" data-value="other">💡 其他</button>
+                            </div>
+                            <div class="fb-field">
+                                <input id="fb-title-input" type="text" placeholder="反馈标题（例如：希望能增加批量操作功能）" maxlength="100" />
+                            </div>
+                            <div class="fb-field">
+                                <textarea id="fb-content-input" placeholder="详细描述你的想法或遇到的问题……" maxlength="2000" rows="4"></textarea>
+                                <div class="fb-counter"><span id="fb-char-count">0</span>/2000</div>
+                            </div>
+                            <div id="fb-error" class="fb-error" style="display:none;"></div>
+                            <button id="fb-submit-btn" class="fb-submit">提交反馈</button>
+                        </div>
+                        <div id="fb-success" class="fb-success" style="display:none;">
+                            <div class="fb-success-icon">🙏</div>
+                            <div class="fb-success-title">感谢你的反馈！</div>
+                            <div class="fb-success-text">我们会认真对待每一条反馈，持续改进产品体验</div>
+                            <button id="fb-reset-btn" class="fb-submit" style="margin-top:24px;">再写一条</button>
+                        </div>
+                    </div>
+                </div>`;
+            }
+
+            function bindFeedbackEvents() {
+                const form = document.getElementById('fb-form');
+                const success = document.getElementById('fb-success');
+                const titleInput = document.getElementById('fb-title-input');
+                const contentInput = document.getElementById('fb-content-input');
+                const charCount = document.getElementById('fb-char-count');
+                const errorDiv = document.getElementById('fb-error');
+                const submitBtn = document.getElementById('fb-submit-btn');
+                const resetBtn = document.getElementById('fb-reset-btn');
+                const typeBtns = document.querySelectorAll('.fb-type-btn');
+
+                if (!titleInput) return;
+
+                let selectedType = 'feature';
+
+                typeBtns.forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        typeBtns.forEach(b => b.classList.remove('active'));
+                        btn.classList.add('active');
+                        selectedType = btn.dataset.value;
+                    });
+                });
+
+                contentInput.addEventListener('input', () => {
+                    charCount.textContent = contentInput.value.length;
+                });
+
+                submitBtn.addEventListener('click', async () => {
+                    const title = titleInput.value.trim();
+                    const content = contentInput.value.trim();
+
+                    if (!title) { showError('请输入反馈标题'); return; }
+                    if (!content) { showError('请输入反馈内容'); return; }
+                    if (title.length > 100) { showError('标题不能超过100个字符'); return; }
+                    if (content.length > 2000) { showError('内容不能超过2000个字符'); return; }
+
+                    submitBtn.disabled = true;
+                    submitBtn.textContent = '提交中…';
+                    hideError();
+
+                    try {
+                        const token = localStorage.getItem('token');
+                        const res = await fetch('/imagegen/api/feedback', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                ...(token ? { 'X-Auth-Token': token } : {})
+                            },
+                            body: JSON.stringify({ type: selectedType, title, content })
+                        });
+                        if (!res.ok) {
+                            const d = await res.json();
+                            throw new Error(d.error || '提交失败');
+                        }
+                        form.style.display = 'none';
+                        success.style.display = 'block';
+                    } catch (err) {
+                        showError(err.message);
+                        submitBtn.disabled = false;
+                        submitBtn.textContent = '提交反馈';
+                    }
+                });
+
+                resetBtn.addEventListener('click', () => {
+                    form.style.display = '';
+                    success.style.display = 'none';
+                    titleInput.value = '';
+                    contentInput.value = '';
+                    charCount.textContent = '0';
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = '提交反馈';
+                });
+
+                function showError(msg) {
+                    errorDiv.textContent = msg;
+                    errorDiv.style.display = '';
+                }
+                function hideError() {
+                    errorDiv.style.display = 'none';
+                }
+            }
+
+            function closeDetail() {
+                detailView.classList.remove('active');
+                detailTitlebar.classList.add('hidden');
+                iconGrid.style.display = '';
+                desktopTitlebar.classList.remove('hidden');
+            }
+
+            closeBtn.addEventListener('click', closeDetail);
+
+            // ============================================================
+            // Info 弹窗
+            // ============================================================
+            const infoLogoBtn = document.getElementById('info-logo-btn');
+            const infoPopup   = document.getElementById('info-popup');
+            const infoCloseBtn = document.getElementById('info-close-btn');
+
+            function openInfoPopup() { infoPopup.classList.add('active'); }
+            function closeInfoPopup() { infoPopup.classList.remove('active'); }
+
+            if (infoLogoBtn) infoLogoBtn.addEventListener('click', openInfoPopup);
+            if (infoCloseBtn) infoCloseBtn.addEventListener('click', closeInfoPopup);
+            if (infoPopup) {
+                infoPopup.addEventListener('click', (e) => {
+                    if (e.target === infoPopup) closeInfoPopup();
+                });
+            }
+
+            // ============================================================
+            // 图标点击（单击打开，双击以防误触也保留）
+            // ============================================================
+            iconGrid.addEventListener('click', (e) => {
+                const item = e.target.closest('.icon-item');
+                if (!item) {
+                    iconGrid.querySelectorAll('.icon-item').forEach(el => el.classList.remove('selected'));
+                    return;
+                }
+                iconGrid.querySelectorAll('.icon-item').forEach(el => el.classList.remove('selected'));
+                item.classList.add('selected');
+                const url = item.dataset.url;
+                if (url) {
+                    window.open(url, '_blank');
+                    return;
+                }
+                const id = item.dataset.work;
+                if (id) openDetail(id);
+            });
+
+            // ============================================================
+            // 键盘
+            // ============================================================
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape') {
+                    if (infoPopup && infoPopup.classList.contains('active')) {
+                        closeInfoPopup();
+                    } else if (detailView && detailView.classList.contains('active')) {
+                        closeDetail();
+                    }
+                }
+            });
+        })();
+    </script>
+
+<script src="stats/track.js"></script>
+</body>
+</html>
