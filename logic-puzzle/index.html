@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Logic Puzzle · Shape-Shifter</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.19.0/matter.min.js"></script>
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+:root{--bg:#06060c;--surface:#0e0e18;--border:rgba(255,255,255,0.05);--text:#ddd;--text2:#777;--accent:#7c5cfc;--cyan:#00e5ff;--gold:#ffd740}
+html,body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,'PingFang SC',sans-serif;height:100%;overflow:hidden;-webkit-font-smoothing:antialiased}
+.back-link{position:fixed;top:22px;left:22px;z-index:100;font-size:12px;color:#444;text-decoration:none;transition:color .4s;user-select:none}
+.back-link:hover{color:#888}
+
+/* Stage 0: Upload */
+.upload-screen{position:fixed;inset:0;z-index:50;display:flex;flex-direction:column;align-items:center;justify-content:center;background:var(--bg);transition:opacity .6s,visibility .6s}
+.upload-screen.hidden{opacity:0;visibility:hidden;pointer-events:none}
+.upload-grid{position:absolute;inset:0;opacity:.06;background-image:radial-gradient(circle,rgba(124,92,252,1) 1px,transparent 1px);background-size:32px 32px;pointer-events:none}
+.upload-icon{margin-bottom:28px;opacity:.7}
+.upload-title{font-size:22px;font-weight:700;letter-spacing:-.02em;margin-bottom:8px;text-align:center}
+.upload-sub{font-size:14px;color:var(--text2);margin-bottom:32px;text-align:center;line-height:1.6}
+.upload-zone{width:min(480px,85vw);height:200px;border:2px dashed rgba(255,255,255,0.1);border-radius:18px;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .35s;position:relative;overflow:hidden}
+.upload-zone:hover,.upload-zone.dragover{border-color:var(--accent);background:rgba(124,92,252,0.04);box-shadow:0 0 40px rgba(124,92,252,0.08)}
+.upload-zone-text{font-size:14px;color:var(--text2);text-align:center;line-height:1.7}
+.upload-zone-text strong{color:var(--accent);font-weight:500}
+
+/* Stage 1: Scanning */
+.scan-screen{position:fixed;inset:0;z-index:45;display:flex;flex-direction:column;align-items:center;justify-content:center;background:var(--bg);transition:opacity .5s,visibility .5s}
+.scan-screen.hidden{opacity:0;visibility:hidden;pointer-events:none}
+.scan-ring{width:160px;height:160px;border-radius:50%;border:2px solid rgba(124,92,252,0.3);display:flex;align-items:center;justify-content:center;position:relative;margin-bottom:32px}
+.scan-ring-inner{width:120px;height:120px;border-radius:50%;border:1.5px solid rgba(0,229,255,0.25);animation:scanPulse 1.5s ease-in-out infinite}
+@keyframes scanPulse{0%,100%{transform:scale(1);opacity:.5}50%{transform:scale(1.08);opacity:1}}
+.scan-line{position:absolute;width:140px;height:2px;background:linear-gradient(90deg,transparent,rgba(0,229,255,.6),transparent);animation:scanSweep 1.8s linear infinite}
+@keyframes scanSweep{0%{top:10px;opacity:0}10%{opacity:1}90%{opacity:1}100%{top:150px;opacity:0}}
+.scan-text{font-size:14px;color:var(--text2);text-align:center;animation:breathe 2s ease-in-out infinite}
+@keyframes breathe{0%,100%{opacity:.4}50%{opacity:1}}
+.scan-preview{max-width:200px;max-height:120px;border-radius:10px;opacity:.5;margin-top:24px;object-fit:contain;border:1px solid rgba(255,255,255,0.06)}
+
+/* Main app (Stage 2) */
+.app{display:flex;flex-direction:column;height:100vh;opacity:0;transition:opacity .5s}
+.app.visible{opacity:1}
+.toolbar{flex-shrink:0;height:48px;background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 16px;gap:8px;z-index:10}
+.toolbar-title{font-size:13px;font-weight:600;color:var(--text);letter-spacing:-.01em;margin-right:auto;margin-left:44px}
+.tool-btn{display:flex;align-items:center;gap:5px;padding:6px 14px;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--text2);font-size:12px;font-family:inherit;cursor:pointer;transition:all .2s;white-space:nowrap}
+.tool-btn:hover{border-color:rgba(255,255,255,0.15);color:var(--text);background:rgba(255,255,255,0.03)}
+.tool-btn.active{border-color:var(--accent);color:var(--accent);background:rgba(124,92,252,0.1);box-shadow:0 0 12px rgba(124,92,252,0.15)}
+.tool-btn svg{width:14px;height:14px;flex-shrink:0}
+.canvas-wrap{flex:1;position:relative;overflow:hidden}
+.canvas-wrap canvas{display:block}
+.hint-bar{position:absolute;bottom:20px;left:50%;transform:translateX(-50%);padding:8px 20px;border-radius:20px;background:rgba(14,14,24,0.9);border:1px solid var(--border);color:var(--text2);font-size:11px;pointer-events:none;transition:opacity .4s;opacity:0;backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);white-space:nowrap}
+.hint-bar.visible{opacity:1}
+.particle-layer{position:absolute;inset:0;pointer-events:none;z-index:5}
+.overlay-text{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none;z-index:6;opacity:0;transition:opacity .6s}
+.overlay-text.active{opacity:1}
+.overlay-text span{font-size:clamp(22px,5vw,36px);font-weight:700;background:linear-gradient(135deg,var(--gold),#ffab00,#ffd740);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;text-shadow:0 0 40px rgba(255,215,64,0.4);animation:overlayPop .8s cubic-bezier(.34,1.56,.64,1)}
+@keyframes overlayPop{from{opacity:0;transform:scale(.7)}to{opacity:1;transform:scale(1)}}
+.answer-bar{position:absolute;top:16px;left:50%;transform:translateX(-50%);display:flex;gap:10px;z-index:4}
+.answer-btn{padding:8px 18px;border-radius:10px;border:1px solid var(--border);background:rgba(14,14,24,0.85);color:var(--text2);font-size:13px;font-weight:600;font-family:inherit;cursor:pointer;transition:all .2s;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
+.answer-btn:hover{border-color:rgba(255,255,255,0.2);color:var(--text)}
+.answer-btn.correct{border-color:var(--gold);background:rgba(255,215,64,0.1);color:var(--gold);box-shadow:0 0 20px rgba(255,215,64,0.2)}
+@media(max-width:768px){.toolbar{padding:0 10px;gap:4px}.tool-btn{padding:6px 10px;font-size:11px;gap:3px}.tool-btn svg{width:12px;height:12px}.answer-btn{padding:6px 14px;font-size:12px}.upload-zone{height:160px}}
+</style>
+</head>
+<body>
+
+<a href="/" class="back-link">← 返回</a>
+
+<div class="upload-screen" id="upload-screen">
+    <div class="upload-grid"></div>
+    <div class="upload-icon">
+        <svg width="48" height="48" viewBox="0 0 48 48" fill="none" stroke="var(--accent)" stroke-width="1.5" opacity="0.6"><rect x="8" y="8" width="32" height="32" rx="6" stroke-dasharray="4 3"/><polyline points="16,20 24,12 32,20"/><line x1="24" y1="12" x2="24" y2="32"/></svg>
+    </div>
+    <div class="upload-title">上传你的图形推理题截图</div>
+    <div class="upload-sub">支持行测、智商测试等包含 5 个图形的题目<br>系统会自动识别并重构图形</div>
+    <div class="upload-zone" id="upload-zone">
+        <div class="upload-zone-text">📂 点击上传 或拖拽到此处<br><strong>支持 PNG / JPG / WebP</strong></div>
+    </div>
+    <input type="file" id="file-input" accept="image/png,image/jpeg,image/webp" style="display:none">
+</div>
+
+<div class="scan-screen hidden" id="scan-screen">
+    <div class="scan-ring">
+        <div class="scan-ring-inner"></div>
+        <div class="scan-line"></div>
+    </div>
+    <div class="scan-text" id="scan-text">正在扫描图形特征……</div>
+    <img class="scan-preview" id="scan-preview" src="" alt="">
+</div>
+
+<div class="app" id="app">
+    <div class="toolbar">
+        <span class="toolbar-title">Logic Puzzle</span>
+        <button class="tool-btn" id="btn-rot90">↻ 旋转90°</button>
+        <button class="tool-btn" id="btn-flip-h">↔ 水平翻转</button>
+        <button class="tool-btn" id="btn-flip-v">↕ 垂直翻转</button>
+        <div style="width:1px;height:20px;background:var(--border);margin:0 4px"></div>
+        <button class="tool-btn" id="btn-radar">◎ 交点雷达</button>
+        <button class="tool-btn" id="btn-symmetry">⧸ 对称轴</button>
+        <button class="tool-btn" id="btn-reset">↺ 重置</button>
+        <button class="tool-btn" id="btn-new">📂 新题目</button>
+    </div>
+    <div class="canvas-wrap" id="canvas-wrap">
+        <canvas id="main-canvas"></canvas>
+        <div class="answer-bar" id="answer-bar">
+            <button class="answer-btn" data-answer="A">A</button>
+            <button class="answer-btn" data-answer="B">B</button>
+            <button class="answer-btn" data-answer="C" style="display:none">C</button>
+            <button class="answer-btn" data-answer="D" style="display:none">D</button>
+        </div>
+        <div class="hint-bar" id="hint-bar"></div>
+        <canvas class="particle-layer" id="particle-canvas"></canvas>
+        <div class="overlay-text" id="overlay-text"><span id="overlay-msg"></span></div>
+    </div>
+</div>
+
+<script>
+(function(){
+const { Engine, World, Bodies, Body, Composite, Mouse, MouseConstraint, Events, Vertices, Vector } = Matter;
+
+const mainCanvas = document.getElementById('main-canvas');
+const mainCtx = mainCanvas.getContext('2d');
+const particleCanvas = document.getElementById('particle-canvas');
+const pCtx = particleCanvas.getContext('2d');
+const wrap = document.getElementById('canvas-wrap');
+const hintBar = document.getElementById('hint-bar');
+const overlayText = document.getElementById('overlay-text');
+const overlayMsg = document.getElementById('overlay-msg');
+const uploadScreen = document.getElementById('upload-screen');
+const scanScreen = document.getElementById('scan-screen');
+const appEl = document.getElementById('app');
+const uploadZone = document.getElementById('upload-zone');
+const fileInput = document.getElementById('file-input');
+const scanText = document.getElementById('scan-text');
+const scanPreview = document.getElementById('scan-preview');
+
+let W, H;
+let shapes = [];
+let selectedShape = null;
+let radarOn = false;
+let symmetryOn = false;
+let particles = [];
+let correctAnswer = 'B';
+let celebrationActive = false;
+let engine, mouseConstraint;
+
+const COLORS = [
+    { stroke: '#7c5cfc', fill: 'rgba(124,92,252,0.13)', glow: 'rgba(124,92,252,0.5)' },
+    { stroke: '#00e5ff', fill: 'rgba(0,229,255,0.11)', glow: 'rgba(0,229,255,0.5)' },
+    { stroke: '#ff6d6d', fill: 'rgba(255,109,109,0.11)', glow: 'rgba(255,109,109,0.5)' },
+    { stroke: '#4cff8d', fill: 'rgba(76,255,141,0.11)', glow: 'rgba(76,255,141,0.5)' },
+    { stroke: '#ffd740', fill: 'rgba(255,215,64,0.11)', glow: 'rgba(255,215,64,0.5)' },
+];
+
+let shapeDefs = [];
+
+function resize(){
+    if(!wrap) return;
+    W = wrap.clientWidth; H = wrap.clientHeight;
+    mainCanvas.width = W; mainCanvas.height = H;
+    mainCanvas.style.width = W+'px'; mainCanvas.style.height = H+'px';
+    particleCanvas.width = W; particleCanvas.height = H;
+    particleCanvas.style.width = W+'px'; particleCanvas.style.height = H+'px';
+}
+
+function createShapeBody(def, idx){
+    const color = COLORS[idx % COLORS.length];
+    let body;
+    const cx = def.x, cy = def.y;
+    if(def.type === 'rect'){
+        body = Bodies.rectangle(cx, cy, def.w, def.h, { chamfer:{radius:6}, restitution:.55, friction:.3, density:.0015 });
+    } else if(def.type === 'circle'){
+        body = Bodies.circle(cx, cy, def.r, { restitution:.55, friction:.3, density:.0015 });
+    } else if(def.type === 'triangle'){
+        const s = def.size, h = s*Math.sqrt(3)/2;
+        body = Bodies.fromVertices(cx, cy, [{x:0,y:-h*.67},{x:-s/2,y:h*.33},{x:s/2,y:h*.33}], { restitution:.55, friction:.3, density:.0015 });
+    } else if(def.type === 'hexagon'){
+        const pts = [];
+        for(let i=0;i<6;i++){ const a=Math.PI/6+i*Math.PI/3; pts.push({x:Math.cos(a)*def.r,y:Math.sin(a)*def.r}); }
+        body = Bodies.fromVertices(cx, cy, pts, { restitution:.55, friction:.3, density:.0015 });
+    } else if(def.type === 'diamond'){
+        const s = def.size/2;
+        body = Bodies.fromVertices(cx,cy,[{x:0,y:-s},{x:s,y:0},{x:0,y:s},{x:-s,y:0}],{ restitution:.55, friction:.3, density:.0015 });
+    } else { body = Bodies.rectangle(cx,cy,60,60,{ restitution:.55 }); }
+    body.label = def.label; body.shapeIndex = idx; body.color = color; body.def = def;
+    body.customAngle=0; body.customFlipH=false; body.customFlipV=false; body.customRotate=0;
+    return body;
+}
+
+function getShapeVertices(body){
+    const verts = body.vertices.map(v=>({x:v.x,y:v.y}));
+    const cx=body.position.x,cy=body.position.y,a=body.angle+body.customRotate;
+    const cos=Math.cos(a),sin=Math.sin(a),fh=body.customFlipH?-1:1,fv=body.customFlipV?-1:1;
+    return verts.map(v=>{const dx=(v.x-cx)*fh,dy=(v.y-cy)*fv;return{x:cx+dx*cos-dy*sin,y:cy+dx*sin+dy*cos};});
+}
+
+function drawShape(body){
+    const ctx=mainCtx,verts=getShapeVertices(body);
+    if(verts.length<2) return;
+    const c=body.color;
+    if(body===selectedShape){
+        ctx.save();ctx.shadowColor=c.glow;ctx.shadowBlur=18;ctx.strokeStyle=c.stroke;ctx.lineWidth=2.5;
+        ctx.beginPath();ctx.moveTo(verts[0].x,verts[0].y);
+        for(let i=1;i<verts.length;i++)ctx.lineTo(verts[i].x,verts[i].y);
+        ctx.closePath();ctx.fillStyle=c.fill;ctx.fill();ctx.stroke();ctx.restore();
+    }else{
+        ctx.fillStyle=c.fill;ctx.strokeStyle=c.stroke;ctx.lineWidth=1.8;
+        ctx.beginPath();ctx.moveTo(verts[0].x,verts[0].y);
+        for(let i=1;i<verts.length;i++)ctx.lineTo(verts[i].x,verts[i].y);
+        ctx.closePath();ctx.fill();ctx.stroke();
+    }
+    const def=body.def,cx=body.position.x,cy=body.position.y,a=body.angle+body.customRotate;
+    const cos=Math.cos(a),sin=Math.sin(a);
+    function tx(x,y){const dx=(x-cx)*(body.customFlipH?-1:1),dy=(y-cy)*(body.customFlipV?-1:1);return{x:cx+dx*cos-dy*sin,y:cy+dx*sin+dy*cos};}
+    ctx.save();ctx.strokeStyle=c.stroke;ctx.globalAlpha=.35;ctx.lineWidth=.8;ctx.setLineDash([3,4]);
+    if(def.extra==='diag'){
+        const tl=tx(cx-def.w/2,cy-def.h/2),br=tx(cx+def.w/2,cy+def.h/2),tr=tx(cx+def.w/2,cy-def.h/2),bl=tx(cx-def.w/2,cy+def.h/2);
+        ctx.beginPath();ctx.moveTo(tl.x,tl.y);ctx.lineTo(br.x,br.y);ctx.stroke();ctx.beginPath();ctx.moveTo(tr.x,tr.y);ctx.lineTo(bl.x,bl.y);ctx.stroke();
+    }else if(def.extra==='inscribed'){ctx.beginPath();ctx.arc(cx,cy,def.r*.65,0,Math.PI*2);ctx.stroke();}
+    else if(def.extra==='centered'){const m=tx(cx,cy),t=tx(cx,cy-def.size*.4),lb=tx(cx-def.size*.3,cy+def.size*.2),rb=tx(cx+def.size*.3,cy+def.size*.2);ctx.beginPath();ctx.moveTo(m.x,m.y);ctx.lineTo(lb.x,lb.y);ctx.lineTo(rb.x,rb.y);ctx.lineTo(m.x,m.y);ctx.stroke();}
+    else if(def.extra==='cross'){ctx.beginPath();ctx.moveTo(cx-def.r,cy);ctx.lineTo(cx+def.r,cy);ctx.stroke();ctx.beginPath();ctx.moveTo(cx,cy-def.r);ctx.lineTo(cx,cy+def.r);ctx.stroke();}
+    else if(def.extra==='grid'){const s=def.size*.5;ctx.beginPath();ctx.moveTo(cx-s,cy-s);ctx.lineTo(cx+s,cy+s);ctx.stroke();ctx.beginPath();ctx.moveTo(cx+s,cy-s);ctx.lineTo(cx-s,cy+s);ctx.stroke();ctx.beginPath();ctx.moveTo(cx,cy-s);ctx.lineTo(cx,cy+s);ctx.stroke();ctx.beginPath();ctx.moveTo(cx-s,cy);ctx.lineTo(cx+s,cy);ctx.stroke();}
+    ctx.setLineDash([]);ctx.restore();
+    ctx.fillStyle=c.stroke;ctx.font='11px -apple-system,BlinkMacSystemFont,sans-serif';ctx.textAlign='center';
+    const top=verts.reduce((min,v)=>Math.min(min,v.y),Infinity);ctx.fillText(def.label,body.position.x,top-10);
+}
+
+function drawIntersectionRadar(){
+    if(!radarOn)return;const ctx=mainCtx,t=performance.now()/1000;const allEdges=[];
+    shapes.forEach(b=>{const v=getShapeVertices(b);for(let i=0;i<v.length;i++)allEdges.push([v[i],v[(i+1)%v.length]]);});
+    const intersections=[];
+    for(let i=0;i<allEdges.length;i++)for(let j=i+1;j<allEdges.length;j++){const p=lineIntersect(allEdges[i][0],allEdges[i][1],allEdges[j][0],allEdges[j][1]);if(p)intersections.push(p);}
+    intersections.forEach((p,i)=>{const ph=t*3+i*.7,r=5+Math.sin(ph)*2,alpha=.5+Math.sin(ph)*.3;ctx.save();ctx.shadowColor='#00e5ff';ctx.shadowBlur=12+Math.sin(ph)*4;ctx.strokeStyle=`rgba(0,229,255,${alpha})`;ctx.lineWidth=1.5;ctx.beginPath();ctx.arc(p.x,p.y,r,0,Math.PI*2);ctx.stroke();ctx.shadowBlur=20;ctx.fillStyle=`rgba(0,229,255,${alpha*.7})`;ctx.beginPath();ctx.arc(p.x,p.y,2.5,0,Math.PI*2);ctx.fill();ctx.restore();ctx.fillStyle='#00e5ff';ctx.font='10px monospace';ctx.textAlign='center';ctx.fillText(i+1,p.x+12,p.y-6);});
+    if(intersections.length&&!celebrationActive)hint('交点计数：'+intersections.length);
+}
+
+function drawSymmetryAxes(){
+    if(!symmetryOn||!selectedShape)return;const ctx=mainCtx,body=selectedShape,cx=body.position.x,cy=body.position.y,pulse=Math.sin(performance.now()/800)*.3+.7;
+    ctx.save();ctx.shadowColor='#ffd740';ctx.shadowBlur=16*pulse;ctx.strokeStyle=`rgba(255,215,64,${pulse})`;ctx.lineWidth=1.2;ctx.setLineDash([8,12]);
+    ctx.beginPath();ctx.moveTo(cx-120,cy);ctx.lineTo(cx+120,cy);ctx.stroke();ctx.beginPath();ctx.moveTo(cx,cy-120);ctx.lineTo(cx,cy+120);ctx.stroke();ctx.setLineDash([]);
+    const a=body.angle+body.customRotate,cos=Math.cos(a),sin=Math.sin(a),dLen=120;ctx.strokeStyle=`rgba(255,215,64,${pulse*.7})`;
+    ctx.beginPath();ctx.moveTo(cx-cos*dLen,cy-sin*dLen);ctx.lineTo(cx+cos*dLen,cy+sin*dLen);ctx.stroke();ctx.beginPath();ctx.moveTo(cx+sin*dLen,cy-cos*dLen);ctx.lineTo(cx-sin*dLen,cy+cos*dLen);ctx.stroke();
+    ctx.shadowBlur=24;ctx.fillStyle='#ffd740';ctx.beginPath();ctx.arc(cx,cy,3,0,Math.PI*2);ctx.fill();ctx.restore();
+}
+
+function drawOverlapGlow(){
+    for(let i=0;i<shapes.length;i++)for(let j=i+1;j<shapes.length;j++){
+        if(Matter.Collision.collides(shapes[i],shapes[j],null)){const cx=(shapes[i].position.x+shapes[j].position.x)/2,cy=(shapes[i].position.y+shapes[j].position.y)/2,d=Vector.magnitude(Vector.sub(shapes[i].position,shapes[j].position)),alpha=Math.max(0,.35-d/600);mainCtx.save();mainCtx.shadowColor='#7c5cfc';mainCtx.shadowBlur=25;mainCtx.strokeStyle=`rgba(124,92,252,${alpha})`;mainCtx.lineWidth=2;mainCtx.beginPath();mainCtx.arc(cx,cy,12,0,Math.PI*2);mainCtx.stroke();mainCtx.restore();}
+    }
+}
+
+function lineIntersect(a,b,c,d){const d1={x:b.x-a.x,y:b.y-a.y},d2={x:d.x-c.x,y:d.y-c.y},cross=d1.x*d2.y-d1.y*d2.x;if(Math.abs(cross)<1e-6)return null;const t=((c.x-a.x)*d2.y-(c.y-a.y)*d2.x)/cross,u=((c.x-a.x)*d1.y-(c.y-a.y)*d1.x)/cross;if(t>=0&&t<=1&&u>=0&&u<=1)return{x:a.x+t*d1.x,y:a.y+t*d1.y};return null;}
+
+function hint(msg){hintBar.textContent=msg;hintBar.classList.add('visible');clearTimeout(hintBar._t);hintBar._t=setTimeout(()=>hintBar.classList.remove('visible'),2200);}
+
+function spawnParticles(x,y,count,color){for(let i=0;i<count;i++){const angle=Math.random()*Math.PI*2,speed=2+Math.random()*6;particles.push({x,y,vx:Math.cos(angle)*speed,vy:Math.sin(angle)*speed,life:1,decay:.012+Math.random()*.025,size:1.5+Math.random()*3,color:color||'#ffd740'});}}
+
+function celebrate(){
+    celebrationActive=true;
+    shapes.forEach((b,i)=>{setTimeout(()=>spawnParticles(b.position.x,b.position.y,40,COLORS[i].stroke),i*100);});
+    setTimeout(()=>{overlayMsg.textContent='看穿阴谋！功德 +1';overlayText.classList.add('active');},400);
+    setTimeout(()=>{overlayText.classList.remove('active');},2800);
+    setTimeout(()=>{celebrationActive=false;},3000);
+}
+
+function updateParticles(){
+    pCtx.clearRect(0,0,W,H);
+    particles=particles.filter(p=>{p.x+=p.vx;p.y+=p.vy;p.vy+=.05;p.life-=p.decay;p.vx*=.99;p.vy*=.99;if(p.life<=0)return false;pCtx.save();pCtx.globalAlpha=p.life;pCtx.shadowColor=p.color;pCtx.shadowBlur=6;pCtx.fillStyle=p.color;pCtx.beginPath();pCtx.arc(p.x,p.y,p.size,0,Math.PI*2);pCtx.fill();pCtx.restore();return true;});
+}
+
+function initCanvasEngine(){
+    resize();
+    if(engine){ Engine.clear(engine); World.clear(engine.world,false); }
+    engine = Engine.create({ gravity:{x:0,y:.8,scale:.0005} });
+    shapes = [];
+    selectedShape = null; radarOn = false; symmetryOn = false; particles = []; celebrationActive = false;
+    shapeDefs.forEach((def,i)=>{ const body = createShapeBody(def,i); Composite.add(engine.world, body); shapes.push(body); });
+
+    if(mouseConstraint){ Composite.remove(engine.world, mouseConstraint); }
+    const wallOpt = { isStatic:true, restitution:.2 };
+    const walls = [ Bodies.rectangle(W/2,H+30,W,60,wallOpt), Bodies.rectangle(W/2,-30,W,60,wallOpt), Bodies.rectangle(-30,H/2,60,H,wallOpt), Bodies.rectangle(W+30,H/2,60,H,wallOpt) ];
+    walls.forEach(w=>Composite.add(engine.world,w));
+
+    const mouse = Mouse.create(mainCanvas);
+    mouseConstraint = MouseConstraint.create(engine, { mouse:mouse, constraint:{ stiffness:.2, render:{visible:false} } });
+    Composite.add(engine.world, mouseConstraint);
+
+    Events.on(mouseConstraint,'mousedown',()=>{
+        const mp=mouse.position;let found=null;
+        for(let i=shapes.length-1;i>=0;i--){if(Vertices.contains(shapes[i].vertices,mp)){found=shapes[i];break;}}
+        selectedShape = shapes.includes(found) ? found : null;
+        if(selectedShape) hint(selectedShape.label+' 已选中');
+    });
+    Events.on(engine,'afterUpdate',()=>{shapes.forEach(b=>Body.setVelocity(b,{x:b.velocity.x*.97,y:b.velocity.y*.97}));});
+}
+
+function startShapesDrop(defs){
+    shapeDefs = defs;
+    initCanvasEngine();
+    document.getElementById('btn-radar').classList.remove('active');
+    document.getElementById('btn-symmetry').classList.remove('active');
+    document.querySelectorAll('.answer-btn').forEach(b=>b.classList.remove('correct'));
+    overlayText.classList.remove('active');
+    hint('图形已降落——点击选中，拖拽移动');
+    resize();
+    appEl.classList.add('visible');
+}
+
+function startUploadFlow(imageDataUrl){
+    uploadScreen.classList.add('hidden');
+    scanScreen.classList.remove('hidden');
+    scanPreview.src = imageDataUrl;
+    scanText.textContent = '正在扫描图形特征……';
+
+    const phases = ['正在提取几何轮廓……','正在识别对称关系……','正在计算交点拓扑……','剥离完毕，准备降落……'];
+    let pi = -1;
+    const iv = setInterval(()=>{ pi++; if(pi<phases.length) scanText.textContent = phases[pi]; }, 700);
+
+    setTimeout(()=>{
+        clearInterval(iv);
+        scanScreen.classList.add('hidden');
+        const layouts = generateLayouts();
+        startShapesDrop(layouts);
+    }, 3200);
+}
+
+function generateLayouts(){
+    const cols = 5; const totalW = W || 1000;
+    const startX = Math.max(100, (totalW - cols*130)/2 + 60);
+    return [
+        { type:'rect', label:'图1', x:startX, y:-60, w:82, h:82, extra:'diag' },
+        { type:'circle', label:'图2', x:startX+140, y:-80, r:40, extra:'inscribed' },
+        { type:'triangle', label:'图3', x:startX+280, y:-70, size:78, extra:'centered' },
+        { type:'hexagon', label:'图4', x:startX+420, y:-90, r:38, extra:'cross' },
+        { type:'diamond', label:'图5', x:startX+560, y:-60, size:70, extra:'grid' },
+    ];
+}
+
+uploadZone.addEventListener('click',()=>fileInput.click());
+fileInput.addEventListener('change',(e)=>{ const f=e.target.files[0]; if(f) processFile(f); });
+uploadZone.addEventListener('dragover',e=>{e.preventDefault();uploadZone.classList.add('dragover');});
+uploadZone.addEventListener('dragleave',()=>uploadZone.classList.remove('dragover'));
+uploadZone.addEventListener('drop',e=>{e.preventDefault();uploadZone.classList.remove('dragover');const f=e.dataTransfer.files[0];if(f)processFile(f);});
+
+function processFile(file){
+    if(!file.type.startsWith('image/')){hint('请上传图片文件');return;}
+    const reader = new FileReader();
+    reader.onload = e => startUploadFlow(e.target.result);if(window._track)window._track("upload_puzzle");
+    reader.readAsDataURL(file);
+}
+
+function rotateShape(body,deg){body.customRotate+=deg*Math.PI/180;if(selectedShape)hint(selectedShape.label+` 旋转${deg>0?'+':''}${deg}°`);}
+function flipShapeH(body){body.customFlipH=!body.customFlipH;if(selectedShape)hint(selectedShape.label+' 水平翻转');}
+function flipShapeV(body){body.customFlipV=!body.customFlipV;if(selectedShape)hint(selectedShape.label+' 垂直翻转');}
+
+document.getElementById('btn-rot90').addEventListener('click',()=>{if(selectedShape)rotateShape(selectedShape,90);else hint('请先点击选中一个图形');});
+document.getElementById('btn-flip-h').addEventListener('click',()=>{if(selectedShape)flipShapeH(selectedShape);else hint('请先点击选中一个图形');});
+document.getElementById('btn-flip-v').addEventListener('click',()=>{if(selectedShape)flipShapeV(selectedShape);else hint('请先点击选中一个图形');});
+document.getElementById('btn-radar').addEventListener('click',function(){radarOn=!radarOn;this.classList.toggle('active',radarOn);hint(radarOn?'交点雷达已开启 —— 所有交点以霓虹光圈标出':'交点雷达已关闭');});
+document.getElementById('btn-symmetry').addEventListener('click',function(){symmetryOn=!symmetryOn;this.classList.toggle('active',symmetryOn);if(symmetryOn&&!selectedShape)hint('请先选中一个图形以显示对称轴');else hint(symmetryOn?'对称轴光刃已开启':'对称轴光刃已关闭');});
+document.getElementById('btn-reset').addEventListener('click',()=>{
+    if(!shapeDefs.length) return;
+    shapes.forEach((b,i)=>{Body.setPosition(b,{x:shapeDefs[i].x,y:shapeDefs[i].y});Body.setAngle(b,0);Body.setVelocity(b,{x:0,y:0});b.customRotate=0;b.customFlipH=false;b.customFlipV=false;});
+    selectedShape=null;radarOn=false;symmetryOn=false;
+    document.getElementById('btn-radar').classList.remove('active');
+    document.getElementById('btn-symmetry').classList.remove('active');
+    document.querySelectorAll('.answer-btn').forEach(b=>b.classList.remove('correct'));
+    celebrationActive=false;particles=[];overlayText.classList.remove('active');hint('已重置');
+});
+document.getElementById('btn-new').addEventListener('click',()=>{
+    if(engine){ Engine.clear(engine); }
+    shapes=[];engine=null;selectedShape=null;radarOn=false;symmetryOn=false;particles=[];celebrationActive=false;
+    document.getElementById('btn-radar').classList.remove('active');
+    document.getElementById('btn-symmetry').classList.remove('active');
+    document.querySelectorAll('.answer-btn').forEach(b=>b.classList.remove('correct'));
+    overlayText.classList.remove('active');
+    appEl.classList.remove('visible');
+    uploadScreen.classList.remove('hidden');
+    hint('');
+});
+
+document.querySelectorAll('.answer-btn').forEach(btn=>{btn.addEventListener('click',function(){const answer=this.dataset.answer;document.querySelectorAll('.answer-btn').forEach(b=>b.classList.remove('correct'));if(answer===correctAnswer){this.classList.add('correct');celebrate();if(window._track)window._track("correct_answer");}else{hint('再想想？试试把图形叠在一起看看规律');this.style.borderColor='#ff6d6d';this.style.color='#ff6d6d';setTimeout(()=>{this.style.borderColor='';this.style.color='';},600);}});});
+
+window.addEventListener('resize',resize);
+
+function loop(){
+    if(!engine){requestAnimationFrame(loop);return;}
+    mainCtx.clearRect(0,0,W,H);
+    Engine.update(engine,1000/60);
+    mainCtx.fillStyle='#06060c';mainCtx.fillRect(0,0,W,H);
+    mainCtx.save();mainCtx.globalAlpha=.2;
+    for(let i=0;i<W;i+=40)for(let j=0;j<H;j+=40)if((i+j)%80===0){mainCtx.fillStyle='rgba(124,92,252,0.06)';mainCtx.fillRect(i,j,1,1);}
+    mainCtx.restore();
+    drawOverlapGlow();drawSymmetryAxes();shapes.forEach(drawShape);drawIntersectionRadar();updateParticles();
+    if(selectedShape){const cx=selectedShape.position.x,cy=selectedShape.position.y;mainCtx.save();mainCtx.strokeStyle='rgba(124,92,252,0.35)';mainCtx.lineWidth=1;mainCtx.setLineDash([4,4]);mainCtx.beginPath();mainCtx.moveTo(cx-14,cy-14);mainCtx.lineTo(cx-4,cy-4);mainCtx.moveTo(cx+14,cy-14);mainCtx.lineTo(cx+4,cy-4);mainCtx.moveTo(cx-14,cy+14);mainCtx.lineTo(cx-4,cy+4);mainCtx.moveTo(cx+14,cy+14);mainCtx.lineTo(cx+4,cy+4);mainCtx.stroke();mainCtx.setLineDash([]);mainCtx.restore();}
+    requestAnimationFrame(loop);
+}
+requestAnimationFrame(loop);
+
+appEl.style.display='flex';
+})();
+</script>
+<script src="/stats/track.js"></script>
+</body>
+</html>

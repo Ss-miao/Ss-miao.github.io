@@ -1,0 +1,978 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>水水AI - 创作画布</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet">
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        .toast { animation: toastIn 0.3s ease, toastOut 0.3s ease 2.5s forwards; }
+        @keyframes toastIn { from { opacity:0; transform:translate(-50%,20px); } to { opacity:1; transform:translate(-50%,0); } }
+        @keyframes toastOut { from { opacity:1; } to { opacity:0; } }
+        .chat-msg-user { background: #1d1d1f; color: #fff; }
+        .chat-msg-ai { background: #f4f4f5; color: #1d1d1f; }
+        .model-badge { font-size: 9px; padding: 1px 6px; border-radius: 4px; font-weight: 600; }
+        .model-badge.img { background: #dbeafe; color: #1d4ed8; }
+        .model-badge.video { background: #fce7f3; color: #be185d; }
+        .model-badge.chat { background: #dcfce7; color: #16a34a; }
+        .tab-btn.active { background: #1d1d1f; color: #fff; }
+        .fade-in { animation: fadeIn 0.3s ease; }
+        @keyframes fadeIn { from { opacity:0; } to { opacity:1; } }
+    </style>
+</head>
+<body class="bg-[#FAFAFA] text-gray-900 h-screen flex flex-col overflow-hidden">
+
+    <header class="w-full h-14 bg-white border-b border-gray-100 px-6 flex justify-between items-center z-20 shrink-0">
+        <div class="flex items-center gap-8">
+            <div class="flex items-center gap-2">
+                <div class="w-6 h-6 bg-black rounded flex items-center justify-center text-white text-xs font-bold">水</div>
+                <span class="font-bold text-sm tracking-wide">水水AI</span>
+            </div>
+            <nav class="flex items-center gap-1 text-sm font-medium">
+                <a href="/imagegen/" class="px-4 py-1.5 bg-black text-white rounded-lg text-xs font-semibold">AI图片生成</a>
+                <a href="/imagegen/dashboard" class="px-4 py-1.5 text-gray-500 hover:text-black transition text-xs">我的作品</a>
+            </nav>
+        </div>
+        <div class="flex items-center gap-3">
+            <a href="/imagegen/pricing" class="bg-[#FF961E] hover:bg-[#e5861b] text-white text-xs font-medium px-3 py-1.5 rounded-lg flex items-center gap-1 shadow-sm transition no-underline">
+                <span class="material-icons-outlined text-sm">card_giftcard</span> 积分套餐
+            </a>
+            <div class="bg-gray-50 border border-gray-100 rounded-lg px-3 py-1.5 flex items-center gap-1.5 text-xs font-semibold text-gray-700">
+                <span class="material-icons-outlined text-sm text-[#FF961E]">bolt</span>
+                <span id="userCreditsDisplay">--</span><span class="text-gray-400 font-normal">积分</span>
+            </div>
+        </div>
+    </header>
+
+    <main class="flex-1 flex flex-col items-center w-full h-full relative px-6 overflow-hidden">
+
+        <!-- 图生图 / 文生图 / 视频 切换 -->
+        <div id="modeTabs" class="flex items-center gap-1 mt-4 mb-2 shrink-0">
+            <button class="tab-btn active px-4 py-1.5 text-xs font-semibold rounded-lg bg-gray-100 text-gray-600" data-mode="image">图片生成</button>
+            <button class="tab-btn px-4 py-1.5 text-xs font-semibold rounded-lg bg-gray-100 text-gray-600" data-mode="video">视频生成</button>
+        </div>
+
+        <div id="landingWrapper" class="flex flex-col items-center justify-center flex-1 pb-24 w-full">
+            <div class="text-center mb-6">
+                <h2 id="landingTitle" class="text-2xl font-bold text-gray-900 tracking-tight">描述你想过的画面</h2>
+                <p id="landingSub" class="text-xs text-gray-400 mt-1.5">输入详细的描述词，AI 将为你创作高质量图片</p>
+            </div>
+        </div>
+
+        <div id="feedContent" class="hidden flex-1 w-full max-w-4xl overflow-y-auto no-scrollbar pt-4 pb-40 relative">
+            <div id="feedItems" class="flex flex-col gap-6"></div>
+        </div>
+
+        <div id="inputBoxContainer" class="w-full max-w-3xl bg-white border border-gray-200/80 rounded-2xl shadow-md p-3.5 absolute bottom-32 transition-all duration-300 z-10">
+
+            <!-- 生成状态 -->
+            <div id="loadingStatus" class="hidden absolute bottom-full mb-3 right-0 bg-white/95 border border-gray-200/60 rounded-full px-4 py-2 flex items-center gap-2 shadow-lg text-xs font-medium text-gray-700">
+                <svg class="animate-spin h-3.5 w-3.5 text-gray-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                <span id="loadingText">生成中...</span>
+                <span class="text-gray-300">|</span>
+                <button onclick="scrollToBottom()" class="text-gray-500 hover:text-black flex items-center gap-0.5 font-semibold">
+                    回到底部 <span class="material-icons-outlined text-xs">keyboard_double_arrow_down</span>
+                </button>
+            </div>
+
+            <!-- 上传预览区 -->
+            <div id="uploadPreview" class="hidden flex gap-2 mb-3 overflow-x-auto no-scrollbar pb-1"></div>
+
+            <div class="flex items-start gap-3.5">
+                <label class="w-14 h-14 border border-dashed border-gray-200 hover:border-gray-300 rounded-xl flex flex-col items-center justify-center text-gray-400 bg-gray-50/50 cursor-pointer transition flex-shrink-0 group" id="uploadLabel">
+                    <span class="material-icons-outlined text-lg group-hover:text-gray-600">photo_camera</span>
+                    <span class="text-[9px] mt-0.5 scale-90 text-gray-400" id="uploadCount">0/16</span>
+                    <input type="file" id="fileInput" class="hidden" multiple accept="image/*,video/*">
+                </label>
+
+                <textarea id="promptInput" rows="2" class="w-full bg-transparent resize-none outline-none text-sm text-gray-800 placeholder-gray-300 pt-1 leading-relaxed no-scrollbar"
+                    placeholder="例如：一只橘猫宇航员站在月球表面眺望地球，赛博朋克风格"></textarea>
+            </div>
+
+            <div class="flex justify-between items-center mt-3 pt-2.5 border-t border-gray-50 relative">
+                <div class="flex items-center gap-1.5 relative">
+                    <!-- Agent 模式 → AI 对话 -->
+                    <button id="agentBtn" class="px-2.5 py-1.5 bg-gray-50 hover:bg-gray-100 border border-gray-100 text-gray-700 rounded-lg text-xs font-medium flex items-center gap-1 transition">
+                        <span class="material-icons-outlined text-sm text-gray-500">insights</span> AI 对话
+                        <span class="material-icons-outlined text-xs text-gray-400">expand_more</span>
+                    </button>
+
+                    <button id="prefBtn" class="px-2.5 py-1.5 bg-gray-50 hover:bg-gray-100 border border-gray-100 text-gray-700 rounded-lg text-xs font-medium flex items-center gap-1 transition">
+                        <span class="material-icons-outlined text-sm text-gray-400">tune</span> 生成偏好
+                    </button>
+
+                    <button id="modelBtn" class="px-2.5 py-1.5 text-gray-500 hover:text-black hover:bg-gray-50 rounded-lg text-xs font-medium flex items-center gap-1 transition">
+                        <span class="material-icons-outlined text-sm">smart_toy</span> 模型
+                        <span class="model-badge img" id="currentModelBadge">gpt-image-2</span>
+                    </button>
+
+                    <button class="w-7 h-7 text-gray-400 hover:text-black hover:bg-gray-50 rounded-lg flex items-center justify-center transition font-bold text-sm" id="atBtn" title="快捷指令">@</button>
+
+                    <!-- @ 快捷指令弹窗 -->
+                    <div id="atPopover" class="hidden absolute bottom-full left-24 mb-3 w-[240px] bg-white border border-gray-100 rounded-2xl shadow-xl p-2 z-30 transition-all">
+                        <div class="text-[10px] font-bold text-gray-400 mb-1 px-2 py-0.5 tracking-wider">快捷指令</div>
+                        <div class="at-cmd px-2 py-1.5 text-xs rounded-lg hover:bg-gray-50 cursor-pointer flex items-center gap-2" data-cmd="高清写实摄影风格，超高细节，8K分辨率，电影级光影">
+                            <span class="material-icons-outlined text-sm text-gray-400">camera</span> 写实摄影
+                        </div>
+                        <div class="at-cmd px-2 py-1.5 text-xs rounded-lg hover:bg-gray-50 cursor-pointer flex items-center gap-2" data-cmd="动漫风格，日系二次元，精致线条，柔和色调">
+                            <span class="material-icons-outlined text-sm text-gray-400">brush</span> 动漫风格
+                        </div>
+                        <div class="at-cmd px-2 py-1.5 text-xs rounded-lg hover:bg-gray-50 cursor-pointer flex items-center gap-2" data-cmd="赛博朋克风格，霓虹灯光，未来都市，暗色调">
+                            <span class="material-icons-outlined text-sm text-gray-400">nightlife</span> 赛博朋克
+                        </div>
+                        <div class="at-cmd px-2 py-1.5 text-xs rounded-lg hover:bg-gray-50 cursor-pointer flex items-center gap-2" data-cmd="3D渲染风格，C4D，Octane渲染，光滑材质，柔和光线">
+                            <span class="material-icons-outlined text-sm text-gray-400">view_in_ar</span> 3D渲染
+                        </div>
+                        <div class="at-cmd px-2 py-1.5 text-xs rounded-lg hover:bg-gray-50 cursor-pointer flex items-center gap-2" data-cmd="水彩画风格，柔和色调，艺术感，留白">
+                            <span class="material-icons-outlined text-sm text-gray-400">palette</span> 水彩艺术
+                        </div>
+                        <div class="at-cmd px-2 py-1.5 text-xs rounded-lg hover:bg-gray-50 cursor-pointer flex items-center gap-2" data-cmd="极简主义，干净构图，大面积留白，高级感">
+                            <span class="material-icons-outlined text-sm text-gray-400">grid_view</span> 极简主义
+                        </div>
+                    </div>
+
+                    <!-- 生成偏好弹窗 -->
+                    <div id="prefPopover" class="hidden absolute bottom-full left-24 mb-3 w-[380px] bg-white border border-gray-100 rounded-2xl shadow-xl p-4 z-30 transition-all">
+                        <div class="flex justify-between items-center mb-3">
+                            <h4 class="text-xs font-bold text-gray-900">生成偏好设置</h4>
+                        </div>
+                        <div class="mb-3.5">
+                            <div class="text-[10px] font-bold text-gray-400 mb-1.5 tracking-wider">清晰度与消耗</div>
+                            <div class="flex gap-1.5" id="resGroup">
+                                <button class="res-btn px-2.5 py-1 bg-black text-white text-[11px] font-medium rounded-md" data-res="1k">1K <span class="text-[9px] opacity-60">10</span></button>
+                                <button class="res-btn px-2.5 py-1 bg-gray-50 border border-gray-100 text-gray-600 hover:border-gray-200 text-[11px] font-medium rounded-md" data-res="2k">2K <span class="text-[9px] text-gray-400">20</span></button>
+                                <button class="res-btn px-2.5 py-1 bg-gray-50 border border-gray-100 text-gray-600 hover:border-gray-200 text-[11px] font-medium rounded-md" data-res="4k">4K <span class="text-[9px] text-gray-400">30</span></button>
+                                <button class="res-btn px-2.5 py-1 bg-gray-50 border border-gray-100 text-gray-600 hover:border-gray-200 text-[11px] font-medium rounded-md" data-res="auto">auto</button>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="text-[10px] font-bold text-gray-400 mb-1.5 tracking-wider">画面比例</div>
+                            <div class="grid grid-cols-5 gap-1" id="ratioGroup">
+                                <button class="ratio-btn p-1 text-center text-[10px] font-medium bg-black text-white rounded" data-ratio="1:1">1:1</button>
+                                <button class="ratio-btn p-1 text-center text-[10px] font-medium border border-gray-100 hover:border-gray-200 text-gray-600 rounded" data-ratio="16:9">16:9</button>
+                                <button class="ratio-btn p-1 text-center text-[10px] font-medium border border-gray-100 hover:border-gray-200 text-gray-600 rounded" data-ratio="9:16">9:16</button>
+                                <button class="ratio-btn p-1 text-center text-[10px] font-medium border border-gray-100 hover:border-gray-200 text-gray-600 rounded" data-ratio="4:3">4:3</button>
+                                <button class="ratio-btn p-1 text-center text-[10px] font-medium border border-gray-100 hover:border-gray-200 text-gray-600 rounded" data-ratio="3:4">3:4</button>
+                                <button class="ratio-btn p-1 text-center text-[10px] font-medium border border-gray-100 hover:border-gray-200 text-gray-600 rounded" data-ratio="3:2">3:2</button>
+                                <button class="ratio-btn p-1 text-center text-[10px] font-medium border border-gray-100 hover:border-gray-200 text-gray-600 rounded" data-ratio="2:3">2:3</button>
+                                <button class="ratio-btn p-1 text-center text-[10px] font-medium border border-gray-100 hover:border-gray-200 text-gray-600 rounded" data-ratio="5:4">5:4</button>
+                                <button class="ratio-btn p-1 text-center text-[10px] font-medium border border-gray-100 hover:border-gray-200 text-gray-600 rounded" data-ratio="4:5">4:5</button>
+                                <button class="ratio-btn p-1 text-center text-[10px] font-medium border border-gray-100 hover:border-gray-200 text-gray-600 rounded" data-ratio="2:1">2:1</button>
+                            </div>
+                        </div>
+                        <!-- 视频时长（视频模式） -->
+                        <div id="videoDurationGroup" class="hidden mt-3.5">
+                            <div class="text-[10px] font-bold text-gray-400 mb-1.5 tracking-wider">视频时长（秒）</div>
+                            <div class="flex gap-1.5" id="durationGroup">
+                                <button class="dur-btn px-2.5 py-1 bg-black text-white text-[11px] font-medium rounded-md" data-dur="5">5s</button>
+                                <button class="dur-btn px-2.5 py-1 bg-gray-50 border border-gray-100 text-gray-600 hover:border-gray-200 text-[11px] font-medium rounded-md" data-dur="8">8s</button>
+                                <button class="dur-btn px-2.5 py-1 bg-gray-50 border border-gray-100 text-gray-600 hover:border-gray-200 text-[11px] font-medium rounded-md" data-dur="10">10s</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 模型选择弹窗 -->
+                    <div id="modelPopover" class="hidden absolute bottom-full left-0 mb-3 w-[320px] bg-white border border-gray-100 rounded-2xl shadow-xl p-2 z-30 transition-all max-h-[400px] overflow-y-auto no-scrollbar">
+                        <div class="text-[10px] font-bold text-gray-400 mb-1 px-3 py-1 tracking-wider">图片模型</div>
+                        <div id="imageModelList"></div>
+                        <div class="text-[10px] font-bold text-gray-400 mb-1 px-3 py-1 mt-2 tracking-wider">视频模型</div>
+                        <div id="videoModelList"></div>
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-3">
+                    <button class="w-8 h-8 text-gray-400 hover:text-black hover:bg-gray-50 rounded-full flex items-center justify-center transition" id="micBtn" title="语音输入">
+                        <span class="material-icons-outlined text-lg">mic</span>
+                    </button>
+                    <span class="text-xs text-gray-400">消耗 <span id="creditCost" class="font-semibold text-gray-700">10</span> 积分</span>
+                    <button id="generateBtn" class="px-5 py-2 bg-gray-200 text-gray-400 text-xs font-semibold rounded-xl cursor-not-allowed transition-all shadow-sm">
+                        生成图片
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- AI 对话面板 -->
+        <div id="chatPanel" class="hidden fixed bottom-0 right-0 w-[420px] h-[520px] bg-white border border-gray-200 rounded-t-2xl shadow-2xl z-50 flex flex-col transition-all">
+            <div class="flex items-center justify-between px-4 py-3 border-b border-gray-100 shrink-0">
+                <div class="flex items-center gap-2">
+                    <span class="material-icons-outlined text-sm text-gray-500">insights</span>
+                    <span class="text-xs font-bold text-gray-900">AI 对话助手</span>
+                    <select id="chatModelSelect" class="text-[10px] bg-gray-50 border border-gray-100 rounded px-2 py-1 text-gray-600 outline-none">
+                        <option value="gpt-4o-mini">GPT-4o Mini</option>
+                        <option value="gpt-4o">GPT-4o</option>
+                        <option value="claude-sonnet-4-5">Claude Sonnet 4.5</option>
+                        <option value="claude-opus-4-7">Claude Opus 4.7</option>
+                        <option value="deepseek-chat">DeepSeek Chat</option>
+                        <option value="deepseek-reasoner">DeepSeek Reasoner</option>
+                        <option value="gemini-2.5-flash">Gemini 2.5 Flash</option>
+                        <option value="gemini-2.5-pro">Gemini 2.5 Pro</option>
+                        <option value="qwen-plus">Qwen Plus</option>
+                        <option value="qwen-max">Qwen Max</option>
+                        <option value="qwen-turbo">Qwen Turbo</option>
+                        <option value="glm-4-plus">GLM-4 Plus</option>
+                        <option value="glm-4-flash">GLM-4 Flash</option>
+                        <option value="moonshot-v1-8k">Moonshot v1</option>
+                        <option value="yi-large">Yi Large</option>
+                    </select>
+                </div>
+                <div class="flex items-center gap-1">
+                    <button onclick="clearChat()" class="text-[10px] text-gray-400 hover:text-gray-600 px-1.5 py-0.5 rounded" title="清空对话">清空</button>
+                    <button onclick="useChatPrompt()" class="text-[10px] bg-black text-white px-2 py-1 rounded font-medium">填入提示词</button>
+                    <button onclick="closeChat()" class="w-6 h-6 flex items-center justify-center text-gray-400 hover:text-gray-600 rounded">
+                        <span class="material-icons-outlined text-sm">close</span>
+                    </button>
+                </div>
+            </div>
+            <div id="chatMessages" class="flex-1 overflow-y-auto p-4 flex flex-col gap-3 no-scrollbar"></div>
+            <div class="p-3 border-t border-gray-100 flex gap-2">
+                <textarea id="chatInput" rows="1" class="flex-1 bg-gray-50 border border-gray-100 rounded-lg px-3 py-2 text-xs outline-none resize-none no-scrollbar" placeholder="描述你想要生成的画面，AI 帮你优化提示词..."></textarea>
+                <button onclick="sendChatMessage()" class="w-9 h-9 bg-black text-white rounded-lg flex items-center justify-center shrink-0">
+                    <span class="material-icons-outlined text-sm">send</span>
+                </button>
+            </div>
+        </div>
+    </main>
+
+    <!-- Toast -->
+    <div id="toast" class="hidden fixed bottom-24 left-1/2 -translate-x-1/2 bg-[#1d1d1f] text-white px-4 py-2 rounded-full text-xs z-[9999] shadow-xl"></div>
+
+    <script>
+        // ==================== 全局状态 ====================
+        const API_BASE = '/imagegen/api';
+        let userCredits = 0;
+        let currentMode = 'image'; // 'image' | 'video'
+        let currentRes = '1k';
+        let currentRatio = '1:1';
+        let currentDuration = 5;
+        let currentImageModel = 'gpt-image-2';
+        let currentVideoModel = 'doubao-seedance-2.0-fast';
+        let uploadedFiles = [];
+        let activeTaskIds = [];
+        let chatMessageHistory = [];
+        let generationHistory = [];
+
+        // ==================== DOM 引用 ====================
+        const promptInput = document.getElementById('promptInput');
+        const generateBtn = document.getElementById('generateBtn');
+        const landingWrapper = document.getElementById('landingWrapper');
+        const feedContent = document.getElementById('feedContent');
+        const feedItems = document.getElementById('feedItems');
+        const inputBoxContainer = document.getElementById('inputBoxContainer');
+        const loadingStatus = document.getElementById('loadingStatus');
+        const loadingText = document.getElementById('loadingText');
+        const prefPopover = document.getElementById('prefPopover');
+        const modelPopover = document.getElementById('modelPopover');
+        const chatPanel = document.getElementById('chatPanel');
+        const chatMessages = document.getElementById('chatMessages');
+        const chatInput = document.getElementById('chatInput');
+        const uploadPreview = document.getElementById('uploadPreview');
+        const uploadCount = document.getElementById('uploadCount');
+        const creditCost = document.getElementById('creditCost');
+        const userCreditsDisplay = document.getElementById('userCreditsDisplay');
+        const landingTitle = document.getElementById('landingTitle');
+        const landingSub = document.getElementById('landingSub');
+        const videoDurationGroup = document.getElementById('videoDurationGroup');
+        const currentModelBadge = document.getElementById('currentModelBadge');
+        const toast = document.getElementById('toast');
+
+        // ==================== 鉴权 ====================
+        function authHeaders() {
+            const headers = {};
+            const token = localStorage.getItem('token');
+            if (token) headers['x-auth-token'] = token;
+            return headers;
+        }
+
+        function getToken() {
+            return localStorage.getItem('token') || '';
+        }
+
+        // ==================== Toast ====================
+        function showToast(msg, duration = 2500) {
+            toast.textContent = msg;
+            toast.classList.remove('hidden');
+            toast.classList.add('toast');
+            clearTimeout(toast._timeout);
+            toast._timeout = setTimeout(() => { toast.classList.add('hidden'); toast.classList.remove('toast'); }, duration);
+        }
+
+        // ==================== 用户积分 ====================
+        async function refreshCredits() {
+            try {
+                const res = await fetch(API_BASE + '/user', { headers: authHeaders() });
+                if (res.ok) {
+                    const data = await res.json();
+                    userCredits = data.credits || 0;
+                    userCreditsDisplay.textContent = userCredits;
+                    // 低积分警告
+                    if (userCredits < 30 && userCredits > 0) {
+                        userCreditsDisplay.parentElement.classList.add('border-yellow-300', 'bg-yellow-50');
+                    } else {
+                        userCreditsDisplay.parentElement.classList.remove('border-yellow-300', 'bg-yellow-50');
+                    }
+                } else {
+                    userCreditsDisplay.textContent = '--';
+                }
+            } catch (e) {
+                userCreditsDisplay.textContent = '--';
+            }
+        }
+
+        // ==================== 积分计算 ====================
+        const IMAGE_COST = { '1k': 10, '2k': 20, '4k': 30, 'auto': 20 };
+        const VIDEO_COST_PER_SEC = { '480p': 30, '720p': 65, '1080p': 150 };
+
+        function updateCreditCost() {
+            let cost;
+            if (currentMode === 'video') {
+                cost = (VIDEO_COST_PER_SEC['720p'] || 65) * currentDuration;
+            } else {
+                cost = IMAGE_COST[currentRes] || 20;
+            }
+            creditCost.textContent = cost;
+        }
+
+        // ==================== 模式切换 ====================
+        document.querySelectorAll('#modeTabs .tab-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('#modeTabs .tab-btn').forEach(b => { b.classList.remove('active'); b.classList.add('bg-gray-100', 'text-gray-600'); });
+                btn.classList.add('active');
+                btn.classList.remove('bg-gray-100', 'text-gray-600');
+                currentMode = btn.dataset.mode;
+                if (currentMode === 'video') {
+                    generateBtn.textContent = '生成视频';
+                    landingTitle.textContent = '描述你想要的视频画面';
+                    landingSub.textContent = '输入详细的描述词，AI 将为你创作高质量视频';
+                    videoDurationGroup.classList.remove('hidden');
+                    currentModelBadge.textContent = currentVideoModel;
+                    currentModelBadge.className = 'model-badge video';
+                    promptInput.placeholder = '例如：一只橘猫在阳光下的草地上奔跑，电影级画质';
+                } else {
+                    generateBtn.textContent = '生成图片';
+                    landingTitle.textContent = '描述你想过的画面';
+                    landingSub.textContent = '输入详细的描述词，AI 将为你创作高质量图片';
+                    videoDurationGroup.classList.add('hidden');
+                    currentModelBadge.textContent = currentImageModel;
+                    currentModelBadge.className = 'model-badge img';
+                    promptInput.placeholder = '例如：一只橘猫宇航员站在月球表面眺望地球，赛博朋克风格';
+                }
+                updateCreditCost();
+                updateGenerateBtn();
+            });
+        });
+
+        // ==================== 生成偏好弹窗 ====================
+        document.getElementById('prefBtn').addEventListener('click', (e) => {
+            e.stopPropagation();
+            prefPopover.classList.toggle('hidden');
+            modelPopover.classList.add('hidden');
+        });
+
+        document.addEventListener('click', (e) => {
+            if (!prefPopover.contains(e.target) && e.target !== document.getElementById('prefBtn')) {
+                prefPopover.classList.add('hidden');
+            }
+            if (!modelPopover.contains(e.target) && e.target !== document.getElementById('modelBtn')) {
+                modelPopover.classList.add('hidden');
+            }
+        });
+
+        // 分辨率选择
+        document.querySelectorAll('#resGroup .res-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('#resGroup .res-btn').forEach(b => {
+                    b.classList.remove('bg-black', 'text-white');
+                    b.classList.add('bg-gray-50', 'border', 'border-gray-100', 'text-gray-600');
+                });
+                btn.classList.add('bg-black', 'text-white');
+                btn.classList.remove('bg-gray-50', 'border', 'border-gray-100', 'text-gray-600');
+                currentRes = btn.dataset.res;
+                updateCreditCost();
+            });
+        });
+
+        // 比例选择
+        document.querySelectorAll('#ratioGroup .ratio-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('#ratioGroup .ratio-btn').forEach(b => {
+                    b.classList.remove('bg-black', 'text-white');
+                    b.classList.add('border', 'border-gray-100', 'text-gray-600');
+                });
+                btn.classList.add('bg-black', 'text-white');
+                btn.classList.remove('border', 'border-gray-100', 'text-gray-600');
+                currentRatio = btn.dataset.ratio;
+            });
+        });
+
+        // 视频时长选择
+        document.querySelectorAll('#durationGroup .dur-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('#durationGroup .dur-btn').forEach(b => {
+                    b.classList.remove('bg-black', 'text-white');
+                    b.classList.add('bg-gray-50', 'border', 'border-gray-100', 'text-gray-600');
+                });
+                btn.classList.add('bg-black', 'text-white');
+                btn.classList.remove('bg-gray-50', 'border', 'border-gray-100', 'text-gray-600');
+                currentDuration = parseInt(btn.dataset.dur);
+                updateCreditCost();
+            });
+        });
+
+        // ==================== 模型选择弹窗 ====================
+        const IMAGE_MODELS = [
+            { id: 'gpt-image-2', name: 'GPT Image 2', desc: '高精度理解中文提示词，支持 1K/2K/4K', cost: '1K=$0.006', badge: '推荐' },
+            { id: 'gpt-image-1.5-official', name: 'GPT Image 1.5', desc: '官方最新版，支持多分辨率', cost: '默认$0.085', badge: '' },
+            { id: 'gpt-image-1-official', name: 'GPT Image 1', desc: '经典版，稳定可靠', cost: '默认$0.107', badge: '' },
+            { id: 'gpt-image-2-official', name: 'GPT Image 2 Official', desc: '官方直连，品质最高', cost: '默认$0.169', badge: '高清' },
+            { id: 'gemini-2.5-flash-image-preview', name: 'Gemini 2.5 Flash Image', desc: 'Google 最新图像模型', cost: '$0.0125', badge: '' },
+            { id: 'gemini-3.1-flash-image-preview', name: 'Gemini 3.1 Flash Image', desc: '新一代 Gemini 图像生成', cost: '$0.03', badge: '新' },
+            { id: 'gemini-3-pro-image-preview', name: 'Gemini 3 Pro Image', desc: '旗舰级 Gemini 图像', cost: '$0.04', badge: 'Pro' },
+            { id: 'flux-2-pro', name: 'Flux 2 Pro', desc: 'Black Forest Labs 旗舰', cost: '$0.025', badge: '' },
+            { id: 'flux-2-flex', name: 'Flux 2 Flex', desc: 'Flux 灵活版', cost: '$0.07', badge: '' },
+            { id: 'z-image-turbo', name: 'Z Image Turbo', desc: '极速生成，性价比高', cost: '$0.01', badge: '极速' },
+            { id: 'qwen-image-2.0', name: 'Qwen Image 2.0', desc: '阿里通义万相', cost: '$0.02', badge: '' },
+            { id: 'qwen-image-2.0-pro', name: 'Qwen Image 2.0 Pro', desc: '通义万相专业版', cost: '$0.05', badge: '' },
+            { id: 'wan2.7-image', name: 'Wan 2.7 Image', desc: '阿里万相 2.7', cost: '$0.022', badge: '' },
+            { id: 'wan2.7-image-pro', name: 'Wan 2.7 Image Pro', desc: '万相 2.7 专业版', cost: '$0.054', badge: 'Pro' },
+            { id: 'doubao-seedream-5-0-lite', name: 'Doubao Seedream 5.0 Lite', desc: '豆包轻量级图像模型', cost: '$0.028', badge: '' },
+            { id: 'imagen-4.0-apimart', name: 'Imagen 4.0', desc: 'Google Imagen 最新', cost: '$0.04', badge: '' },
+        ];
+
+        const VIDEO_MODELS = [
+            { id: 'doubao-seedance-2.0-fast', name: 'Doubao Seedance 2.0 Fast', desc: '豆包视频生成，快速模式', cost: '720p=65积分/秒', badge: '推荐' },
+            { id: 'doubao-seedance-4-0', name: 'Doubao Seedance 4.0', desc: '豆包视频 4.0，画质更佳', cost: '$0.0224', badge: '' },
+            { id: 'doubao-seedance-4-5', name: 'Doubao Seedance 4.5', desc: '豆包视频 4.5，最新旗舰', cost: '$0.028', badge: '新' },
+        ];
+
+        function renderModelList() {
+            const imgList = document.getElementById('imageModelList');
+            const vidList = document.getElementById('videoModelList');
+            imgList.innerHTML = IMAGE_MODELS.map(m => `
+                <div class="model-item flex items-center justify-between px-3 py-2 rounded-lg cursor-pointer hover:bg-gray-50 text-xs ${currentImageModel === m.id ? 'bg-gray-50' : ''}" data-model="${m.id}" data-type="image">
+                    <div class="flex flex-col gap-0.5">
+                        <div class="flex items-center gap-1.5">
+                            <span class="font-semibold text-gray-900">${m.name}</span>
+                            ${m.badge ? `<span class="model-badge img">${m.badge}</span>` : ''}
+                        </div>
+                        <span class="text-[10px] text-gray-400">${m.desc}</span>
+                    </div>
+                    <span class="text-[10px] text-gray-400">${m.cost}</span>
+                </div>
+            `).join('');
+            vidList.innerHTML = VIDEO_MODELS.map(m => `
+                <div class="model-item flex items-center justify-between px-3 py-2 rounded-lg cursor-pointer hover:bg-gray-50 text-xs ${currentVideoModel === m.id ? 'bg-gray-50' : ''}" data-model="${m.id}" data-type="video">
+                    <div class="flex flex-col gap-0.5">
+                        <div class="flex items-center gap-1.5">
+                            <span class="font-semibold text-gray-900">${m.name}</span>
+                            ${m.badge ? `<span class="model-badge video">${m.badge}</span>` : ''}
+                        </div>
+                        <span class="text-[10px] text-gray-400">${m.desc}</span>
+                    </div>
+                    <span class="text-[10px] text-gray-400">${m.cost}</span>
+                </div>
+            `).join('');
+
+            document.querySelectorAll('#modelPopover .model-item').forEach(item => {
+                item.addEventListener('click', () => {
+                    const model = item.dataset.model;
+                    const type = item.dataset.type;
+                    if (type === 'image') {
+                        currentImageModel = model;
+                        currentModelBadge.textContent = model;
+                        currentModelBadge.className = 'model-badge img';
+                    } else {
+                        currentVideoModel = model;
+                        currentModelBadge.textContent = model;
+                        currentModelBadge.className = 'model-badge video';
+                    }
+                    modelPopover.classList.add('hidden');
+                    renderModelList();
+                });
+            });
+        }
+
+        document.getElementById('modelBtn').addEventListener('click', (e) => {
+            e.stopPropagation();
+            modelPopover.classList.toggle('hidden');
+            prefPopover.classList.add('hidden');
+            renderModelList();
+        });
+
+        renderModelList();
+
+        // ==================== 文件上传 ====================
+        const fileInput = document.getElementById('fileInput');
+        fileInput.addEventListener('change', async () => {
+            const files = Array.from(fileInput.files);
+            if (uploadedFiles.length + files.length > 16) {
+                showToast('最多上传 16 个文件');
+                return;
+            }
+            for (const file of files) {
+                if (file.size > 100 * 1024 * 1024) {
+                    showToast(`文件 ${file.name} 超过 100MB 限制`);
+                    continue;
+                }
+                uploadedFiles.push(file);
+                addUploadPreview(file);
+                // 异步上传到服务器
+                await uploadFile(file);
+            }
+            updateUploadCount();
+            fileInput.value = '';
+        });
+
+        function addUploadPreview(file) {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const div = document.createElement('div');
+                div.className = 'relative w-12 h-12 rounded-lg overflow-hidden border border-gray-200 shrink-0';
+                div.innerHTML = `
+                    <img src="${e.target.result}" class="w-full h-full object-cover">
+                    <button class="absolute -top-1 -right-1 w-4 h-4 bg-gray-800 text-white rounded-full flex items-center justify-center text-[8px]" onclick="removeUpload(this, '${file.name}')">x</button>
+                `;
+                uploadPreview.appendChild(div);
+            };
+            reader.readAsDataURL(file);
+        }
+
+        async function uploadFile(file) {
+            const formData = new FormData();
+            formData.append('file', file);
+            try {
+                const res = await fetch(API_BASE + '/upload', {
+                    method: 'POST',
+                    headers: authHeaders(),
+                    body: formData,
+                });
+                if (res.ok) {
+                    const data = await res.json();
+                    file._uploadedUrl = data.url;
+                }
+            } catch (e) {
+                console.error('上传失败:', e);
+            }
+        }
+
+        window.removeUpload = function(btn, name) {
+            uploadedFiles = uploadedFiles.filter(f => f.name !== name);
+            btn.parentElement.remove();
+            updateUploadCount();
+            if (uploadedFiles.length === 0) {
+                uploadPreview.classList.add('hidden');
+            }
+        };
+
+        function updateUploadCount() {
+            uploadCount.textContent = `${uploadedFiles.length}/16`;
+            if (uploadedFiles.length > 0) {
+                uploadPreview.classList.remove('hidden');
+            }
+        }
+
+        // ==================== 输入框联动 ====================
+        function updateGenerateBtn() {
+            const hasText = promptInput.value.trim().length > 0;
+            if (hasText) {
+                generateBtn.classList.remove('bg-gray-200', 'text-gray-400', 'cursor-not-allowed');
+                generateBtn.classList.add('bg-black', 'text-white', 'hover:bg-gray-800', 'cursor-pointer');
+            } else {
+                generateBtn.classList.remove('bg-black', 'text-white', 'hover:bg-gray-800', 'cursor-pointer');
+                generateBtn.classList.add('bg-gray-200', 'text-gray-400', 'cursor-not-allowed');
+            }
+        }
+
+        promptInput.addEventListener('input', updateGenerateBtn);
+
+        // ==================== 生成按钮 ====================
+        generateBtn.addEventListener('click', async () => {
+            const prompt = promptInput.value.trim();
+            if (!prompt) return;
+            if (userCredits > 0) {
+                const cost = currentMode === 'video' ? (VIDEO_COST_PER_SEC['720p'] || 65) * currentDuration : (IMAGE_COST[currentRes] || 20);
+                if (userCredits < cost) {
+                    showToast(`积分不足 (当前 ${userCredits}，需要 ${cost})`);
+                    return;
+                }
+            }
+
+            // 进入生成态
+            landingWrapper.classList.add('hidden');
+            inputBoxContainer.classList.remove('bottom-32');
+            inputBoxContainer.classList.add('bottom-4');
+            feedContent.classList.remove('hidden');
+            loadingStatus.classList.remove('hidden');
+            loadingText.textContent = currentMode === 'video' ? '视频生成中...' : '0/1 生成中...';
+
+            // 收集上传的图片 URL
+            const imageUrls = uploadedFiles.filter(f => f._uploadedUrl).map(f => f._uploadedUrl);
+
+            // 构建请求
+            const isVideo = currentMode === 'video';
+            const endpoint = isVideo ? API_BASE + '/video' : API_BASE + '/generate';
+            const ratio = currentRatio === 'auto' ? 'auto' : currentRatio;
+            const body = isVideo
+                ? { prompt, resolution: '720p', size: ratio, duration: currentDuration, image_urls: imageUrls, model: currentVideoModel }
+                : { prompt, resolution: currentRes, size: ratio, image_urls: imageUrls, model: currentImageModel };
+
+            // 添加历史记录占位
+            const historyId = 'hist_' + Date.now();
+            const cost = isVideo ? (VIDEO_COST_PER_SEC['720p'] || 65) * currentDuration : (IMAGE_COST[currentRes] || 20);
+            addHistoryItem(historyId, prompt, cost, currentMode);
+
+            try {
+                const res = await fetch(endpoint, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', ...authHeaders() },
+                    body: JSON.stringify(body),
+                });
+
+                if (res.status === 401) { showToast('请先登录'); loadingStatus.classList.add('hidden'); return; }
+                if (res.status === 402) {
+                    const err = await res.json().catch(() => ({}));
+                    showToast(`积分不足 (${err.error || '请充值'})`);
+                    loadingStatus.classList.add('hidden');
+                    return;
+                }
+                if (!res.ok) {
+                    const errText = await res.text();
+                    showToast('提交失败: ' + (errText.slice(0, 80)));
+                    loadingStatus.classList.add('hidden');
+                    return;
+                }
+
+                const data = await res.json();
+                if (data.creditsLeft !== undefined) {
+                    userCredits = data.creditsLeft;
+                    userCreditsDisplay.textContent = data.creditsLeft;
+                    // 低积分提示
+                    if (data.creditsLeft < 30) {
+                        showToast(`剩余 ${data.creditsLeft} 积分，建议充值`);
+                    }
+                }
+
+                if (isVideo) {
+                    // 视频同步返回
+                    if (data.videoUrl) {
+                        updateHistoryItem(historyId, data.videoUrl, true);
+                        loadingStatus.classList.add('hidden');
+                        showToast('视频生成完成！');
+                    } else if (data.taskId) {
+                        startPolling(data.taskId, historyId, true);
+                    }
+                } else {
+                    if (data.taskId) {
+                        startPolling(data.taskId, historyId, false);
+                    }
+                }
+            } catch (e) {
+                showToast('网络异常: ' + (e.message || ''));
+                loadingStatus.classList.add('hidden');
+            }
+        });
+
+        function addHistoryItem(id, prompt, cost, mode) {
+            const item = {
+                id, prompt, cost, mode, status: 'generating', mediaUrl: '',
+                createdAt: new Date().toLocaleString('zh-CN'),
+            };
+            generationHistory.unshift(item);
+            renderHistory();
+        }
+
+        function updateHistoryItem(id, mediaUrl, isVideo) {
+            const item = generationHistory.find(h => h.id === id);
+            if (item) {
+                item.status = 'completed';
+                item.mediaUrl = mediaUrl;
+                item.isVideo = isVideo;
+            }
+            renderHistory();
+        }
+
+        function renderHistory() {
+            feedItems.innerHTML = generationHistory.map((item, idx) => `
+                <div class="fade-in w-full flex justify-between items-start gap-12">
+                    <div class="flex-1 flex flex-col items-start">
+                        <div class="flex items-center gap-1 text-xs text-gray-400 font-medium mb-1.5">
+                            <span>${item.status === 'generating' ? '生成中' : '已完成'}</span>
+                            <span class="material-icons-outlined text-xs">chevron_right</span>
+                        </div>
+                        <p class="text-xs text-gray-700 mb-3 leading-relaxed">${item.prompt}</p>
+                        <div class="bg-white border border-gray-100 rounded-2xl p-3 shadow-sm w-[290px] shrink-0">
+                            <div class="relative rounded-xl overflow-hidden aspect-[3/4] bg-gray-50 border border-gray-100/70 shadow-inner">
+                                <span class="absolute top-2.5 left-2.5 bg-black/40 backdrop-blur-md text-[9px] text-white px-2 py-0.5 rounded font-medium tracking-wide z-10">AI 生成</span>
+                                ${item.status === 'generating' ? `
+                                <div class="w-full h-full flex items-center justify-center">
+                                    <svg class="animate-spin h-8 w-8 text-gray-300" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+                                    </svg>
+                                </div>
+                                ` : item.isVideo ? `
+                                <video src="${item.mediaUrl}" controls class="w-full h-full object-cover" autoplay loop muted></video>
+                                ` : `
+                                <img src="${item.mediaUrl}" class="w-full h-full object-cover" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'" alt="生成结果">
+                                <div class="hidden w-full h-full items-center justify-center text-xs text-gray-400">图片加载失败</div>
+                                `}
+                            </div>
+                            <div class="mt-3 text-[10px] text-gray-400 flex justify-between items-center px-0.5">
+                                <span>以上内容由 AI 生成</span>
+                                <span>本次消耗 ${item.cost} 积分</span>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-1.5 mt-3">
+                            <button class="px-3 py-1.5 bg-white border border-gray-200/80 hover:bg-gray-50 text-gray-600 rounded-xl text-xs font-medium flex items-center gap-1 shadow-sm transition" onclick="regenerate('${item.prompt}')">
+                                <span class="material-icons-outlined text-sm text-gray-400">refresh</span> 重新生成
+                            </button>
+                            <button class="w-8 h-8 bg-white border border-gray-200/80 hover:bg-gray-50 text-gray-400 hover:text-gray-600 rounded-xl flex items-center justify-center shadow-sm transition" onclick="copyPrompt('${item.prompt.replace(/'/g, "\\'")}')">
+                                <span class="material-icons-outlined text-sm font-bold">format_quote</span>
+                            </button>
+                            <button class="w-8 h-8 bg-white border border-gray-200/80 hover:bg-gray-50 text-gray-400 hover:text-gray-600 rounded-xl flex items-center justify-center shadow-sm transition" onclick="downloadMedia('${(item.mediaUrl || '').replace(/'/g, "\\'")}')">
+                                <span class="material-icons-outlined text-sm">download</span>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="w-44 sticky top-0 pt-8 flex flex-col gap-2 items-end">
+                        ${item.isVideo ? `
+                        <div class="w-[72px] h-[48px] bg-gradient-to-tr from-[#FF5E62] to-[#FF9966] rounded-xl border-2 border-white shadow-md shadow-gray-200 rotate-[6deg] relative overflow-hidden cursor-pointer group mb-1" onclick="if('${(item.mediaUrl || '').replace(/'/g, "\\'")}') window.open('${(item.mediaUrl || '').replace(/'/g, "\\'")}','_blank')">
+                            <div class="absolute inset-0 bg-black/10 flex items-center justify-center backdrop-blur-[0.5px] group-hover:bg-black/20 transition-all">
+                                <span class="material-icons-outlined text-white text-base">play_circle_filled</span>
+                            </div>
+                        </div>
+                        ` : ''}
+                        <button class="px-3 py-2 bg-white border border-gray-200 shadow-sm shadow-gray-100 text-gray-700 hover:text-black rounded-xl text-xs font-semibold tracking-wide flex items-center gap-1 transition-all hover:scale-[1.02]" onclick="styleTransfer('${item.prompt.replace(/'/g, "\\'")}')">
+                            转换成动漫风格
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        window.regenerate = function(prompt) {
+            promptInput.value = prompt;
+            updateGenerateBtn();
+            generateBtn.click();
+        };
+
+        window.copyPrompt = function(prompt) {
+            navigator.clipboard.writeText(prompt).then(() => showToast('提示词已复制'));
+        };
+
+        window.downloadMedia = function(url) {
+            if (url) window.open(url, '_blank');
+        };
+
+        window.styleTransfer = function(prompt) {
+            promptInput.value = prompt + '，动漫风格';
+            updateGenerateBtn();
+            generateBtn.click();
+        };
+
+        function startPolling(taskId, historyId, isVideo) {
+            let attempts = 0;
+            const maxAttempts = isVideo ? 60 : 40;
+            const interval = isVideo ? 8000 : 3000;
+
+            const poll = async () => {
+                attempts++;
+                try {
+                    const endpoint = isVideo ? API_BASE + '/video?type=tasks' : API_BASE + '/generate?type=tasks';
+                    const res = await fetch(endpoint, { headers: authHeaders() });
+                    const data = await res.json();
+                    const tasks = data.tasks || [];
+                    const task = tasks.find(t => t.id === taskId);
+                    if (task && (task.status === 'completed' || task.imageUrl || task.videoUrl)) {
+                        updateHistoryItem(historyId, task.imageUrl || task.videoUrl, isVideo);
+                        loadingStatus.classList.add('hidden');
+                        showToast(isVideo ? '视频生成完成！' : '图片生成完成！');
+                        refreshCredits();
+                        return true;
+                    }
+                    if (task && task.status === 'failed') {
+                        showToast('生成失败: ' + (task.error || '未知错误'));
+                        loadingStatus.classList.add('hidden');
+                        return true;
+                    }
+                    if (attempts >= maxAttempts) {
+                        showToast('生成超时，请稍后刷新');
+                        loadingStatus.classList.add('hidden');
+                        return true;
+                    }
+                    loadingText.textContent = isVideo ? `视频生成中... (${attempts}/${maxAttempts})` : `${attempts}/${maxAttempts} 生成中...`;
+                    return false;
+                } catch (e) { return false; }
+            };
+
+            const timer = setInterval(async () => {
+                const done = await poll();
+                if (done) clearInterval(timer);
+            }, interval);
+        }
+
+        // ==================== AI 对话面板 ====================
+        document.getElementById('agentBtn').addEventListener('click', () => {
+            chatPanel.classList.toggle('hidden');
+            if (!chatPanel.classList.contains('hidden') && chatMessages.children.length === 0) {
+                addChatMessage('ai', '你好！我是水水AI的对话助手。告诉我你想生成什么样的画面，我可以帮你优化提示词，让生成效果更好。');
+            }
+        });
+
+        function closeChat() { chatPanel.classList.add('hidden'); }
+
+        function addChatMessage(role, content) {
+            const div = document.createElement('div');
+            div.className = `flex ${role === 'user' ? 'justify-end' : 'justify-start'}`;
+            div.innerHTML = `
+                <div class="max-w-[85%] px-3 py-2 rounded-xl text-xs leading-relaxed ${role === 'user' ? 'chat-msg-user' : 'chat-msg-ai'}">
+                    ${content.replace(/\n/g, '<br>')}
+                </div>
+            `;
+            chatMessages.appendChild(div);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+            chatMessageHistory.push({ role, content });
+        }
+
+        async function sendChatMessage() {
+            const input = chatInput.value.trim();
+            if (!input) return;
+            addChatMessage('user', input);
+            chatInput.value = '';
+            // 添加加载占位
+            const loadingDiv = document.createElement('div');
+            loadingDiv.className = 'flex justify-start';
+            loadingDiv.innerHTML = `<div class="max-w-[85%] px-3 py-2 rounded-xl text-xs leading-relaxed chat-msg-ai"><span class="inline-flex gap-1"><span class="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce" style="animation-delay:0s"></span><span class="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce" style="animation-delay:0.15s"></span><span class="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce" style="animation-delay:0.3s"></span></span></div>`;
+            chatMessages.appendChild(loadingDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+
+            const model = document.getElementById('chatModelSelect').value;
+            // 使用 chatMessageHistory 构建消息（排除加载占位）
+            const msgs = chatMessageHistory.slice(-10).map(m => ({
+                role: m.role === 'user' ? 'user' : 'assistant',
+                content: m.content
+            }));
+
+            try {
+                const res = await fetch(API_BASE + '/chat', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', ...authHeaders() },
+                    body: JSON.stringify({ messages: msgs.length > 0 ? msgs : [{ role: 'user', content: input }], model }),
+                });
+                loadingDiv.remove();
+                if (res.ok) {
+                    const data = await res.json();
+                    const content = data.message?.content || '';
+                    addChatMessage('ai', content);
+                    chatMessageHistory.push({ role: 'assistant', content });
+                } else {
+                    const err = await res.text();
+                    addChatMessage('ai', '抱歉，对话出错了: ' + err.slice(0, 100));
+                }
+            } catch (e) {
+                loadingDiv.remove();
+                addChatMessage('ai', '网络异常: ' + (e.message || ''));
+            }
+        }
+
+        document.getElementById('chatInput').addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                sendChatMessage();
+            }
+        });
+
+        window.useChatPrompt = function() {
+            // 获取最后一条 AI 消息
+            const lastAiMsg = [...chatMessageHistory].reverse().find(m => m.role === 'assistant');
+            if (lastAiMsg && lastAiMsg.content && !lastAiMsg.content.includes('你好！我是')) {
+                promptInput.value = lastAiMsg.content;
+                updateGenerateBtn();
+                showToast('已填入提示词');
+            } else {
+                showToast('请先与 AI 对话获取提示词');
+            }
+        };
+
+        // ==================== 语音输入 ====================
+        document.getElementById('micBtn').addEventListener('click', () => {
+            if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+                showToast('你的浏览器不支持语音输入');
+                return;
+            }
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            const recognition = new SpeechRecognition();
+            recognition.lang = 'zh-CN';
+            recognition.interimResults = false;
+            recognition.onresult = (event) => {
+                const transcript = event.results[0][0].transcript;
+                promptInput.value = transcript;
+                updateGenerateBtn();
+            };
+            recognition.onerror = () => showToast('语音识别失败');
+            recognition.onend = () => document.getElementById('micBtn').classList.remove('text-black');
+            document.getElementById('micBtn').classList.add('text-black');
+            recognition.start();
+        });
+
+        // ==================== @ 快捷指令 ====================
+        document.getElementById('atBtn').addEventListener('click', (e) => {
+            e.stopPropagation();
+            const popover = document.getElementById('atPopover');
+            popover.classList.toggle('hidden');
+            prefPopover.classList.add('hidden');
+            modelPopover.classList.add('hidden');
+        });
+
+        document.querySelectorAll('#atPopover .at-cmd').forEach(cmd => {
+            cmd.addEventListener('click', () => {
+                const suffix = cmd.dataset.cmd;
+                const current = promptInput.value.trim();
+                promptInput.value = current ? current + '，' + suffix : suffix;
+                updateGenerateBtn();
+                document.getElementById('atPopover').classList.add('hidden');
+                promptInput.focus();
+            });
+        });
+
+        document.addEventListener('click', (e) => {
+            const atPopover = document.getElementById('atPopover');
+            if (!atPopover.contains(e.target) && e.target !== document.getElementById('atBtn')) {
+                atPopover.classList.add('hidden');
+            }
+        });
+
+        // ==================== 清空对话 ====================
+        window.clearChat = function() {
+            chatMessages.innerHTML = '';
+            chatMessageHistory = [];
+            showToast('对话已清空');
+        };
+        // ==================== 工具函数 ====================
+        function scrollToBottom() {
+            setTimeout(() => {
+                feedContent.scrollTo({ top: feedContent.scrollHeight, behavior: 'smooth' });
+            }, 100);
+        }
+
+        // ==================== 初始化 ====================
+        refreshCredits();
+        updateCreditCost();
+
+        // 键盘快捷键
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && e.ctrlKey && document.activeElement === promptInput) {
+                e.preventDefault();
+                generateBtn.click();
+            }
+        });
+    </script>
+</body>
+</html>

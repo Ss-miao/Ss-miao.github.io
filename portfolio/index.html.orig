@@ -1,0 +1,879 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+<title>黄淼 · 个人主页</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#F2F2F7;--win-bg:#FFFFFF;--text:#1D1D1F;--t2:rgba(0,0,0,.55);--t3:rgba(0,0,0,.3);
+  --bdr:rgba(0,0,0,.08);--sb-bg:#F5F5F7;--accent:#007AFF;--accent2:#5856D6;--gold:#F5A623
+}
+html,body{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display','PingFang SC','Microsoft YaHei',sans-serif;-webkit-font-smoothing:antialiased;background:var(--bg);min-height:100vh;color:var(--text);overflow-x:hidden;font-size:14px;line-height:1.6}
+a{color:inherit;text-decoration:none}
+.desktop{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;padding:20px}
+.window{width:100%;max-width:1100px;max-height:calc(100vh - 40px);background:var(--win-bg);border-radius:10px;overflow:hidden;box-shadow:0 0 0 1px rgba(0,0,0,.06),0 2px 16px rgba(0,0,0,.08),0 8px 48px rgba(0,0,0,.06);display:flex;flex-direction:column}
+.titlebar{flex-shrink:0;height:40px;background:#ECECF0;display:flex;align-items:center;justify-content:center;padding:0 14px;position:relative;user-select:none}
+.titlebar .dots{position:absolute;left:14px;display:flex;gap:7px}
+.titlebar .dots i{width:12px;height:12px;border-radius:50%}
+.titlebar .dots i:nth-child(1){background:#FF5F57}
+.titlebar .dots i:nth-child(2){background:#FFBD2E}
+.titlebar .dots i:nth-child(3){background:#28CA41}
+.titlebar .win-title{font-size:12px;font-weight:600;color:var(--text)}
+.titlebar .back{position:absolute;right:14px;font-size:11px;font-weight:500;color:var(--t2);cursor:pointer;transition:color .15s;background:none;border:none;font-family:inherit;padding:4px 8px;border-radius:4px}
+.titlebar .back:hover{color:var(--text);background:rgba(0,0,0,.05)}
+.shadow-line{flex-shrink:0;height:1px;background:rgba(0,0,0,.06)}
+.body{flex:1;display:flex;min-height:0}
+
+.sidebar{width:200px;flex-shrink:0;background:var(--sb-bg);border-right:1px solid var(--bdr);padding:16px 0;display:flex;flex-direction:column;overflow-y:auto}
+.sidebar .sb-profile{padding:12px;display:flex;align-items:center;gap:10px}
+.sidebar .sb-avatar{width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#1D1D1F,#3a3a3f);display:flex;align-items:center;justify-content:center;font-size:15px;color:#fff;flex-shrink:0;font-weight:600}
+.sidebar .sb-name{font-size:12px;font-weight:600;color:var(--text)}
+.sidebar .sb-role{font-size:10px;color:var(--t3)}
+.sidebar .sb-divider{height:1px;background:var(--bdr);margin:8px 12px}
+.sidebar .sb-section{padding:0 12px;margin-bottom:10px}
+.sidebar .sb-label{font-size:10px;font-weight:600;color:var(--t3);text-transform:uppercase;letter-spacing:.06em;padding:0 8px;margin-bottom:4px}
+.sidebar .sb-item{display:flex;align-items:center;gap:8px;padding:5px 8px;border-radius:6px;font-size:12px;font-weight:500;color:var(--t2);cursor:pointer;transition:all .12s;border:none;background:none;font-family:inherit;width:100%;text-align:left}
+.sidebar .sb-item:hover{background:rgba(0,0,0,.04);color:var(--text)}
+.sidebar .sb-item.active{background:rgba(0,0,0,.06);color:var(--text);font-weight:600}
+.sidebar .sb-item .sb-icon{width:16px;height:16px;display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0}
+.sidebar .sb-item .sb-count{margin-left:auto;font-size:10px;color:var(--t3);font-weight:400}
+.sidebar .sb-tags{display:flex;flex-wrap:wrap;gap:4px;padding:0 8px}
+.sidebar .sb-tag{font-size:10px;padding:2px 8px;border-radius:4px;background:rgba(0,0,0,.04);color:var(--t2);font-weight:500}
+.sidebar .sb-contact{padding:0 8px;font-size:10px;color:var(--t3);line-height:1.8}
+
+.content{flex:1;overflow-y:auto;overflow-x:hidden}
+
+/* Hero with animated background */
+.hero{position:relative;padding:32px 28px;border-bottom:1px solid var(--bdr);display:flex;gap:28px;align-items:center;overflow:hidden}
+.hero::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(0,122,255,.03),rgba(88,86,214,.03),rgba(245,166,35,.02));z-index:0}
+.hero>*{position:relative;z-index:1}
+.hero .h-avatar{width:80px;height:80px;border-radius:50%;background:linear-gradient(135deg,#1a1a2e,#16213e,#0f3460);display:flex;align-items:center;justify-content:center;font-size:32px;color:#fff;flex-shrink:0;font-weight:700;box-shadow:0 4px 20px rgba(0,0,0,.12)}
+.hero .h-info{flex:1}
+.hero .h-info h1{font-size:24px;font-weight:800;margin-bottom:4px;background:linear-gradient(135deg,#1D1D1F,#3a3a3f);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.hero .h-info .h-bio{font-size:13px;color:var(--t2);line-height:1.7;margin-bottom:10px}
+.hero .h-info .h-stats{display:flex;gap:24px;flex-wrap:wrap}
+.hero .h-info .h-stat{display:flex;flex-direction:column;align-items:center}
+.hero .h-info .h-stat .hs-num{font-size:22px;font-weight:800;color:var(--accent);transition:all .3s}
+.hero .h-info .h-stat .hs-label{font-size:10px;color:var(--t3);font-weight:500;margin-top:2px}
+
+.section{padding:28px 32px;border-bottom:1px solid var(--bdr)}
+.section:last-child{border-bottom:none}
+.section h2{font-size:15px;font-weight:700;color:var(--text);margin-bottom:20px;display:flex;align-items:center;gap:10px;letter-spacing:-.01em}
+.section h2::before{content:'';width:3px;height:16px;border-radius:2px;background:var(--accent);flex-shrink:0}
+
+/* Timeline */
+.timeline{position:relative;padding-left:24px}
+.timeline::before{content:'';position:absolute;left:6px;top:4px;bottom:4px;width:1px;background:linear-gradient(180deg,var(--accent),var(--accent2),rgba(0,0,0,.06))}
+.timeline .tl-item{position:relative;padding:0 0 24px 20px;opacity:0;transform:translateX(-8px);transition:all .5s cubic-bezier(.16,1,.3,1)}
+.timeline .tl-item.visible{opacity:1;transform:translateX(0)}
+.timeline .tl-item:last-child{padding-bottom:0}
+.timeline .tl-item::before{content:'';position:absolute;left:-22px;top:6px;width:12px;height:12px;border-radius:50%;background:var(--accent);border:2px solid #fff;box-shadow:0 0 0 2px var(--accent),0 0 12px rgba(0,122,255,.3)}
+.timeline .tl-item:nth-child(2)::before{background:var(--accent2);box-shadow:0 0 0 2px var(--accent2),0 0 12px rgba(88,86,214,.3)}
+.timeline .tl-item:nth-child(3)::before{background:var(--gold);box-shadow:0 0 0 2px var(--gold),0 0 12px rgba(245,166,35,.3)}
+.timeline .tl-item:nth-child(4)::before{background:#34C759;box-shadow:0 0 0 2px #34C759,0 0 12px rgba(52,199,89,.3)}
+.timeline .tl-item .tl-year{font-size:10px;font-weight:700;color:var(--accent);margin-bottom:2px}
+.timeline .tl-item:nth-child(2) .tl-year{color:var(--accent2)}
+.timeline .tl-item:nth-child(3) .tl-year{color:var(--gold)}
+.timeline .tl-item:nth-child(4) .tl-year{color:#34C759}
+.timeline .tl-item .tl-title{font-size:13px;font-weight:600;color:var(--text)}
+.timeline .tl-item .tl-desc{font-size:11px;color:var(--t2);margin-top:2px;line-height:1.5}
+
+/* Skills - SVG icons */
+.skills-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px}
+.skill-item{position:relative;display:flex;align-items:center;gap:10px;padding:12px 14px;background:#FAFAFC;border-radius:10px;border:1px solid var(--bdr);transition:all .3s cubic-bezier(.16,1,.3,1);cursor:default;overflow:hidden}
+.skill-item::after{content:'';position:absolute;bottom:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--accent),var(--accent2));transform:scaleX(0);transform-origin:left;transition:transform .4s cubic-bezier(.16,1,.3,1)}
+.skill-item:hover{background:#fff;border-color:rgba(0,0,0,.12);transform:translateY(-2px);box-shadow:0 6px 20px rgba(0,0,0,.06)}
+.skill-item:hover::after{transform:scaleX(1)}
+.skill-item .sk-icon{width:36px;height:36px;flex-shrink:0;display:flex;align-items:center;justify-content:center}
+.skill-item .sk-icon svg{width:22px;height:22px}
+.skill-item .sk-info{flex:1;min-width:0}
+.skill-item .sk-name{font-size:12px;font-weight:600}
+.skill-item .sk-level{font-size:10px;color:var(--t3);margin-top:1px}
+.skill-item .sk-bar{width:44px;height:4px;border-radius:3px;background:#E8E8ED;overflow:hidden;flex-shrink:0}
+.skill-item .sk-fill{height:100%;border-radius:3px;background:linear-gradient(90deg,var(--accent),var(--accent2));transition:width 1s cubic-bezier(.16,1,.3,1)}
+
+/* Service cards */
+.services-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px}
+.service-card{position:relative;padding:16px;border-radius:10px;border:1px solid var(--bdr);background:#FAFAFC;transition:all .3s cubic-bezier(.16,1,.3,1);overflow:hidden}
+.service-card::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(0,122,255,.02),rgba(88,86,214,.02));opacity:0;transition:opacity .3s}
+.service-card:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,0,0,.06);border-color:rgba(0,0,0,.12)}
+.service-card:hover::before{opacity:1}
+.service-card .sc-icon{font-size:22px;margin-bottom:8px;display:flex;align-items:center;gap:6px}
+.service-card .sc-icon svg{width:20px;height:20px}
+.service-card .sc-title{font-size:13px;font-weight:700;margin-bottom:4px}
+.service-card .sc-desc{font-size:11px;color:var(--t2);line-height:1.5}
+
+.grid-wrap{padding:2px 0}
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
+.card{position:relative;border-radius:12px;overflow:hidden;border:1px solid rgba(0,0,0,.06);background:var(--win-bg);transition:all .35s cubic-bezier(.16,1,.3,1);cursor:pointer}
+.card:hover{border-color:rgba(0,0,0,.1);box-shadow:0 4px 24px rgba(0,0,0,.06);transform:translateY(-2px)}
+.card .c-thumb{position:relative;aspect-ratio:16/10;background:#1a1a2e;overflow:hidden}
+.card .c-thumb .c-cover{position:absolute;inset:0;width:100%;height:100%;transition:transform .5s cubic-bezier(.16,1,.3,1);display:flex;flex-direction:column}
+.card .c-thumb .c-cover .c-cover-fx{position:absolute;inset:0;background:radial-gradient(ellipse at center,transparent 40%,rgba(0,0,0,.35) 100%)}
+.card .c-thumb .c-cover .c-cover-top{position:absolute;top:8px;left:8px;z-index:2}
+.card .c-thumb .c-cover .c-cover-tag{font-size:9px;font-weight:600;color:#fff;background:rgba(0,0,0,.45);backdrop-filter:blur(6px);padding:2px 7px;border-radius:3px;letter-spacing:.02em}
+.card .c-thumb .c-cover .c-cover-center{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;z-index:1;transition:opacity .3s}
+.card .c-thumb .c-cover .c-cover-play-hint{width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,.15);backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:center;font-size:12px;color:#fff;border:1px solid rgba(255,255,255,.2);opacity:.7;transition:opacity .3s}
+.card:hover .c-thumb .c-cover .c-cover-center{opacity:0}
+.card .c-thumb .c-cover .c-cover-bottom{position:absolute;bottom:6px;right:8px;display:flex;align-items:center;gap:5px;z-index:2}
+.card .c-thumb .c-cover .c-cover-dur,.card .c-thumb .c-cover .c-cover-res{font-size:9px;font-weight:600;color:#fff;background:rgba(0,0,0,.55);backdrop-filter:blur(6px);padding:1px 5px;border-radius:2px;letter-spacing:.03em}
+.card .c-thumb .c-cover .c-cover-res{font-size:8px;background:rgba(0,0,0,.4)}
+.card .c-thumb .c-cover .c-cover-progress{position:absolute;bottom:0;left:0;right:0;height:2px;background:rgba(255,255,255,.08);z-index:2}
+.card .c-thumb .c-cover .c-cover-prog-fill{height:100%;background:var(--accent);width:35%;border-radius:0 1px 1px 0}
+.card:hover .c-thumb .c-cover{transform:scale(1.05)}
+.card .c-thumb .c-overlay{position:absolute;inset:0;background:rgba(0,0,0,0);display:flex;align-items:center;justify-content:center;transition:background .35s;z-index:3}
+.card:hover .c-thumb .c-overlay{background:rgba(0,0,0,.08)}
+.card .c-thumb .c-play{width:48px;height:48px;border-radius:50%;background:rgba(255,255,255,.92);box-shadow:0 4px 20px rgba(0,0,0,.25);display:flex;align-items:center;justify-content:center;font-size:14px;color:#1D1D1F;opacity:0;transform:scale(.8);transition:all .3s cubic-bezier(.16,1,.3,1)}
+.card:hover .c-thumb .c-play{opacity:1;transform:scale(1)}
+.card .c-info{padding:16px 18px 18px}
+.card .c-info h4{font-size:13px;font-weight:600;margin-bottom:3px;letter-spacing:-.01em}
+.card .c-info .c-cat{font-size:10px;color:var(--t3);margin-bottom:5px;font-weight:500;text-transform:uppercase;letter-spacing:.04em}
+.card .c-info .c-desc{font-size:11px;color:var(--t2);line-height:1.6}
+
+.toolbar{display:flex;align-items:center;gap:8px;padding:0 0 18px;flex-wrap:wrap}
+.toolbar .tb-btn{display:flex;align-items:center;gap:5px;padding:5px 14px;border-radius:7px;font-size:11px;font-weight:500;color:var(--t2);cursor:pointer;border:1px solid rgba(0,0,0,.07);background:var(--win-bg);font-family:inherit;transition:all .2s;white-space:nowrap;letter-spacing:-.01em}
+.toolbar .tb-btn:hover{background:rgba(0,0,0,.03);color:var(--text);border-color:rgba(0,0,0,.12)}
+.toolbar .tb-btn.active{background:var(--accent);color:#fff;border-color:var(--accent);box-shadow:0 2px 8px rgba(0,122,255,.25)}
+
+.empty-state{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 20px;color:var(--t3)}
+.empty-state .es-icon{font-size:32px;margin-bottom:8px;opacity:.5}
+.empty-state .es-text{font-size:12px}
+
+.chat-section{background:linear-gradient(135deg,rgba(0,122,255,.03),rgba(88,86,214,.03));border:1px solid rgba(0,122,255,.1);border-radius:12px;padding:18px;margin-top:4px}
+.chat-section .chat-header{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+.chat-section .chat-header .ch-icon{font-size:20px}
+.chat-section .chat-header .ch-title{font-size:13px;font-weight:700;color:var(--text)}
+.chat-section .chat-header .ch-sub{font-size:10px;color:var(--t3)}
+.chat-messages{max-height:200px;overflow-y:auto;margin-bottom:12px;display:flex;flex-direction:column;gap:8px;padding-right:4px}
+.chat-messages .msg{max-width:85%;padding:9px 14px;border-radius:12px;font-size:12px;line-height:1.5;animation:msgIn .3s cubic-bezier(.16,1,.3,1)}
+.chat-messages .msg.user{align-self:flex-end;background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;border-bottom-right-radius:3px}
+.chat-messages .msg.bot{align-self:flex-start;background:#F0F0F5;color:var(--text);border-bottom-left-radius:3px}
+.chat-messages .msg.typing{color:var(--t3);font-style:italic}
+@keyframes msgIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.chat-input-row{display:flex;gap:8px}
+.chat-input-row input{flex:1;padding:9px 14px;border:1px solid var(--bdr);border-radius:10px;font-size:12px;font-family:inherit;color:var(--text);background:var(--win-bg);outline:none;transition:border-color .2s}
+.chat-input-row input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(0,122,255,.1)}
+.chat-input-row button{padding:9px 18px;border:none;border-radius:10px;background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;white-space:nowrap;transition:all .2s}
+.chat-input-row button:hover{opacity:.9;transform:scale(1.02)}
+.chat-input-row button:disabled{opacity:.4;cursor:not-allowed;transform:none}
+
+.lb-overlay{position:fixed;inset:0;z-index:200;background:rgba(0,0,0,.6);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:center;padding:24px;animation:fadeIn .3s ease}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+.lb{background:#0d0d0d;border-radius:14px;max-width:860px;width:100%;max-height:90vh;overflow:hidden;box-shadow:0 24px 80px rgba(0,0,0,.4),0 0 0 1px rgba(255,255,255,.06);animation:lbin .35s cubic-bezier(.16,1,.3,1)}
+@keyframes lbin{0%{opacity:0;transform:scale(.94) translateY(12px)}to{opacity:1;transform:scale(1) translateY(0)}}
+.lb .lb-bar{display:flex;align-items:center;justify-content:space-between;padding:10px 18px;background:#141414;color:#fff;font-size:12px;font-weight:600;letter-spacing:-.01em;border-bottom:1px solid rgba(255,255,255,.06)}
+.lb .lb-bar button{background:none;border:none;color:rgba(255,255,255,.5);cursor:pointer;font-size:16px;padding:4px 10px;border-radius:6px;transition:all .2s;font-family:inherit;line-height:1}
+.lb .lb-bar button:hover{color:#fff;background:rgba(255,255,255,.08)}
+.lb video{width:100%;display:block;max-height:calc(90vh - 44px);background:#000}
+.lb .lb-preview{width:100%;aspect-ratio:16/10;background:#000;max-height:calc(90vh - 44px);overflow:hidden;min-height:300px;position:relative;display:flex;align-items:center;justify-content:center}
+
+.mobile-nav{display:none;position:fixed;bottom:0;left:0;right:0;background:rgba(255,255,255,.92);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-top:1px solid var(--bdr);padding:6px 8px env(safe-area-inset-bottom,6px);z-index:100;justify-content:space-around}
+.mobile-nav .mn-item{display:flex;flex-direction:column;align-items:center;gap:2px;padding:4px 8px;border:none;background:none;font-family:inherit;cursor:pointer;color:var(--t3);font-size:9px;font-weight:500;transition:color .15s}
+.mobile-nav .mn-item .mn-icon{font-size:17px}
+.mobile-nav .mn-item.active{color:var(--accent)}
+
+/* Scroll reveal */
+.reveal{opacity:0;transform:translateY(20px);transition:all .6s cubic-bezier(.16,1,.3,1)}
+.reveal.visible{opacity:1;transform:translateY(0)}
+
+/* Particle canvas */
+#particleCanvas{position:fixed;inset:0;z-index:0;pointer-events:none;opacity:.4}
+.desktop{position:relative;z-index:1}
+
+/* Section glow on scroll */
+.section-glow{position:relative}
+.section-glow::before{content:'';position:absolute;inset:-1px;border-radius:12px;background:var(--accent);opacity:0;transition:opacity .6s;z-index:-1;filter:blur(24px)}
+.section-glow.glow-active::before{opacity:.04}
+
+/* Enhanced skill item */
+.skill-item .sk-icon svg{transition:transform .3s cubic-bezier(.16,1,.3,1)}
+.skill-item:hover .sk-icon svg{transform:scale(1.1)}
+
+@media(max-width:860px){
+  .desktop{padding:10px}
+  .window{max-height:calc(100vh - 20px);border-radius:8px}
+  .titlebar{height:34px}
+  .titlebar .dots i{width:10px;height:10px}
+  .titlebar .dots{gap:5px}
+  .sidebar{width:180px}
+  .hero{flex-direction:column;align-items:flex-start;padding:24px 20px}
+  .hero .h-avatar{width:64px;height:64px;font-size:26px}
+  .hero .h-info h1{font-size:20px}
+  .hero .h-info .h-stats{justify-content:flex-start}
+  .skills-grid{grid-template-columns:repeat(2,1fr)}
+  .services-grid{grid-template-columns:repeat(2,1fr)}
+  .grid{grid-template-columns:repeat(2,1fr);gap:16px}
+}
+@media(max-width:640px){
+  .desktop{padding:0}
+  .window{max-height:100vh;border-radius:0;max-width:100%}
+  .titlebar{height:32px;padding:0 10px}
+  .titlebar .dots i{width:8px;height:8px}
+  .titlebar .dots{gap:4px}
+  .titlebar .win-title{font-size:11px}
+  .titlebar .back{font-size:10px;right:8px}
+  .body{flex-direction:column}
+  .sidebar{display:none}
+  .content{padding-bottom:56px}
+  .hero{padding:20px 16px;gap:14px}
+  .hero .h-avatar{width:56px;height:56px;font-size:22px}
+  .hero .h-info h1{font-size:18px}
+  .hero .h-info .h-bio{font-size:12px}
+  .hero .h-info .h-stats{gap:16px}
+  .hero .h-info .h-stat .hs-num{font-size:18px}
+  .section{padding:20px 18px}
+  .section h2{font-size:14px;margin-bottom:14px}
+  .section h2::before{height:14px}
+  .grid{grid-template-columns:repeat(2,1fr);gap:12px}
+  .card .c-thumb{aspect-ratio:16/10}
+  .card .c-info{padding:8px 10px}
+  .card .c-info h4{font-size:11px}
+  .card .c-info .c-cat{font-size:9px}
+  .card .c-info .c-desc{display:none}
+  .card .c-thumb .c-play{width:28px;height:28px;font-size:10px}
+  .card .c-thumb .c-cover .c-cover-tag{font-size:8px;padding:1px 5px}
+  .card .c-thumb .c-cover .c-cover-play-hint{width:24px;height:24px;font-size:10px}
+  .card .c-thumb .c-cover .c-cover-dur,.card .c-thumb .c-cover .c-cover-res{font-size:8px;padding:1px 4px}
+  .skills-grid{grid-template-columns:repeat(2,1fr);gap:8px}
+  .skill-item{padding:10px 12px}
+  .services-grid{grid-template-columns:1fr;gap:8px}
+  .toolbar{gap:5px}
+  .toolbar .tb-btn{padding:4px 8px;font-size:10px}
+  .mobile-nav{display:flex}
+  .chat-messages{max-height:150px}
+  .lb-overlay{padding:10px}
+  .timeline{padding-left:20px}
+  .timeline .tl-item{padding:0 0 18px 16px}
+}
+</style>
+</head>
+<body>
+
+<canvas id="particleCanvas"></canvas>
+<div class="desktop">
+  <div class="window">
+    <div class="titlebar">
+      <span class="dots"><i></i><i></i><i></i></span>
+      <span class="win-title">黄淼 · 个人主页</span>
+      <a href="/" class="back">← 返回桌面</a>
+    </div>
+    <div class="shadow-line"></div>
+    <div class="body">
+      <div class="sidebar" id="sidebar">
+        <div class="sb-profile">
+          <div class="sb-avatar">淼</div>
+          <div>
+            <div class="sb-name">黄淼</div>
+            <div class="sb-role">Video Creator</div>
+          </div>
+        </div>
+        <div class="sb-divider"></div>
+        <div class="sb-section">
+          <div class="sb-label">作品分类</div>
+          <button class="sb-item active" data-cat="all">
+            <span class="sb-icon">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z"/></svg>
+            </span>全部作品<span class="sb-count">20</span>
+          </button>
+          <button class="sb-item" data-cat="ae">
+            <span class="sb-icon">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>
+            </span>AE 特效<span class="sb-count">10</span>
+          </button>
+          <button class="sb-item" data-cat="edit">
+            <span class="sb-icon">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+            </span>剪辑作品<span class="sb-count">6</span>
+          </button>
+          <button class="sb-item" data-cat="biz">
+            <span class="sb-icon">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v16"/></svg>
+            </span>商业项目<span class="sb-count">3</span>
+          </button>
+          <button class="sb-item" data-cat="aigc">
+            <span class="sb-icon">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+            </span>AIGC<span class="sb-count">1</span>
+          </button>
+        </div>
+        <div class="sb-divider"></div>
+        <div class="sb-section">
+          <div class="sb-label">技能标签</div>
+          <div class="sb-tags">
+            <span class="sb-tag">AE</span><span class="sb-tag">PR</span><span class="sb-tag">PS</span>
+            <span class="sb-tag">AIGC</span><span class="sb-tag">即梦</span><span class="sb-tag">剪映</span>
+            <span class="sb-tag">运营</span><span class="sb-tag">Python</span>
+          </div>
+        </div>
+        <div class="sb-divider"></div>
+        <div class="sb-section">
+          <div class="sb-label">联系我</div>
+          <div class="sb-contact">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:-1px;margin-right:3px"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z"/></svg>
+            18006172919<br>
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:-1px;margin-right:3px"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+            hm3227513340@qq.com
+          </div>
+        </div>
+      </div>
+      <div class="content" id="mainContent">
+        <div class="hero">
+          <div class="h-avatar">淼</div>
+          <div class="h-info">
+            <h1>黄淼</h1>
+            <div class="h-bio">
+              湖南农业大学 · 教育技术学 · 2022-2026<br>
+              视频创作者 / 新媒体运营 / AIGC探索者<br>
+              精通 AE·PR·PS · 擅长短视频全流程创作与账号运营
+            </div>
+          </div>
+        </div>
+
+        <div class="section" id="expSection">
+          <h2>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            我的历程
+          </h2>
+          <div class="timeline">
+            <div class="tl-item"><div class="tl-year">2022</div><div class="tl-title">入学 · 湖南农业大学 教育技术学</div><div class="tl-desc">进入湖南农业大学教育技术学专业，主修教学设计、多媒体技术、Python编程。加入院学生会视频部，开始接触视频拍摄与剪辑。</div></div>
+            <div class="tl-item"><div class="tl-year">2022-2024</div><div class="tl-title">视频部干事 · 校园活动策划</div><div class="tl-desc">负责校级大型活动（迎新晚会、运动会、学术讲座）现场拍摄与后期制作，累计完成10+条短视频。主导"校园文化宣传月"系列视频策划，获校团委"优秀新媒体作品"表彰。为新成员开展视频培训，提升团队效率。</div></div>
+            <div class="tl-item"><div class="tl-year">2023</div><div class="tl-title">突破 · 抖音自媒体运营</div><div class="tl-desc">独立运营抖音短视频账号，全权负责内容选题、AE/剪映全流程剪辑包装与账号运营。产出多条爆款作品，单条视频最高播放392W+，累计获赞7.5万+。熟练掌握短视频流量逻辑与爆款内容创作技巧。</div></div>
+            <div class="tl-item"><div class="tl-year">至今</div><div class="tl-title">商业接单 · 持续进化</div><div class="tl-desc">长期承接AE动画、短视频剪辑代做业务。</div></div>
+          </div>
+        </div>
+
+        <div class="section" id="skillsSection">
+          <h2>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+            技能栈
+          </h2>
+          <div class="skills-grid">
+            <div class="skill-item reveal">
+              <div class="sk-icon">
+                <svg viewBox="0 0 36 36" fill="none"><defs><linearGradient id="skg1" x1="0" y1="0" x2="36" y2="36"><stop offset="0%" stop-color="#667eea"/><stop offset="100%" stop-color="#764ba2"/></linearGradient></defs><rect x="2" y="2" width="32" height="32" rx="8" fill="url(#skg1)" opacity=".12"/><polygon points="24 8 18 14 24 20 24 8" fill="url(#skg1)"/><rect x="5" y="8" width="12" height="20" rx="2" fill="none" stroke="url(#skg1)" stroke-width="1.8"/><line x1="10" y1="14" x2="15" y2="14" stroke="url(#skg1)" stroke-width="1.2" stroke-linecap="round"/><line x1="10" y1="18" x2="15" y2="18" stroke="url(#skg1)" stroke-width="1.2" stroke-linecap="round"/><line x1="10" y1="22" x2="13" y2="22" stroke="url(#skg1)" stroke-width="1.2" stroke-linecap="round"/></svg>
+              </div>
+              <div class="sk-info"><div class="sk-name">AE 特效合成</div><div class="sk-level">精通</div></div>
+              <div class="sk-bar"><div class="sk-fill" data-width="95"></div></div>
+            </div>
+            <div class="skill-item reveal">
+              <div class="sk-icon">
+                <svg viewBox="0 0 36 36" fill="none"><defs><linearGradient id="skg2" x1="0" y1="0" x2="36" y2="36"><stop offset="0%" stop-color="#f093fb"/><stop offset="100%" stop-color="#f5576c"/></linearGradient></defs><rect x="2" y="2" width="32" height="32" rx="8" fill="url(#skg2)" opacity=".12"/><path d="M21 3l-6 7 4 1-3 7 7-7-4-1 2-7z" fill="url(#skg2)" opacity=".9"/><path d="M14 20h8M14 23h5M14 26h3" stroke="url(#skg2)" stroke-width="1.2" stroke-linecap="round"/></svg>
+              </div>
+              <div class="sk-info"><div class="sk-name">PR 剪辑</div><div class="sk-level">精通</div></div>
+              <div class="sk-bar"><div class="sk-fill" data-width="92"></div></div>
+            </div>
+            <div class="skill-item reveal">
+              <div class="sk-icon">
+                <svg viewBox="0 0 36 36" fill="none"><defs><linearGradient id="skg3" x1="0" y1="0" x2="36" y2="36"><stop offset="0%" stop-color="#4facfe"/><stop offset="100%" stop-color="#00f2fe"/></linearGradient></defs><rect x="2" y="2" width="32" height="32" rx="8" fill="url(#skg3)" opacity=".12"/><rect x="7" y="7" width="22" height="22" rx="4" fill="none" stroke="url(#skg3)" stroke-width="1.8"/><circle cx="18" cy="16" r="5" fill="none" stroke="url(#skg3)" stroke-width="1.5"/><path d="M18 11v5l3 3" stroke="url(#skg3)" stroke-width="1.5" stroke-linecap="round"/><path d="M10 26l4-7h8l4 7" fill="url(#skg3)" opacity=".15" stroke="url(#skg3)" stroke-width="1.2"/></svg>
+              </div>
+              <div class="sk-info"><div class="sk-name">PS 图像处理</div><div class="sk-level">精通</div></div>
+              <div class="sk-bar"><div class="sk-fill" data-width="88"></div></div>
+            </div>
+            <div class="skill-item reveal">
+              <div class="sk-icon">
+                <svg viewBox="0 0 36 36" fill="none"><defs><linearGradient id="skg4" x1="0" y1="0" x2="36" y2="36"><stop offset="0%" stop-color="#43e97b"/><stop offset="100%" stop-color="#38f9d7"/></linearGradient></defs><rect x="2" y="2" width="32" height="32" rx="8" fill="url(#skg4)" opacity=".12"/><circle cx="18" cy="18" r="10" fill="none" stroke="url(#skg4)" stroke-width="1.8"/><path d="M18 8v10l6 4" stroke="url(#skg4)" stroke-width="1.5" stroke-linecap="round"/><circle cx="18" cy="18" r="3" fill="url(#skg4)" opacity=".3"/></svg>
+              </div>
+              <div class="sk-info"><div class="sk-name">AIGC 工具链</div><div class="sk-level">熟练</div></div>
+              <div class="sk-bar"><div class="sk-fill" data-width="78"></div></div>
+            </div>
+            <div class="skill-item reveal">
+              <div class="sk-icon">
+                <svg viewBox="0 0 36 36" fill="none"><defs><linearGradient id="skg5" x1="0" y1="0" x2="36" y2="36"><stop offset="0%" stop-color="#FF6B35"/><stop offset="100%" stop-color="#F7C948"/></linearGradient></defs><rect x="2" y="2" width="32" height="32" rx="8" fill="url(#skg5)" opacity=".12"/><rect x="5" y="10" width="26" height="16" rx="3" fill="none" stroke="url(#skg5)" stroke-width="1.8"/><path d="M12 18h3M21 18h3" stroke="url(#skg5)" stroke-width="1.5" stroke-linecap="round"/><circle cx="18" cy="18" r="2" fill="url(#skg5)" opacity=".6"/></svg>
+              </div>
+              <div class="sk-info"><div class="sk-name">数据分析(Excel)</div><div class="sk-level">擅长</div></div>
+              <div class="sk-bar"><div class="sk-fill" data-width="75"></div></div>
+            </div>
+            <div class="skill-item reveal">
+              <div class="sk-icon">
+                <svg viewBox="0 0 36 36" fill="none"><defs><linearGradient id="skg6" x1="0" y1="0" x2="36" y2="36"><stop offset="0%" stop-color="#8B5CF6"/><stop offset="100%" stop-color="#6366F1"/></linearGradient></defs><rect x="2" y="2" width="32" height="32" rx="8" fill="url(#skg6)" opacity=".12"/><path d="M10 20l4 4 6-6 6 6" stroke="url(#skg6)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><circle cx="18" cy="16" r="2" fill="url(#skg6)" opacity=".6"/><circle cx="12" cy="12" r="1.5" fill="url(#skg6)" opacity=".3"/></svg>
+              </div>
+              <div class="sk-info"><div class="sk-name">Python 编程</div><div class="sk-level">基础</div></div>
+              <div class="sk-bar"><div class="sk-fill" data-width="55"></div></div>
+            </div>
+            <div class="skill-item reveal">
+              <div class="sk-icon">
+                <svg viewBox="0 0 36 36" fill="none"><defs><linearGradient id="skg7" x1="0" y1="0" x2="36" y2="36"><stop offset="0%" stop-color="#EC4899"/><stop offset="100%" stop-color="#F43F5E"/></linearGradient></defs><rect x="2" y="2" width="32" height="32" rx="8" fill="url(#skg7)" opacity=".12"/><path d="M18 6v24M6 18h24" stroke="url(#skg7)" stroke-width="1.8" stroke-linecap="round"/><circle cx="18" cy="18" r="5" fill="url(#skg7)" opacity=".2" stroke="url(#skg7)" stroke-width="1.5"/></svg>
+              </div>
+              <div class="sk-info"><div class="sk-name">新媒体运营</div><div class="sk-level">擅长</div></div>
+              <div class="sk-bar"><div class="sk-fill" data-width="82"></div></div>
+            </div>
+            <div class="skill-item reveal">
+              <div class="sk-icon">
+                <svg viewBox="0 0 36 36" fill="none"><defs><linearGradient id="skg8" x1="0" y1="0" x2="36" y2="36"><stop offset="0%" stop-color="#14B8A6"/><stop offset="100%" stop-color="#0D9488"/></linearGradient></defs><rect x="2" y="2" width="32" height="32" rx="8" fill="url(#skg8)" opacity=".12"/><path d="M6 18c0 6.6 5.4 12 12 12s12-5.4 12-12" fill="none" stroke="url(#skg8)" stroke-width="1.8"/><path d="M18 8v10l5 3" stroke="url(#skg8)" stroke-width="1.5" stroke-linecap="round"/><circle cx="18" cy="18" r="3" fill="url(#skg8)" opacity=".3"/></svg>
+              </div>
+              <div class="sk-info"><div class="sk-name">Web 前端</div><div class="sk-level">基础</div></div>
+              <div class="sk-bar"><div class="sk-fill" data-width="50"></div></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="section" id="servicesSection">
+          <h2>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v16"/></svg>
+            服务范围
+          </h2>
+          <div class="services-grid">
+            <div class="service-card reveal">
+              <div class="sc-icon">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linecap="round"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>
+                <span style="font-size:13px;font-weight:700">视频特效包装</span>
+              </div>
+              <div class="sc-desc">AE合成 · 粒子光效 · 三维摄像机动画 · 动态图形 · 文字动画 · 品牌视觉</div>
+            </div>
+            <div class="service-card reveal">
+              <div class="sc-icon">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--accent2)" stroke-width="2" stroke-linecap="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+                <span style="font-size:13px;font-weight:700">视频剪辑</span>
+              </div>
+              <div class="sc-desc">电影感叙事 · 情绪节奏 · 游戏混剪 · 卡点 · 可爱风格 · 定格动画</div>
+            </div>
+            <div class="service-card reveal">
+              <div class="sc-icon">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--gold)" stroke-width="2" stroke-linecap="round"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v16"/></svg>
+                <span style="font-size:13px;font-weight:700">商业视频</span>
+              </div>
+              <div class="sc-desc">企业宣传片 · 产线展示 · 店铺推广 · 美业宣传 · 产品介绍</div>
+            </div>
+            <div class="service-card reveal">
+              <div class="sc-icon">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#34C759" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+                <span style="font-size:13px;font-weight:700">AIGC 视频制作</span>
+              </div>
+              <div class="sc-desc">AI生成 · 即梦平台 · GPT辅助 · 前沿实验 · 效率翻倍</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="section" id="worksSection">
+          <h2>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+            作品集
+          </h2>
+          <div class="toolbar">
+            <button class="tb-btn active" data-cat="all">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z"/></svg>
+              全部
+            </button>
+            <button class="tb-btn" data-cat="ae">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>
+              AE特效
+            </button>
+            <button class="tb-btn" data-cat="edit">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+              剪辑
+            </button>
+            <button class="tb-btn" data-cat="biz">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v16"/></svg>
+              商业
+            </button>
+            <button class="tb-btn" data-cat="aigc">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+              AIGC
+            </button>
+          </div>
+          <div class="grid-wrap">
+            <div class="grid" id="grid"></div>
+          </div>
+        </div>
+
+        <div class="section">
+          <div class="chat-section" id="chatSection">
+            <div class="chat-header">
+              <span class="ch-icon">💬</span>
+              <div>
+                <div class="ch-title">问黄淼任何问题</div>
+                <div class="ch-sub">AI 将以我的角度回答你</div>
+              </div>
+            </div>
+            <div class="chat-messages" id="chatMessages">
+              <div class="msg bot">嗨！我是黄淼的 AI 分身 👋 有什么想了解的尽管问我~</div>
+            </div>
+            <div class="chat-input-row">
+              <input type="text" id="chatInput" placeholder="比如：你都接过哪些类型的项目？" maxlength="200">
+              <button id="chatSendBtn">发送</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="mobile-nav" id="mobileNav">
+  <button class="mn-item active" data-section="worksSection">
+    <span class="mn-icon">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+    </span>
+    作品
+  </button>
+  <button class="mn-item" data-section="skillsSection">
+    <span class="mn-icon">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+    </span>
+    技能
+  </button>
+  <button class="mn-item" data-section="expSection">
+    <span class="mn-icon">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+    </span>
+    历程
+  </button>
+  <button class="mn-item" data-section="chatSection">
+    <span class="mn-icon">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+    </span>
+    AI 问答
+  </button>
+</div>
+
+<div class="lb-overlay" id="lbOverlay" style="display:none">
+  <div class="lb">
+    <div class="lb-bar">
+      <span id="lbTitle">作品预览</span>
+      <button id="lbClose">✕</button>
+    </div>
+    <div class="lb-preview" id="lbPreview"></div>
+  </div>
+</div>
+
+<script>
+(function(){
+  const API_BASE = '/api';
+  const CATEGORIES = {
+    ae: 'AE 特效包装',
+    edit: '剪辑作品',
+    biz: '商业项目',
+    aigc: 'AIGC'
+  };
+
+
+  const WORKS = [
+    {title:'奖项荣誉包装',cat:'ae',desc:'荣誉奖项展示特效包装',video:'videos/奖项包装.mp4',poster:'thumbnails/奖项包装.jpg'},
+    {title:'品牌片头动画',cat:'ae',desc:'品牌片头动画设计',video:'videos/片头包装.mp4',poster:'thumbnails/片头包装.jpg'},
+    {title:'视觉特效合成',cat:'ae',desc:'视觉特效合成包装',video:'videos/特效包装.mp4',poster:'thumbnails/特效包装.jpg'},
+    {title:'科技感包装',cat:'ae',desc:'科技感视觉包装展示',video:'videos/科技包装.mp4',poster:'thumbnails/科技包装.jpg'},
+    {title:'赛博朋克跟踪',cat:'ae',desc:'赛博朋克风格跟踪特效',video:'videos/赛博跟踪.mp4',poster:'thumbnails/赛博跟踪.jpg'},
+    {title:'多人同屏特效',cat:'ae',desc:'多人同屏特效合成',video:'videos/多人同屏包装.mp4',poster:'thumbnails/多人同屏包装.jpg'},
+    {title:'年度总结包装',cat:'ae',desc:'年度总结视觉包装',video:'videos/年度包装.mp4',poster:'thumbnails/年度包装.jpg'},
+    {title:'照片展示动画',cat:'ae',desc:'照片展示动画包装',video:'videos/照片包装.mp4',poster:'thumbnails/照片包装.jpg'},
+    {title:'模板化包装',cat:'ae',desc:'模板化视觉包装',video:'videos/套模板.mp4',poster:'thumbnails/套模板.jpg'},
+    {title:'App界面展示',cat:'ae',desc:'App界面展示动画',video:'videos/app套模板.mp4',poster:'thumbnails/app套模板.jpg'},
+    {title:'电影感叙事剪辑',cat:'edit',desc:'电影感氛围叙事剪辑',video:'videos/氛围感剪辑.mp4',poster:'thumbnails/氛围感剪辑.jpg'},
+    {title:'高燃游戏混剪',cat:'edit',desc:'游戏高燃混剪集锦',video:'videos/游戏剪辑.mp4',poster:'thumbnails/游戏剪辑.jpg'},
+    {title:'FPS 精彩集锦',cat:'edit',desc:'FPS 游戏精彩集锦',video:'videos/瓦罗兰特剪辑.mp4',poster:'thumbnails/瓦罗兰特剪辑.jpg'},
+    {title:'游戏实况录制',cat:'edit',desc:'游戏实况录制剪辑',video:'videos/我的世界短视频.mp4',poster:'thumbnails/我的世界短视频.jpg'},
+    {title:'可爱风格创意',cat:'edit',desc:'可爱风格创意剪辑',video:'videos/可爱风.mp4',poster:'thumbnails/可爱风.jpg'},
+    {title:'定格动画制作',cat:'edit',desc:'定格动画创意制作',video:'videos/木偶动画.mp4',poster:'thumbnails/木偶动画.jpg'},
+    {title:'工厂宣传片',cat:'biz',desc:'工厂产线宣传视频',video:'videos/工厂包装.mp4',poster:'thumbnails/工厂包装.jpg'},
+    {title:'店铺推广视频',cat:'biz',desc:'店铺品牌推广视频',video:'videos/理发店铺推广视频.mp4',poster:'thumbnails/理发店铺推广视频.jpg'},
+    {title:'美业品牌宣传',cat:'biz',desc:'美业品牌宣传视频',video:'videos/店铺宣传.mp4',poster:'thumbnails/店铺宣传.jpg'},
+    {title:'AI 视频制作',cat:'aigc',desc:'AIGC工具生成视频',video:'videos/AI视频制作.mp4',poster:'thumbnails/AI视频制作.jpg'}
+  ];
+
+  let activeCat = 'all';
+
+  function renderGrid(filter) {
+    const grid = document.getElementById('grid');
+    const filtered = filter === 'all' ? WORKS : WORKS.filter(w => w.cat === filter);
+    if (filtered.length === 0) {
+      grid.innerHTML = '<div class="empty-state"><div class="es-icon">📭</div><div class="es-text">暂无该分类作品</div></div>';
+      return;
+    }
+    grid.innerHTML = filtered.map((w,i) => {
+      const catLabel = CATEGORIES[w.cat] || w.cat;
+      const durMin = 1 + (i % 3);
+      const durSec = (i * 17 + w.title.length * 5) % 60;
+      return `
+      <div class="card reveal" data-cat="${w.cat}">
+        <div class="c-thumb">
+          <div class="c-cover" style="background-image:url(${w.poster});background-size:cover;background-position:center">
+            <div class="c-cover-fx"></div>
+            <div class="c-cover-top">
+              <span class="c-cover-tag">${catLabel}</span>
+            </div>
+            <div class="c-cover-center">
+              <div class="c-cover-play-hint">▶</div>
+            </div>
+            <div class="c-cover-bottom">
+              <span class="c-cover-dur">${durMin}:${String(durSec).padStart(2,'0')}</span>
+              <span class="c-cover-res">HD</span>
+            </div>
+            <div class="c-cover-progress"><div class="c-cover-prog-fill"></div></div>
+          </div>
+          <div class="c-overlay">
+            <div class="c-play">▶</div>
+          </div>
+        </div>
+        <div class="c-info">
+          <h4>${w.title}</h4>
+          <div class="c-cat">${catLabel}</div>
+          <div class="c-desc">${w.desc}</div>
+        </div>
+      </div>
+    `}).join('');
+    observeReveal();
+  }
+
+  function observeReveal() {
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('visible');
+          observer.unobserve(entry.target);
+        }
+      });
+    }, {threshold: 0.1, rootMargin: '0px 0px -20px 0px'});
+    document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+  }
+
+  function initParticles() {
+    const canvas = document.getElementById('particleCanvas');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    let w, h;
+    const particles = [];
+    const maxParticles = 15;
+
+    function resize() {
+      w = canvas.width = window.innerWidth;
+      h = canvas.height = window.innerHeight;
+    }
+    resize();
+    window.addEventListener('resize', resize);
+
+    for (let i = 0; i < maxParticles; i++) {
+      particles.push({
+        x: Math.random() * w,
+        y: Math.random() * h,
+        vx: (Math.random() - 0.5) * 0.5,
+        vy: (Math.random() - 0.5) * 0.5,
+        r: Math.random() * 1.5 + 0.5,
+        alpha: Math.random() * 0.5 + 0.1
+      });
+    }
+
+    function draw() {
+      ctx.clearRect(0, 0, w, h);
+      particles.forEach(p => {
+        p.x += p.vx;
+        p.y += p.vy;
+        if (p.x < 0) p.x = w;
+        if (p.x > w) p.x = 0;
+        if (p.y < 0) p.y = h;
+        if (p.y > h) p.y = 0;
+
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(0,122,255,' + p.alpha + ')';
+        ctx.fill();
+      });
+      requestAnimationFrame(draw);
+    }
+    draw();
+  }
+
+  function initSectionGlow() {
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('glow-active');
+        } else {
+          entry.target.classList.remove('glow-active');
+        }
+      });
+    }, {threshold: 0.3});
+    document.querySelectorAll('.section').forEach(s => {
+      s.classList.add('section-glow');
+      observer.observe(s);
+    });
+  }
+
+  function animateSkills() {
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          const fills = entry.target.querySelectorAll('.sk-fill[data-width]');
+          fills.forEach(f => {
+            f.style.width = f.dataset.width + '%';
+          });
+          observer.unobserve(entry.target);
+        }
+      });
+    }, {threshold: 0.3});
+    const skillsSection = document.getElementById('skillsSection');
+    if (skillsSection) observer.observe(skillsSection);
+  }
+
+  function animateCounters() {
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          const nums = entry.target.querySelectorAll('.hs-num[data-count]');
+          nums.forEach(el => {
+            const target = parseFloat(el.dataset.count);
+            const isFloat = el.dataset.count.includes('.');
+            const duration = 1500;
+            const start = performance.now();
+            function update(now) {
+              const elapsed = now - start;
+              const progress = Math.min(elapsed / duration, 1);
+              const eased = 1 - Math.pow(1 - progress, 3);
+              const current = target * eased;
+              el.textContent = isFloat ? current.toFixed(1) : Math.round(current);
+              if (progress < 1) requestAnimationFrame(update);
+            }
+            requestAnimationFrame(update);
+          });
+          observer.unobserve(entry.target);
+        }
+      });
+    }, {threshold: 0.5});
+    const hero = document.querySelector('.hero');
+    if (hero) observer.observe(hero);
+  }
+
+  function animateTimeline() {
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('visible');
+          observer.unobserve(entry.target);
+        }
+      });
+    }, {threshold: 0.2, rootMargin: '0px 0px -30px 0px'});
+    document.querySelectorAll('.tl-item').forEach(el => observer.observe(el));
+  }
+
+  function initFilters() {
+    document.querySelectorAll('.sb-item[data-cat], .tb-btn[data-cat]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const cat = btn.dataset.cat;
+        activeCat = cat;
+        document.querySelectorAll('.sb-item[data-cat], .tb-btn[data-cat]').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll(`.sb-item[data-cat="${cat}"], .tb-btn[data-cat="${cat}"]`).forEach(b => b.classList.add('active'));
+        renderGrid(cat);
+      });
+    });
+  }
+
+  function initMobileNav() {
+    const navItems = document.querySelectorAll('.mn-item');
+    navItems.forEach(item => {
+      item.addEventListener('click', () => {
+        navItems.forEach(n => n.classList.remove('active'));
+        item.classList.add('active');
+        const sectionId = item.dataset.section;
+        const section = document.getElementById(sectionId);
+        if (section) {
+          section.scrollIntoView({behavior:'smooth',block:'start'});
+        }
+      });
+    });
+  }
+
+  function initChat() {
+    const input = document.getElementById('chatInput');
+    const btn = document.getElementById('chatSendBtn');
+    const msgs = document.getElementById('chatMessages');
+
+    async function send() {
+      const text = input.value.trim();
+      if (!text) return;
+      input.value = '';
+      btn.disabled = true;
+      addMsg(text, 'user');
+      const typing = addMsg('思考中...', 'bot typing');
+      try {
+        const res = await fetch(API_BASE + '/portfolio-chat', {
+          method: 'POST',
+          headers: {'Content-Type':'application/json'},
+          body: JSON.stringify({message:text})
+        });
+        const data = await res.json();
+        typing.remove();
+        addMsg(data.reply || '抱歉，出了点问题~', 'bot');
+      } catch(e) {
+        typing.remove();
+        addMsg('网络不太好，稍后再试吧~', 'bot');
+      }
+      btn.disabled = false;
+      msgs.scrollTop = msgs.scrollHeight;
+    }
+
+    function addMsg(text, cls) {
+      const div = document.createElement('div');
+      div.className = 'msg ' + cls;
+      div.textContent = text;
+      msgs.appendChild(div);
+      msgs.scrollTop = msgs.scrollHeight;
+      return div;
+    }
+
+    btn.addEventListener('click', send);
+    input.addEventListener('keydown', e => { if (e.key === 'Enter') send(); });
+  }
+
+  function initLightbox() {
+    const overlay = document.getElementById('lbOverlay');
+    const preview = document.getElementById('lbPreview');
+    const title = document.getElementById('lbTitle');
+    const closeBtn = document.getElementById('lbClose');
+    let currentVideo = null;
+
+    document.getElementById('grid').addEventListener('click', e => {
+      const card = e.target.closest('.card');
+      if (!card) return;
+      const workTitle = card.querySelector('h4')?.textContent || '';
+      const work = WORKS.find(w => w.title === workTitle);
+      if (!work) return;
+      title.textContent = workTitle;
+      preview.innerHTML = '';
+      const video = document.createElement('video');
+      video.src = work.video;
+      video.poster = work.poster;
+      video.controls = true;
+      video.autoplay = true;
+      video.playsInline = true;
+      video.style.width = '100%';
+      video.style.display = 'block';
+      video.style.maxHeight = 'calc(90vh - 44px)';
+      video.style.background = '#000';
+      preview.appendChild(video);
+      currentVideo = video;
+      overlay.style.display = 'flex';
+    });
+
+    function closeLightbox() {
+      overlay.style.display = 'none';
+      if (currentVideo) {
+        currentVideo.pause();
+        currentVideo.removeAttribute('src');
+        currentVideo.load();
+        currentVideo = null;
+      }
+      preview.innerHTML = '';
+    }
+
+    closeBtn.addEventListener('click', closeLightbox);
+    overlay.addEventListener('click', function(e) {
+      if (e.target === overlay) closeLightbox();
+    });
+  }
+
+  renderGrid('all');
+  initFilters();
+  initMobileNav();
+  initChat();
+  initLightbox();
+  animateSkills();
+  animateCounters();
+  animateTimeline();
+  observeReveal();
+  initParticles();
+  initSectionGlow();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>植物实验室</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/dexie@3/dist/dexie.min.js"></script>
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+:root{
+    --bg:#F2F2F7;--surface:#FFFFFF;--surface2:#F9F9FC;--border:rgba(0,0,0,.08);--border2:rgba(0,0,0,.05);
+    --text:#1D1D1F;--text2:#6E6E73;--text3:#AEAEB2;
+    --green:#34C759;--blue:#007AFF;--red:#FF3B30;--orange:#FF9500;--purple:#AF52DE;
+    --shadow-sm:0 1px 3px rgba(0,0,0,.04);--shadow:0 4px 16px rgba(0,0,0,.06);--shadow-lg:0 8px 32px rgba(0,0,0,.08);
+    --radius:14px;--radius-sm:10px;
+}
+html,body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,'PingFang SC','Noto Sans SC',sans-serif;height:100%;overflow:hidden;-webkit-font-smoothing:antialiased}
+.back-link{position:fixed;top:22px;left:22px;z-index:100;font-size:12px;color:var(--text3);text-decoration:none;transition:color .4s;user-select:none}
+.back-link:hover{color:var(--text2)}
+.app{display:flex;flex-direction:column;height:100vh}
+
+.toolbar{flex-shrink:0;height:48px;background:rgba(255,255,255,.72);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 18px;gap:12px;z-index:20}
+.toolbar-title{font-size:14px;font-weight:700;letter-spacing:-.02em;margin-right:auto;margin-left:48px;display:flex;align-items:center;gap:8px}
+.toolbar-dot{width:6px;height:6px;border-radius:50%;background:var(--green);display:inline-block;animation:dotPulse 2s ease-in-out infinite}
+@keyframes dotPulse{0%,100%{opacity:.4;transform:scale(1)}50%{opacity:1;transform:scale(1.6)}}
+.badge{font-size:11px;padding:4px 12px;border-radius:16px;background:var(--surface2);border:1px solid var(--border);color:var(--text2);font-weight:500;transition:all .3s}
+.badge.pulse{border-color:var(--green);color:var(--green);background:rgba(52,199,89,.06)}
+
+.main-layout{flex:1;display:flex;overflow:hidden}
+
+.left-panel{width:300px;flex-shrink:0;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden}
+.panel-head{padding:14px 16px 10px;font-size:10px;font-weight:600;color:var(--text3);letter-spacing:.08em;border-bottom:1px solid var(--border2);display:flex;align-items:center;gap:6px;flex-shrink:0}
+.control-group{padding:12px 14px;border-bottom:1px solid var(--border2)}
+.control-label{font-size:11px;font-weight:600;color:var(--text2);margin-bottom:8px;display:flex;align-items:center;gap:6px}
+.control-label .icon{font-size:15px}
+.control-row{display:flex;gap:6px;flex-wrap:wrap}
+.ctrl-chip{padding:7px 14px;border-radius:18px;border:1px solid var(--border);background:var(--surface);color:var(--text);font-size:12px;font-weight:500;cursor:pointer;transition:all .2s;font-family:inherit;white-space:nowrap}
+.ctrl-chip:hover{border-color:var(--blue);color:var(--blue);background:rgba(0,122,255,.04)}
+.ctrl-chip.active{background:var(--green);color:#FFF;border-color:var(--green)}
+.ctrl-chip.danger.active{background:var(--red);border-color:var(--red)}
+
+.slider-wrap{margin-top:8px}
+.slider-wrap input[type=range]{width:100%;-webkit-appearance:none;height:5px;border-radius:3px;background:var(--border);outline:none}
+.slider-wrap input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;border-radius:50%;background:var(--text);cursor:pointer;box-shadow:var(--shadow-sm)}
+.slider-labels{display:flex;justify-content:space-between;font-size:10px;color:var(--text3);margin-top:4px}
+
+.stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:8px 14px}
+.stat-item{background:var(--surface2);border-radius:8px;padding:10px 12px;text-align:center}
+.stat-value{font-size:18px;font-weight:700;letter-spacing:-.02em;line-height:1}
+.stat-label{font-size:10px;color:var(--text3);margin-top:3px}
+.stat-bar-wrap{margin-top:4px;height:3px;background:rgba(0,0,0,.05);border-radius:2px;overflow:hidden}
+.stat-bar-fill{height:100%;border-radius:2px;transition:width .5s}
+
+.log-list{flex:1;overflow-y:auto;padding:8px 12px;scrollbar-width:none;display:flex;flex-direction:column;gap:4px}
+.log-list::-webkit-scrollbar{display:none}
+.log-item{font-size:11px;padding:6px 10px;border-radius:6px;background:var(--surface2);line-height:1.5;display:flex;gap:6px;align-items:flex-start;animation:logIn .3s ease}
+@keyframes logIn{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:translateY(0)}}
+.log-emoji{font-size:13px;flex-shrink:0;width:18px}
+
+.center-panel{flex:1;position:relative;overflow:hidden;background:linear-gradient(170deg,#E8EDF2 0%,#F2F2F7 30%,#EDEDF2 100%)}
+#three-canvas{display:block}
+.hint-bar{position:absolute;bottom:18px;left:50%;transform:translateX(-50%);padding:9px 20px;border-radius:20px;background:rgba(0,0,0,.72);color:#FFF;font-size:12px;pointer-events:none;z-index:5;opacity:0;transition:opacity .3s;white-space:nowrap;backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}
+.hint-bar.visible{opacity:1}
+
+.right-panel{width:260px;flex-shrink:0;background:var(--surface);border-left:1px solid var(--border);display:flex;flex-direction:column}
+.weather-card{margin:12px;padding:14px;border-radius:var(--radius-sm);background:linear-gradient(135deg,#E3F2FD,#E8F5E9);border:1px solid var(--border2)}
+.weather-row{display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px}
+.weather-row .wv{font-weight:600}
+.pest-alert{margin:0 12px 8px;padding:10px 14px;border-radius:8px;background:rgba(255,59,48,.06);border:1px solid rgba(255,59,48,.15);font-size:11px;color:var(--red);display:flex;align-items:center;gap:6px;cursor:pointer;transition:all .2s}
+.pest-alert:hover{background:rgba(255,59,48,.1)}
+.pest-alert .pa-icon{font-size:16px}
+
+.info-card{margin:0 12px 12px;padding:12px 14px;border-radius:var(--radius-sm);background:var(--surface2);border:1px solid var(--border2);font-size:12px;color:var(--text2);line-height:1.7}
+
+@media(max-width:800px){.left-panel{width:240px}.right-panel{width:200px}}
+@media(max-width:600px){.main-layout{flex-direction:column}.left-panel{width:100%;max-height:200px;border-right:none;border-bottom:1px solid var(--border)}.right-panel{width:100%;max-height:160px;border-left:none;border-top:1px solid var(--border)}.center-panel{min-height:280px}}
+</style>
+</head>
+<body>
+<a href="/" class="back-link">← 返回</a>
+<div class="app">
+<div class="toolbar">
+    <span class="toolbar-title"><span class="toolbar-dot"></span>植物实验室</span>
+    <span class="badge pulse" id="growth-badge">🌱 生长中</span>
+    <span class="badge" id="season-badge">☀️ 夏季</span>
+    <span class="badge" id="day-badge">第 1 天</span>
+</div>
+<div class="main-layout">
+    <!-- 左面板：控制 -->
+    <div class="left-panel">
+        <div class="panel-head">🎮 环境控制</div>
+        <div class="control-group">
+            <div class="control-label"><span class="icon">💧</span>浇水</div>
+            <div class="control-row">
+                <button class="ctrl-chip" id="btn-water-small">少量</button>
+                <button class="ctrl-chip" id="btn-water-medium">适量</button>
+                <button class="ctrl-chip" id="btn-water-large">浇透</button>
+            </div>
+        </div>
+        <div class="control-group">
+            <div class="control-label"><span class="icon">⚡</span>生长速度</div>
+            <div class="control-row">
+                <button class="ctrl-chip active" data-speed="1">1×</button>
+                <button class="ctrl-chip" data-speed="3">3×</button>
+                <button class="ctrl-chip" data-speed="5">5×</button>
+                <button class="ctrl-chip" data-speed="10">10×</button>
+            </div>
+        </div>
+        <div class="control-group">
+            <div class="control-label"><span class="icon">☀️</span>光照方向</div>
+            <div class="slider-wrap">
+                <input type="range" id="light-angle" min="0" max="100" value="50">
+                <div class="slider-labels"><span>← 左侧</span><span>上方</span><span>右侧 →</span></div>
+            </div>
+        </div>
+        <div class="control-group">
+            <div class="control-label"><span class="icon">🪴</span>操作</div>
+            <div class="control-row">
+                <button class="ctrl-chip" id="btn-fertilize">🌿 施肥</button>
+                <button class="ctrl-chip danger" id="btn-pesticide">🛡 除虫</button>
+                <button class="ctrl-chip" id="btn-reset">↺ 重置</button>
+            </div>
+        </div>
+        <div class="panel-head">📊 土壤数据</div>
+        <div class="stat-grid">
+            <div class="stat-item">
+                <div class="stat-value" id="val-moisture" style="color:var(--blue)">60%</div>
+                <div class="stat-label">含水量</div>
+                <div class="stat-bar-wrap"><div class="stat-bar-fill" id="bar-moisture" style="width:60%;background:var(--blue)"></div></div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value" id="val-fertility" style="color:var(--orange)">50%</div>
+                <div class="stat-label">肥力</div>
+                <div class="stat-bar-wrap"><div class="stat-bar-fill" id="bar-fertility" style="width:50%;background:var(--orange)"></div></div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value" id="val-ph" style="color:var(--purple)">6.5</div>
+                <div class="stat-label">pH 值</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value" id="val-health" style="color:var(--green)">100%</div>
+                <div class="stat-label">健康度</div>
+               <div class="stat-bar-wrap"><div class="stat-bar-fill" id="bar-health" style="width:100%;background:var(--green)"></div></div>
+            </div>
+        </div>
+        <div class="panel-head">📝 生长日志</div>
+        <div class="log-list" id="log-list">
+            <div class="log-item"><span class="log-emoji">🌱</span>一颗种子被埋入土壤，等待发芽...</div>
+        </div>
+    </div>
+
+    <!-- 中央：3D 场景 -->
+    <div class="center-panel" id="scene-container">
+        <canvas id="three-canvas"></canvas>
+        <div class="hint-bar" id="hint-bar"></div>
+    </div>
+
+    <!-- 右面板：环境 + 病虫害 -->
+    <div class="right-panel">
+        <div class="panel-head">🌍 环境</div>
+        <div class="weather-card" id="weather-card">
+            <div class="weather-row"><span>🌡 温度</span><span class="wv" id="w-temp">24°C</span></div>
+            <div class="weather-row"><span>💧 湿度</span><span class="wv" id="w-humidity">55%</span></div>
+            <div class="weather-row"><span>🌤 天气</span><span class="wv" id="w-weather">晴</span></div>
+            <div class="weather-row"><span>🌿 季节</span><span class="wv" id="w-season">夏季</span></div>
+        </div>
+        <div class="panel-head">🦗 病虫害检测</div>
+        <div id="pest-container"></div>
+        <div class="info-card" id="info-card">
+            <strong>💡 提示</strong><br>
+            点击「浇水」保持土壤湿润。<br>
+            光照方向影响植物向光弯曲。<br>
+            发现害虫请及时除虫！
+        </div>
+    </div>
+</div>
+</div>
+
+<script>
+(function(){
+const container=document.getElementById('scene-container'),canvas=document.getElementById('three-canvas'),
+hintBar=document.getElementById('hint-bar'),logList=document.getElementById('log-list');
+
+let W,H;
+let scene,camera,renderer,plantGroup,potGroup,soilMesh,stemGroup;
+let plantData={days:0,growth:0,moisture:60,fertility:50,ph:6.5,health:100,lightAngle:0.5,
+    hasPests:false,pestType:'',pestCount:0,season:'summer',weather:'晴',speed:1,
+    stemHeight:0,leafCount:0,bendAngle:0,
+};
+let growthInterval=null,saveInterval=null;
+let waterDrops=[],activeEffects=[];
+
+const db=new Dexie('PlantLabDB');
+db.version(1).stores({state:'key'});
+
+function resize(){
+    W=container.clientWidth;H=container.clientHeight;
+    canvas.width=W;canvas.height=H;canvas.style.width=W+'px';canvas.style.height=H+'px';
+    if(camera){camera.aspect=W/H;camera.updateProjectionMatrix();}
+    if(renderer){renderer.setSize(W,H);}
+}
+
+async function initScene(){
+    scene=new THREE.Scene();
+    scene.background=new THREE.Color(0xe8edf2);
+    scene.fog=new THREE.Fog(0xe8edf2,5,25);
+
+    camera=new THREE.PerspectiveCamera(50,W/H,0.5,40);
+    camera.position.set(2.5,3.5,6.5);
+    camera.lookAt(0,1.2,0);
+
+    renderer=new THREE.WebGLRenderer({canvas,antialias:true,alpha:true});
+    renderer.setSize(W,H);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio,2));
+    renderer.shadowMap.enabled=true;
+    renderer.shadowMap.type=THREE.PCFSoftShadowMap;
+    renderer.outputEncoding=THREE.sRGBEncoding;
+
+    const ambient=new THREE.AmbientLight(0xffffff,0.55);
+    scene.add(ambient);
+
+    const sun=new THREE.DirectionalLight(0xfff8e8,1.2);
+    sun.position.set(3,8,2);
+    sun.castShadow=true;
+    sun.shadow.mapSize.set(1024,1024);
+    sun.shadow.camera.near=0.5;sun.shadow.camera.far=30;
+    sun.shadow.camera.left=-8;sun.shadow.camera.right=8;
+    sun.shadow.camera.top=8;sun.shadow.camera.bottom=-2;
+    sun.shadow.bias=-0.0005;
+    scene.add(sun);
+
+    const floorGeom=new THREE.PlaneGeometry(12,12);
+    const floorMat=new THREE.MeshStandardMaterial({color:0xd5c8b5,roughness:0.9});
+    const floor=new THREE.Mesh(floorGeom,floorMat);
+    floor.rotation.x=-Math.PI/2;floor.position.y=-0.6;
+    floor.receiveShadow=true;
+    scene.add(floor);
+
+    buildPot();
+    buildPlant();
+    updateSunPosition();
+
+    window.addEventListener('resize',resize);
+    animate();
+}
+
+function buildPot(){
+    potGroup=new THREE.Group();
+    const potGeom=new THREE.CylinderGeometry(0.55,0.4,0.9,32);
+    const potMat=new THREE.MeshStandardMaterial({color:0xe8d5c0,roughness:0.6,metalness:0.05});
+    const pot=new THREE.Mesh(potGeom,potMat);
+    pot.position.y=0.45;pot.castShadow=true;pot.receiveShadow=true;
+    potGroup.add(pot);
+
+    const rimGeom=new THREE.TorusGeometry(0.55,0.06,16,32);
+    const rim=new THREE.Mesh(rimGeom,new THREE.MeshStandardMaterial({color:0xddc8b0,roughness:0.5}));
+    rim.rotation.x=Math.PI/2;rim.position.y=0.9;
+    potGroup.add(rim);
+
+    soilMesh=new THREE.Mesh(
+        new THREE.CylinderGeometry(0.5,0.5,0.08,32),
+        new THREE.MeshStandardMaterial({color:0x5c3d2e,roughness:0.95})
+    );
+    soilMesh.position.y=0.85;
+    potGroup.add(soilMesh);
+
+    scene.add(potGroup);
+}
+
+function buildPlant(){
+    plantGroup=new THREE.Group();
+    stemGroup=new THREE.Group();
+    plantGroup.add(stemGroup);
+    scene.add(plantGroup);
+    updatePlantVisual();
+}
+
+function updatePlantVisual(){
+    while(stemGroup.children.length>0)stemGroup.remove(stemGroup.children[0]);
+
+    const h=plantData.stemHeight;
+    if(h<0.01)return;
+
+    const segments=Math.max(3,Math.floor(h*12));
+    const baseR=0.06-plantData.growth*0.02;
+    const bend=plantData.bendAngle;
+
+    const curve=[];
+    for(let i=0;i<=segments;i++){
+        const t=i/segments;
+        const y=t*h;
+        const bx=bend*Math.pow(t,2)*2;
+        curve.push(new THREE.Vector3(bx,y,0));
+    }
+    const path=new THREE.CatmullRomCurve3(curve);
+
+    const tubeGeom=new THREE.TubeGeometry(path,segments*2,baseR,8,false);
+    const stemMat=new THREE.MeshStandardMaterial({color:new THREE.Color().setHSL(0.25,0.6,0.25+plantData.growth*0.15),roughness:0.7});
+    const stemMesh=new THREE.Mesh(tubeGeom,stemMat);
+    stemMesh.castShadow=true;
+    stemGroup.add(stemMesh);
+
+    const leafCount=plantData.leafCount;
+    for(let i=0;i<leafCount;i++){
+        const t=0.15+i*0.75/leafCount;
+        const pt=path.getPointAt(Math.min(t,0.95));
+        const angle=i*2.4+plantData.growth*0.5;
+        const leafGroup=new THREE.Group();
+        leafGroup.position.copy(pt);
+
+        const size=0.15+plantData.growth*0.2;
+        const leafShape=new THREE.Shape();
+        leafShape.moveTo(0,0);
+        leafShape.bezierCurveTo(size,size*0.3,size*0.8,size*1.2,0,size*1.5);
+        leafShape.bezierCurveTo(-size*0.8,size*1.2,-size,size*0.3,0,0);
+        const leafGeom=new THREE.ShapeGeometry(leafShape);
+        const leafHue=0.22+plantData.growth*0.1+(plantData.health<40?0.08:0);
+        const leafSat=plantData.health<30?0.3:0.55;
+        const leafLight=0.28+plantData.moisture/200;
+        const leafMat=new THREE.MeshStandardMaterial({
+            color:new THREE.Color().setHSL(leafHue,leafSat,leafLight),
+            side:THREE.DoubleSide,roughness:0.65
+        });
+        const leaf=new THREE.Mesh(leafGeom,leafMat);
+        leaf.rotation.z=angle;leaf.rotation.y=0.3;
+        leaf.castShadow=true;
+        leafGroup.add(leaf);
+
+        if(i%2===0){
+            const leaf2=new THREE.Mesh(leafGeom,leafMat);
+            leaf2.rotation.z=angle+Math.PI;leaf2.rotation.y=-0.3;
+            leaf2.castShadow=true;
+            leafGroup.add(leaf2);
+        }
+
+        stemGroup.add(leafGroup);
+    }
+}
+
+function updateSunPosition(){
+    const lights=scene.children.filter(c=>c instanceof THREE.DirectionalLight);
+    if(lights.length>0){
+        const a=plantData.lightAngle*Math.PI-Math.PI/2;
+        lights[0].position.set(Math.cos(a)*4,6,Math.sin(a)*4);
+    }
+}
+
+function showHint(msg){
+    hintBar.textContent=msg;hintBar.classList.add('visible');
+    clearTimeout(hintBar._t);hintBar._t=setTimeout(()=>hintBar.classList.remove('visible'),2500);
+}
+
+function addLog(emoji,msg){
+    const d=document.createElement('div');d.className='log-item';
+    d.innerHTML=`<span class="log-emoji">${emoji}</span>${msg}`;
+    logList.appendChild(d);logList.scrollTop=logList.scrollHeight;
+    if(logList.children.length>50)logList.removeChild(logList.firstChild);
+}
+
+function updateUI(){
+    document.getElementById('val-moisture').textContent=Math.round(plantData.moisture)+'%';
+    document.getElementById('bar-moisture').style.width=plantData.moisture+'%';
+    document.getElementById('val-fertility').textContent=Math.round(plantData.fertility)+'%';
+    document.getElementById('bar-fertility').style.width=plantData.fertility+'%';
+    document.getElementById('val-ph').textContent=plantData.ph.toFixed(1);
+    document.getElementById('val-health').textContent=Math.round(plantData.health)+'%';
+    document.getElementById('bar-health').style.width=plantData.health+'%';
+    document.getElementById('day-badge').textContent='第 '+Math.max(1,Math.ceil(plantData.days))+' 天';
+    document.getElementById('season-badge').textContent={
+        spring:'🌸 春季',summer:'☀️ 夏季',autumn:'🍂 秋季',winter:'❄️ 冬季'
+    }[plantData.season]||'☀️ 夏季';
+    document.getElementById('w-temp').textContent={spring:'18°C',summer:'28°C',autumn:'16°C',winter:'6°C'}[plantData.season]||'24°C';
+    document.getElementById('w-humidity').textContent={spring:'50%',summer:'65%',autumn:'45%',winter:'35%'}[plantData.season]||'55%';
+    document.getElementById('w-weather').textContent=plantData.weather;
+    document.getElementById('w-season').textContent={spring:'春季',summer:'夏季',autumn:'秋季',winter:'冬季'}[plantData.season]||'夏季';
+    document.getElementById('growth-badge').textContent=plantData.growth>0.9?'🌳 成熟':plantData.growth>0.5?'🌿 茁壮':plantData.growth>0.1?'🌱 发芽':'🌰 种子';
+
+    if(plantData.growth>0.9)document.getElementById('growth-badge').classList.add('pulse');
+    else document.getElementById('growth-badge').classList.remove('pulse');
+
+    updatePestUI();
+}
+
+function updatePestUI(){
+    const container=document.getElementById('pest-container');
+    if(plantData.hasPests){
+        container.innerHTML=`<div class="pest-alert" id="pest-alert-btn"><span class="pa-icon">🐛</span>检测到 ${plantData.pestType} ×${plantData.pestCount} — 点击除虫</div>`;
+        document.getElementById('pest-alert-btn').addEventListener('click',applyPesticide);
+    }else{
+        container.innerHTML='<div style="padding:8px 14px;font-size:11px;color:var(--text3)">✅ 未检测到病虫害</div>';
+    }
+}
+
+function water(amount){
+    plantData.moisture=Math.min(100,plantData.moisture+amount);
+    soilMesh.material.color.setHSL(0.1,0.5,0.2+plantData.moisture/160);
+    const labels={25:'少量',50:'适量',80:'浇透'};
+    addLog('💧','浇水 '+((labels[amount]||amount+'%'))+' — 含水量 '+Math.round(plantData.moisture)+'%');
+    if(plantData.moisture>95){addLog('⚠️','土壤过湿，小心烂根！');plantData.health-=3;}
+    if(window._track)window._track("water_plant",{amount:'$amount'});showHint('💧 已浇水！土壤含水量 ' + Math.round(plantData.moisture) + '%');
+    updateUI();
+}
+
+function fertilize(){
+    if(plantData.fertility>=100){showHint('肥力已满，无需施肥');return;}
+    plantData.fertility=Math.min(100,plantData.fertility+25);
+    plantData.ph=Math.max(4,Math.min(8,plantData.ph+(Math.random()-.5)*0.4));
+    addLog('🌿','施肥 — 肥力 +25%，当前 '+Math.round(plantData.fertility)+'%');
+    showHint('🌿 已施肥！肥力恢复至 '+Math.round(plantData.fertility)+'%');
+    updateUI();
+}
+
+function applyPesticide(){
+    if(!plantData.hasPests)return;
+    const success=Math.random()<0.75;
+    if(success){
+        addLog('🛡','成功清除 '+plantData.pestType+' ×'+plantData.pestCount);
+        plantData.hasPests=false;plantData.pestCount=0;plantData.health=Math.min(100,plantData.health+10);
+        showHint('✅ 病虫害已清除！');
+    }else{
+        addLog('⚠️','除虫失败，害虫产生抗药性...');
+        plantData.pestCount=Math.min(5,plantData.pestCount+1);
+        plantData.health-=5;
+        showHint('❌ 除虫失败，请再次尝试');
+    }
+    updateUI();
+}
+
+function resetPlant(){
+    if(growthInterval)clearInterval(growthInterval);
+    plantData={days:0,growth:0,moisture:60,fertility:50,ph:6.5,health:100,lightAngle:0.5,
+        hasPests:false,pestType:'',pestCount:0,season:'summer',weather:'晴',speed:1,
+        stemHeight:0,leafCount:0,bendAngle:0,
+    };
+    document.querySelectorAll('.ctrl-chip[data-speed]').forEach(b=>b.classList.toggle('active',b.dataset.speed==='1'));
+    updatePlantVisual();
+    updateUI();
+    addLog('🔄','已重置，重新开始种植');
+    showHint('已重置，开始新的种植旅程');
+    startGrowthLoop();
+}
+
+function startGrowthLoop(){
+    if(growthInterval)clearInterval(growthInterval);
+    growthInterval=setInterval(()=>{
+        const sp=plantData.speed;
+        plantData.days+=sp*0.05;
+        const dayNum=plantData.days;
+
+        if(dayNum>90)plantData.season='autumn';
+        else if(dayNum>60)plantData.season='summer';
+        else if(dayNum>30)plantData.season='spring';
+        else plantData.season='spring';
+
+        const seasonMod={spring:1.2,summer:1,autumn:0.7,winter:0.3}[plantData.season]||1;
+        const moistureMod=plantData.moisture>15?Math.min(1.3,(plantData.moisture-10)/70):0.2;
+        const fertilityMod=0.5+plantData.fertility/200;
+        const healthMod=plantData.health/100;
+
+        const growthRate=0.002*sp*seasonMod*moistureMod*fertilityMod*healthMod;
+        plantData.growth=Math.min(1,plantData.growth+growthRate);
+        plantData.moisture=Math.max(0,plantData.moisture-0.08*sp);
+        plantData.fertility=Math.max(0,plantData.fertility-0.01*sp);
+        plantData.stemHeight=0.05+plantData.growth*2.8;
+        plantData.leafCount=Math.floor(plantData.growth*12);
+        plantData.bendAngle+=(plantData.lightAngle-0.5)*0.003*sp;
+
+        if(plantData.moisture<5&&plantData.health>0)plantData.health-=0.5;
+        if(plantData.moisture>95)plantData.health-=0.2;
+        if(plantData.fertility<5&&plantData.health>0)plantData.health-=0.1;
+        if(plantData.health<100&&plantData.moisture>30&&plantData.fertility>20)plantData.health+=0.05;
+
+        if(plantData.hasPests&&plantData.health>0)plantData.health-=0.3;
+
+        if(Math.random()<0.0005*sp&&!plantData.hasPests&&plantData.growth>0.1){
+            plantData.hasPests=true;
+            const pests=[{name:'蚜虫',emoji:'🐜'},{name:'红蜘蛛',emoji:'🕷'},{name:'白粉病',emoji:'🦠'}];
+            const p=pests[Math.floor(Math.random()*pests.length)];
+            plantData.pestType=p.name;plantData.pestCount=Math.floor(Math.random()*3)+1;
+            addLog(p.emoji,'发现 '+p.name+' ×'+plantData.pestCount+'！请及时除虫');
+        }
+
+        if(plantData.health<=0){plantData.health=0;addLog('💀','植物已枯萎... 请重置重新开始');showHint('植物枯萎了，点击重置重新种植');}
+
+        updatePlantVisual();
+        updateUI();
+        saveState();
+    },200);
+}
+
+async function saveState(){
+    try{await db.state.put({key:'plantData',data:JSON.parse(JSON.stringify(plantData))});}catch(e){}
+}
+async function loadState(){
+    try{
+        const saved=await db.state.get('plantData');
+        if(saved&&saved.data){plantData={...plantData,...saved.data};}
+    }catch(e){}
+}
+
+document.getElementById('btn-water-small').addEventListener('click',()=>water(25));
+document.getElementById('btn-water-medium').addEventListener('click',()=>water(50));
+document.getElementById('btn-water-large').addEventListener('click',()=>water(80));
+document.getElementById('btn-fertilize').addEventListener('click',fertilize);
+document.getElementById('btn-pesticide').addEventListener('click',applyPesticide);
+document.getElementById('btn-reset').addEventListener('click',resetPlant);
+document.getElementById('light-angle').addEventListener('input',function(){
+    plantData.lightAngle=parseInt(this.value)/100;
+    updateSunPosition();
+});
+
+document.querySelectorAll('.ctrl-chip[data-speed]').forEach(btn=>{
+    btn.addEventListener('click',function(){
+        document.querySelectorAll('.ctrl-chip[data-speed]').forEach(b=>b.classList.remove('active'));
+        this.classList.add('active');
+        plantData.speed=parseInt(this.dataset.speed);
+        showHint('⚡ 生长速度切换为 '+plantData.speed+'×');
+    });
+});
+
+function animate(){
+    requestAnimationFrame(animate);
+    if(!renderer)return;
+
+    const t=performance.now()/1000;
+    if(stemGroup){
+        stemGroup.children.forEach((child,i)=>{
+            if(child instanceof THREE.Group){
+                child.rotation.z+=Math.sin(t*1.5+i)*0.003;
+            }
+        });
+    }
+
+    if(camera){
+        const orbitR=7;
+        const orbitAngle=t*0.08;
+        camera.position.x=Math.cos(orbitAngle)*orbitR*0.3+2.5;
+        camera.position.z=Math.sin(orbitAngle)*orbitR*0.3+6;
+        camera.lookAt(plantData.bendAngle*0.5,plantData.stemHeight*0.5,0);
+    }
+
+    renderer.render(scene,camera);
+}
+
+resize();
+(async()=>{await loadState();initScene();updatePlantVisual();updateUI();startGrowthLoop();addLog('🌱','植物实验室已就绪 — 开始呵护你的植物吧');showHint('点击「浇水」开始培育，调整光照方向观察向光性');})();
+
+})();
+</script>
+<script src="/stats/track.js"></script>
+</body>
+</html>
