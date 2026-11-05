@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
 <title>黄淼 · AIGC 视频创作 / AI 内容运营</title>
-<meta name="description" content="黄淼，湖南农业大学教育技术学 2022—2026。AIGC 视频创作与 AI 内容运营：抖音 AI 视觉账号 2.12 万粉、近两月总播放 2,006 万；AE / PR / PS / Midjourney / 可灵 / Seedance。">
+<meta name="description" content="黄淼，湖南农业大学教育技术学 2022—2026。AIGC 视频创作与 AI 内容运营：抖音 AI 视觉账号 2.53 万粉、93 天总播放 2,837.6 万；AE / PR / PS / Midjourney / 可灵 / Seedance。">
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
@@ -57,10 +57,19 @@ a{color:inherit;text-decoration:none}
 .hero .h-info{flex:1}
 .hero .h-info h1{font-size:24px;font-weight:800;margin-bottom:4px;background:linear-gradient(135deg,#1D1D1F,#3a3a3f);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
 .hero .h-info .h-bio{font-size:13px;color:var(--t2);line-height:1.7;margin-bottom:10px}
-.hero .h-info .h-stats{display:flex;gap:24px;flex-wrap:wrap}
-.hero .h-info .h-stat{display:flex;flex-direction:column;align-items:center}
-.hero .h-info .h-stat .hs-num{font-size:22px;font-weight:800;color:var(--accent);transition:all .3s}
-.hero .h-info .h-stat .hs-label{font-size:10px;color:var(--t3);font-weight:500;margin-top:2px}
+.hero .h-info .h-stats{display:flex;flex-wrap:wrap;margin-top:15px;padding-top:14px;border-top:1px solid rgba(0,0,0,.07)}
+.hero .h-info .h-stat{position:relative;display:flex;flex-direction:column;align-items:flex-start;padding:0 18px;min-width:0;flex:1 1 0}
+.hero .h-info .h-stat:first-child{padding-left:0}
+.hero .h-info .h-stat:last-child{padding-right:0}
+.hero .h-info .h-stat+.h-stat::before{content:'';position:absolute;left:0;top:1px;bottom:3px;width:1px;background:linear-gradient(180deg,rgba(0,0,0,.11),rgba(0,0,0,.03))}
+.hero .h-info .h-stat .hs-num{display:flex;align-items:baseline;font-size:24px;line-height:1.08;font-weight:800;letter-spacing:-.035em;
+font-variant-numeric:tabular-nums;font-feature-settings:"tnum";white-space:nowrap;
+background:linear-gradient(158deg,#0B2E6F 0%,#0E63D8 55%,#3B82F6 100%);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;
+transition:transform .4s cubic-bezier(.16,1,.3,1),filter .4s}
+.hero .h-info .h-stat .hs-num .u{font-size:12px;font-weight:700;margin-left:2px;letter-spacing:0;-webkit-text-fill-color:#5B7799}
+.hero .h-info .h-stat .hs-label{font-size:10.5px;color:var(--t3);font-weight:500;margin-top:3px;white-space:nowrap}
+.hero .h-info .h-stat .hs-sub{font-size:9.5px;color:#1A9E63;font-weight:600;margin-top:2px;white-space:nowrap;opacity:.9}
+.hero .h-info .h-stat:hover .hs-num{transform:translateY(-1.5px);filter:drop-shadow(0 3px 8px rgba(14,99,216,.22))}
 
 .section{padding:28px 32px;border-bottom:1px solid var(--bdr)}
 .section:last-child{border-bottom:none}
@@ -231,8 +240,12 @@ a{color:inherit;text-decoration:none}
   .hero .h-avatar{width:56px;height:56px;font-size:22px}
   .hero .h-info h1{font-size:18px}
   .hero .h-info .h-bio{font-size:12px}
-  .hero .h-info .h-stats{gap:16px}
-  .hero .h-info .h-stat .hs-num{font-size:18px}
+  .hero .h-info .h-stats{display:grid;grid-template-columns:1fr 1fr;gap:13px 0}
+  .hero .h-info .h-stat{padding:0 12px 0 0}
+  .hero .h-info .h-stat:nth-child(even){padding:0 0 0 14px}
+  .hero .h-info .h-stat+.h-stat::before{display:none}
+  .hero .h-info .h-stat:nth-child(even)::before{content:'';position:absolute;left:0;top:1px;bottom:3px;width:1px;background:linear-gradient(180deg,rgba(0,0,0,.11),rgba(0,0,0,.03))}
+  .hero .h-info .h-stat .hs-num{font-size:21px}
   .section{padding:20px 18px}
   .section h2{font-size:14px;margin-bottom:14px}
   .section h2::before{height:14px}
@@ -336,13 +349,13 @@ a{color:inherit;text-decoration:none}
             <div class="h-bio">
               湖南农业大学 · 教育技术学 · 2022.09—2026.06<br>
               AIGC 视频创作 / AI 内容运营<br>
-              抖音 AI 视觉账号 2.12 万粉 · 近两个月总播放 2,006 万
+              抖音 AI 视觉账号 2.53 万粉 · 93 天总播放 2,837.6 万
             </div>
             <div class="h-stats">
-              <div class="h-stat"><span class="hs-num">2.12万</span><span class="hs-label">抖音粉丝</span></div>
-              <div class="h-stat"><span class="hs-num">2,006万</span><span class="hs-label">近两月总播放</span></div>
-              <div class="h-stat"><span class="hs-num">93.89万</span><span class="hs-label">累计获赞</span></div>
-              <div class="h-stat"><span class="hs-num">27</span><span class="hs-label">近两月发布</span></div>
+              <div class="h-stat"><span class="hs-num"><span class="v" data-to="2.53" data-dec="2">2.53</span><span class="u">万</span></span><span class="hs-label">抖音粉丝</span><span class="hs-sub">净增 +3,319</span></div>
+              <div class="h-stat"><span class="hs-num"><span class="v" data-to="2837.6" data-dec="1">2,837.6</span><span class="u">万</span></span><span class="hs-label">93 天总播放</span><span class="hs-sub">均播 50.7 万</span></div>
+              <div class="h-stat"><span class="hs-num"><span class="v" data-to="104.7" data-dec="1">104.7</span><span class="u">万</span></span><span class="hs-label">93 天总获赞</span><span class="hs-sub">赞播率 3.7%</span></div>
+              <div class="h-stat"><span class="hs-num"><span class="v" data-to="56" data-dec="0">56</span><span class="u">条</span></span><span class="hs-label">作品数</span><span class="hs-sub">日均 0.6 条</span></div>
             </div>
             <div style="display:flex;flex-wrap:wrap;gap:16px;margin-top:12px;font-size:11.5px">
               <a href="https://upmiao.com" target="_blank" rel="noopener" style="color:var(--accent);font-weight:600">像样 AI · upmiao.com ↗</a>
@@ -362,7 +375,7 @@ a{color:inherit;text-decoration:none}
             <div class="tl-item"><div class="tl-year">2023.01—2023.06</div><div class="tl-title">抖音短视频账号 · 个人运营</div><div class="tl-desc">独立完成选题、剪辑与发布，单条最高播放 392 万，账号累计获赞 7.5 万以上，跑通从选题到发布的全流程。</div></div>
             <div class="tl-item"><div class="tl-year">2025.03—2025.04</div><div class="tl-title">网络维护中心 · 运维助理</div><div class="tl-desc">为校内教师提供办公设备现场支持，处理打印机、外设与常见软硬件故障。</div></div>
             <div class="tl-item"><div class="tl-year">2025.04—2025.06</div><div class="tl-title">长沙财经学校 · 中职计算机教师（实习）</div><div class="tl-desc">承担 C 语言课程教学，编写教案与课堂练习，负责练习讲评与课后答疑。</div></div>
-            <div class="tl-item"><div class="tl-year">至今</div><div class="tl-title">抖音 AI 视觉账号 · 像样 AI（upmiao.com）</div><div class="tl-desc">运营抖音 AI 视觉内容账号：粉丝 2.12 万、累计获赞 93.89 万，近两个月发布 27 条、总播放 2,006 万，单条最高 555.2 万。同时负责个人 AI 创作工具站 upmiao.com 的页面与流程设计，用 Codex、WorkBuddy 完成开发上线。</div></div>
+            <div class="tl-item"><div class="tl-year">至今</div><div class="tl-title">抖音 AI 视觉账号 · 像样 AI（upmiao.com）</div><div class="tl-desc">运营抖音 AI 视觉内容账号：粉丝 2.53 万、总获赞 104.7 万，2026.08—11 的 93 天内发布 56 条、总播放 2,837.6 万，单条最高 555.2 万，单条均播 50.7 万。同时负责个人 AI 创作工具站 upmiao.com 的页面与流程设计，用 Codex、WorkBuddy 完成开发上线。</div></div>
           </div>
         </div>
 
@@ -904,6 +917,39 @@ a{color:inherit;text-decoration:none}
   observeReveal();
   initParticles();
   initSectionGlow();
+})();
+</script>
+<script>
+(function(){
+  var els = document.querySelectorAll('.h-stat .v');
+  if(!els.length) return;
+  function fmt(n, dec){
+    return n.toLocaleString('en-US', {minimumFractionDigits:dec, maximumFractionDigits:dec});
+  }
+  function run(el){
+    var to  = parseFloat(el.dataset.to) || 0;
+    var dec = parseInt(el.dataset.dec || '0', 10);
+    var finalTxt = fmt(to, dec);
+    el.textContent = fmt(0, dec);
+    var dur = 950, t0 = performance.now();
+    function step(t){
+      var p = Math.min(1, (t - t0) / dur);
+      var e = 1 - Math.pow(1 - p, 3);
+      el.textContent = p < 1 ? fmt(to * e, dec) : finalTxt;
+      if(p < 1) requestAnimationFrame(step);
+    }
+    requestAnimationFrame(step);
+  }
+  if('IntersectionObserver' in window){
+    var io = new IntersectionObserver(function(entries){
+      entries.forEach(function(en){
+        if(en.isIntersecting){ run(en.target); io.unobserve(en.target); }
+      });
+    }, {threshold:.4});
+    els.forEach(function(el){ io.observe(el); });
+  } else {
+    els.forEach(run);
+  }
 })();
 </script>
 </body>
