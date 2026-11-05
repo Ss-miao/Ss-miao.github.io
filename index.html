@@ -240,7 +240,7 @@ transition:transform .4s cubic-bezier(.16,1,.3,1),filter .4s}
   .hero .h-avatar{width:56px;height:56px;font-size:22px}
   .hero .h-info h1{font-size:18px}
   .hero .h-info .h-bio{font-size:12px}
-  .hero .h-info .h-stats{display:grid;grid-template-columns:1fr 1fr;gap:13px 0}
+  .hero .h-info .h-stats{display:grid;grid-template-columns:1fr 1fr;gap:18px 0}
   .hero .h-info .h-stat{padding:0 12px 0 0}
   .hero .h-info .h-stat:nth-child(even){padding:0 0 0 14px}
   .hero .h-info .h-stat+.h-stat::before{display:none}
@@ -306,15 +306,35 @@ html,body{letter-spacing:-.005em}
 .hero .h-avatar{width:84px;height:84px;font-size:33px;margin-top:2px}
 .hero .h-info h1{font-size:31px;font-weight:800;letter-spacing:-.04em;margin-bottom:10px;background:none;-webkit-text-fill-color:currentColor;color:#0A0A0B}
 .hero .h-info .h-bio{font-size:13px;line-height:1.78;color:var(--t2);margin-bottom:0;letter-spacing:0}
-.hero .h-info .h-stats{margin-top:19px;padding-top:18px;border-top:1px solid rgba(0,0,0,.06)}
-.hero .h-info .h-stat{padding:0 24px}
-.hero .h-info .h-stat .hs-num{font-size:28px;font-weight:800;letter-spacing:-.045em;
-  background:none;-webkit-background-clip:initial;background-clip:initial;
-  -webkit-text-fill-color:#0A0A0B;color:#0A0A0B;transition:color .35s,transform .4s cubic-bezier(.16,1,.3,1)}
-.hero .h-info .h-stat .hs-num .u{font-size:12.5px;font-weight:600;letter-spacing:0;margin-left:2px;-webkit-text-fill-color:rgba(0,0,0,.32);color:rgba(0,0,0,.32)}
-.hero .h-info .h-stat .hs-label{font-size:11px;color:rgba(0,0,0,.45);margin-top:4px;letter-spacing:.01em}
-.hero .h-info .h-stat .hs-sub{font-size:9.5px;color:rgba(16,124,84,.92);margin-top:3px;letter-spacing:.01em}
-.hero .h-info .h-stat:hover .hs-num{color:#0A84FF;-webkit-text-fill-color:#0A84FF;filter:none;transform:translateY(-1px)}
+/* —— KPI 数据条：标签在上 / 数字居中 / 说明在下，上下共用发丝线 —— */
+.hero .h-info .h-stats{margin-top:20px;padding:15px 0 14px;
+  border-top:1px solid rgba(0,0,0,.075);border-bottom:1px solid rgba(0,0,0,.04)}
+.hero .h-info .h-stat{padding:0 22px}
+.hero .h-info .h-stat .hs-label{display:block;margin:0 0 7px;font-size:11px;font-weight:500;
+  letter-spacing:.02em;color:rgba(0,0,0,.42);white-space:nowrap}
+.hero .h-info .h-stat .hs-num{display:block;font-size:27px;line-height:1.12;
+  font-weight:800;letter-spacing:-.045em;color:#0A0A0B;
+  background:none;background-clip:initial;-webkit-background-clip:initial;
+  -webkit-text-fill-color:#0A0A0B;font-variant-numeric:tabular-nums;transition:color .35s}
+.hero .h-info .h-stat .hs-num .u{font-size:12px;font-weight:600;letter-spacing:0;margin-left:2px;
+  -webkit-text-fill-color:rgba(0,0,0,.3);color:rgba(0,0,0,.3)}
+.hero .h-info .h-stat .hs-sub{display:flex;align-items:center;gap:4px;margin-top:7px;
+  font-size:10.5px;font-weight:600;letter-spacing:.01em;color:rgba(0,0,0,.38);white-space:nowrap}
+.hero .h-info .h-stat .hs-sub.up{color:#0F7B53}
+.hero .h-info .h-stat .hs-sub svg{width:9px;height:9px;flex-shrink:0;opacity:.9}
+.hero .h-info .h-stat:hover .hs-num{color:#0A84FF;-webkit-text-fill-color:#0A84FF}
+
+/* 逐位滚轮 */
+.hs-num .v{--lh:1.12;display:inline-block;vertical-align:baseline}
+.sp-d{position:relative;display:inline-block}
+.sp-d::before{content:'0';visibility:hidden;letter-spacing:0}
+.sp-win{position:absolute;inset:0;overflow:hidden;transition:filter .55s ease}
+.sp-win.is-roll{filter:blur(.9px)}
+.sp-reel{display:block;will-change:transform;
+  transition:transform 1.1s cubic-bezier(.16,1,.3,1)}
+.sp-reel i{display:block;height:calc(var(--lh) * 1em);line-height:calc(var(--lh) * 1em);
+  text-align:center;font-style:normal;letter-spacing:0}
+.sp-sep{display:inline-block}
 .hero .h-info>div[style]{margin-top:18px!important;gap:20px!important;font-size:11.5px!important}
 
 /* —— Section —— */
@@ -513,13 +533,29 @@ body.anim-ready .section h2.in{opacity:1;transform:translateY(0);letter-spacing:
             <div class="h-bio">
               湖南农业大学 · 教育技术学 · 2022.09—2026.06<br>
               AIGC 视频创作 / AI 内容运营<br>
-              抖音 AI 视觉账号 2.53 万粉 · 93 天总播放 2,837.6 万
+              湖南 · 长沙 / 可远程
             </div>
             <div class="h-stats">
-              <div class="h-stat"><span class="hs-num"><span class="v" data-to="2.53" data-dec="2">2.53</span><span class="u">万</span></span><span class="hs-label">抖音粉丝</span><span class="hs-sub">净增 +3,319</span></div>
-              <div class="h-stat"><span class="hs-num"><span class="v" data-to="2837.6" data-dec="1">2,837.6</span><span class="u">万</span></span><span class="hs-label">93 天总播放</span><span class="hs-sub">均播 50.7 万</span></div>
-              <div class="h-stat"><span class="hs-num"><span class="v" data-to="104.7" data-dec="1">104.7</span><span class="u">万</span></span><span class="hs-label">93 天总获赞</span><span class="hs-sub">赞播率 3.7%</span></div>
-              <div class="h-stat"><span class="hs-num"><span class="v" data-to="56" data-dec="0">56</span><span class="u">条</span></span><span class="hs-label">作品数</span><span class="hs-sub">日均 0.6 条</span></div>
+              <div class="h-stat">
+                <span class="hs-label">抖音粉丝</span>
+                <span class="hs-num"><span class="v" data-to="2.53" data-dec="2">2.53</span><span class="u">万</span></span>
+                <span class="hs-sub up"><svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 10.2V2.2M2.7 5.5 6 2.2l3.3 3.3"/></svg>净增 +3,319</span>
+              </div>
+              <div class="h-stat">
+                <span class="hs-label">93 天总播放</span>
+                <span class="hs-num"><span class="v" data-to="2837.6" data-dec="1">2837.6</span><span class="u">万</span></span>
+                <span class="hs-sub">均播 50.7 万</span>
+              </div>
+              <div class="h-stat">
+                <span class="hs-label">93 天总获赞</span>
+                <span class="hs-num"><span class="v" data-to="104.7" data-dec="1">104.7</span><span class="u">万</span></span>
+                <span class="hs-sub">赞播率 3.7%</span>
+              </div>
+              <div class="h-stat">
+                <span class="hs-label">作品数</span>
+                <span class="hs-num"><span class="v" data-to="56" data-dec="0">56</span><span class="u">条</span></span>
+                <span class="hs-sub">日均 0.6 条</span>
+              </div>
             </div>
             <div style="display:flex;flex-wrap:wrap;gap:16px;margin-top:12px;font-size:11.5px">
               <a href="https://upmiao.com" target="_blank" rel="noopener" style="color:var(--accent);font-weight:600">像样 AI · upmiao.com ↗</a>
@@ -1082,32 +1118,77 @@ body.anim-ready .section h2.in{opacity:1;transform:translateY(0);letter-spacing:
 (function(){
   var els = document.querySelectorAll('.h-stat .v');
   if(!els.length) return;
-  function fmt(n, dec){
-    return n.toLocaleString('en-US', {minimumFractionDigits:dec, maximumFractionDigits:dec});
-  }
-  function run(el){
+  var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion:reduce)').matches;
+  var TURNS = 10;   // 下落格数（一圈）
+
+  function build(el){
     var to  = parseFloat(el.dataset.to) || 0;
     var dec = parseInt(el.dataset.dec || '0', 10);
-    var finalTxt = fmt(to, dec);
-    el.textContent = fmt(0, dec);
-    var dur = 950, t0 = performance.now();
-    function step(t){
-      var p = Math.min(1, (t - t0) / dur);
-      var e = 1 - Math.pow(1 - p, 3);
-      el.textContent = p < 1 ? fmt(to * e, dec) : finalTxt;
-      if(p < 1) requestAnimationFrame(step);
+    var txt = to.toLocaleString('en-US', {minimumFractionDigits:dec, maximumFractionDigits:dec});
+    el.setAttribute('aria-label', txt);
+    el.textContent = '';
+    var reels = [];
+    for(var i=0;i<txt.length;i++){
+      var ch = txt.charAt(i);
+      if(ch >= '0' && ch <= '9'){
+        var slot = document.createElement('span'); slot.className = 'sp-d';
+        var win  = document.createElement('span'); win.className  = 'sp-win';
+        var reel = document.createElement('span'); reel.className = 'sp-reel';
+        for(var k=0;k<TURNS*2;k++){
+          var d = document.createElement('i');
+          d.textContent = String(k % 10);
+          reel.appendChild(d);
+        }
+        win.appendChild(reel); slot.appendChild(win); el.appendChild(slot);
+        reels.push({reel:reel, win:win, digit:+ch});
+      }else{
+        var sep = document.createElement('span');
+        sep.className = 'sp-sep'; sep.textContent = ch;
+        el.appendChild(sep);
+      }
     }
-    requestAnimationFrame(step);
+    return reels;
   }
+
+  function pos(n){ return 'translateY(calc(' + (-n) + ' * var(--lh) * 1em))'; }
+
+  function play(el){
+    var reels = build(el);
+    if(reduce){
+      reels.forEach(function(o){
+        o.reel.style.transition = 'none';
+        o.reel.style.transform  = pos(o.digit);
+      });
+      return;
+    }
+    reels.forEach(function(o){
+      o.reel.style.transition = 'none';
+      o.reel.style.transform  = pos(o.digit + TURNS);
+      o.win.classList.add('is-roll');
+      o.reel.addEventListener('transitionend', function clear(){
+        o.win.classList.remove('is-roll');
+        o.reel.removeEventListener('transitionend', clear);
+      });
+    });
+    void el.offsetWidth;
+    reels.forEach(function(o, n){
+      o.reel.style.transition = 'transform 1.3s cubic-bezier(.16,1,.3,1) ' + (n * 38) + 'ms';
+      o.reel.style.transform  = pos(o.digit);
+    });
+  }
+
   if('IntersectionObserver' in window){
     var io = new IntersectionObserver(function(entries){
       entries.forEach(function(en){
-        if(en.isIntersecting){ run(en.target); io.unobserve(en.target); }
+        if(en.isIntersecting){
+          io.unobserve(en.target);
+          setTimeout(function(){ play(en.target); }, 560);
+        }
       });
-    }, {threshold:.4});
+    }, {threshold:.5});
     els.forEach(function(el){ io.observe(el); });
   } else {
-    els.forEach(run);
+    els.forEach(play);
   }
 })();
 </script>
