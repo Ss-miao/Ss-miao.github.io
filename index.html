@@ -270,6 +270,170 @@ transition:transform .4s cubic-bezier(.16,1,.3,1),filter .4s}
   .timeline{padding-left:20px}
   .timeline .tl-item{padding:0 0 18px 16px}
 }
+
+/* ================= 视觉精修层 v2 ================= */
+:root{
+  --text:#0A0A0B;
+  --t2:rgba(0,0,0,.56);
+  --t3:rgba(0,0,0,.40);
+  --bdr:rgba(0,0,0,.065);
+  --hair:rgba(0,0,0,.055);
+  --card-sh:0 1px 2px rgba(0,0,0,.018);
+}
+html,body{letter-spacing:-.005em}
+
+/* —— 窗口 —— */
+.window{border-radius:16px;box-shadow:0 0 0 1px rgba(0,0,0,.05),0 24px 60px -18px rgba(0,0,0,.22),0 6px 18px -6px rgba(0,0,0,.06)}
+.titlebar{height:46px;background:linear-gradient(180deg,#F8F8FA,#F1F1F4);border-bottom:1px solid rgba(0,0,0,.045)}
+.titlebar .win-title{font-size:12px;font-weight:600;letter-spacing:-.01em;color:rgba(0,0,0,.62)}
+.titlebar .back{font-size:11px;color:rgba(0,0,0,.42);padding:4px 10px;border-radius:6px;transition:background .2s,color .2s}
+.titlebar .back:hover{background:rgba(0,0,0,.05);color:rgba(0,0,0,.7)}
+.sidebar{background:#FAFAFB;border-right:1px solid rgba(0,0,0,.045)}
+.sidebar .sb-avatar{width:34px;height:34px;font-size:14px}
+.sidebar .sb-name{font-size:12.5px;font-weight:700;letter-spacing:-.01em}
+.sidebar .sb-sub{font-size:9.5px;color:var(--t3);letter-spacing:.01em}
+.sidebar .sb-label{font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:rgba(0,0,0,.34);font-weight:600}
+.sidebar .sb-item{font-size:11.5px;padding:5px 9px;border-radius:7px;color:rgba(0,0,0,.62)}
+.sidebar .sb-item:hover{background:rgba(0,0,0,.045)}
+.sidebar .sb-item.active{background:rgba(0,0,0,.065);color:#0A0A0B;font-weight:600}
+.sidebar .sb-tag{font-size:9.5px;padding:2px 7px;border-radius:5px;background:rgba(0,0,0,.038);color:rgba(0,0,0,.52)}
+.sidebar .sb-contact{font-size:9.5px;color:rgba(0,0,0,.42);line-height:1.9}
+.content{background:#fff}
+
+/* —— Hero —— */
+.hero{padding:42px 44px 40px;gap:32px;align-items:flex-start}
+.hero::before{background:radial-gradient(720px 260px at 12% -10%, rgba(10,132,255,.055), transparent 68%),radial-gradient(620px 240px at 78% 0%, rgba(88,86,214,.035), transparent 70%)}
+.hero .h-avatar{width:84px;height:84px;font-size:33px;margin-top:2px}
+.hero .h-info h1{font-size:31px;font-weight:800;letter-spacing:-.04em;margin-bottom:10px;background:none;-webkit-text-fill-color:currentColor;color:#0A0A0B}
+.hero .h-info .h-bio{font-size:13px;line-height:1.78;color:var(--t2);margin-bottom:0;letter-spacing:0}
+.hero .h-info .h-stats{margin-top:19px;padding-top:18px;border-top:1px solid rgba(0,0,0,.06)}
+.hero .h-info .h-stat{padding:0 24px}
+.hero .h-info .h-stat .hs-num{font-size:28px;font-weight:800;letter-spacing:-.045em;
+  background:none;-webkit-background-clip:initial;background-clip:initial;
+  -webkit-text-fill-color:#0A0A0B;color:#0A0A0B;transition:color .35s,transform .4s cubic-bezier(.16,1,.3,1)}
+.hero .h-info .h-stat .hs-num .u{font-size:12.5px;font-weight:600;letter-spacing:0;margin-left:2px;-webkit-text-fill-color:rgba(0,0,0,.32);color:rgba(0,0,0,.32)}
+.hero .h-info .h-stat .hs-label{font-size:11px;color:rgba(0,0,0,.45);margin-top:4px;letter-spacing:.01em}
+.hero .h-info .h-stat .hs-sub{font-size:9.5px;color:rgba(16,124,84,.92);margin-top:3px;letter-spacing:.01em}
+.hero .h-info .h-stat:hover .hs-num{color:#0A84FF;-webkit-text-fill-color:#0A84FF;filter:none;transform:translateY(-1px)}
+.hero .h-info>div[style]{margin-top:18px!important;gap:20px!important;font-size:11.5px!important}
+
+/* —— Section —— */
+.desktop{background:radial-gradient(1400px 900px at 50% -30%, #EDF2FB 0%, #F2F2F7 58%)}
+.section{padding:44px 44px 48px;border-bottom:none}
+.section+.section{border-top:1px solid rgba(0,0,0,.038)}
+.section:last-child{border-bottom:none}
+.section h2{font-size:19px;font-weight:700;letter-spacing:-.035em;margin-bottom:26px;color:#0A0A0B;gap:10px}
+.section h2::before{display:none}
+.section h2 svg{width:18px;height:18px;stroke:#0A84FF;stroke-width:1.9;opacity:.9;flex-shrink:0}
+.section h2 .en{font-size:9px;font-weight:600;letter-spacing:.18em;color:rgba(0,0,0,.30);margin-left:auto;text-transform:uppercase;font-family:'SF Pro Text',-apple-system,sans-serif}
+
+/* —— 历程 —— */
+.timeline{padding-left:26px}
+.timeline::before{left:5px;background:linear-gradient(180deg,rgba(10,132,255,.5),rgba(88,86,214,.28),rgba(0,0,0,.04))}
+.timeline .tl-item{padding:0 0 30px 22px}
+.timeline .tl-item::before{width:9px;height:9px;left:-25px;top:8px;border:2px solid #fff}
+.timeline .tl-item .tl-year{font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;margin-bottom:5px;color:rgba(0,0,0,.36)}
+.timeline .tl-item:nth-child(2) .tl-year,.timeline .tl-item:nth-child(3) .tl-year,.timeline .tl-item:nth-child(4) .tl-year{color:rgba(0,0,0,.36)}
+.timeline .tl-item::before{background:#0A84FF!important;box-shadow:0 0 0 2px rgba(10,132,255,.16)!important}
+.timeline .tl-item:nth-child(2)::before,.timeline .tl-item:nth-child(3)::before,.timeline .tl-item:nth-child(4)::before{background:#0A84FF!important;box-shadow:0 0 0 2px rgba(10,132,255,.16)!important}
+.timeline .tl-item .tl-title{font-size:13.5px;font-weight:650;letter-spacing:-.015em;margin-bottom:4px;color:#0A0A0B}
+.timeline .tl-item .tl-desc{font-size:11.5px;line-height:1.8;color:var(--t2);letter-spacing:0}
+
+/* —— 技能 —— */
+.skills-grid{gap:12px}
+.skill-item{background:#fff;border:1px solid var(--hair);border-radius:13px;padding:14px 15px;box-shadow:var(--card-sh)}
+.skill-item::after{display:none}
+.skill-item:hover{background:#fff;border-color:rgba(0,0,0,.11);box-shadow:0 10px 24px -10px rgba(0,0,0,.16);transform:translateY(-2px)}
+.skill-item .sk-name{font-size:12.5px;font-weight:600;letter-spacing:-.015em;color:#0A0A0B}
+.skill-item .sk-level{font-size:10px;color:rgba(0,0,0,.38);margin-top:2px;letter-spacing:.01em}
+.skill-item{padding:13px 14px 16px;min-height:64px;align-items:center}
+.skill-item .sk-bar{position:absolute;left:14px;right:14px;bottom:9px;width:auto;height:2px;border-radius:2px;background:rgba(0,0,0,.06)}
+.skill-item .sk-bar .sk-fill{height:100%;border-radius:2px;background:linear-gradient(90deg,#0A84FF,#5E5CE6);opacity:.9}
+.skill-item .sk-info{padding-bottom:4px}
+.skill-item .sk-icon{width:34px;height:34px}
+.skill-item .sk-icon svg.ico-ab{width:26px;height:26px}
+.skill-item .sk-icon svg.ico-lang{width:25px;height:25px}
+.skill-item .sk-icon svg.ico-sm{width:19px;height:19px}
+
+/* —— 服务/证书 —— */
+.services-grid{gap:12px;grid-template-columns:repeat(2,1fr)}
+@media(max-width:640px){.services-grid{grid-template-columns:1fr}}
+.service-card{background:#fff;border:1px solid var(--hair);border-radius:13px;padding:18px 18px 20px;box-shadow:var(--card-sh)}
+.service-card:hover{box-shadow:0 10px 26px -10px rgba(0,0,0,.16);border-color:rgba(0,0,0,.11);transform:translateY(-2px)}
+.service-card .sc-icon{margin-bottom:10px;gap:8px}
+.service-card .sc-desc{font-size:11.5px;line-height:1.7;color:var(--t2);letter-spacing:0;margin-top:2px}
+
+/* —— 作品卡 —— */
+.toolbar .tb-btn{font-size:11px;padding:5px 13px;border-radius:8px;border-color:rgba(0,0,0,.07);color:rgba(0,0,0,.6)}
+.toolbar .tb-btn.active{box-shadow:0 2px 8px -2px rgba(0,122,255,.4)}
+.card{border-radius:14px;border:1px solid var(--hair);box-shadow:var(--card-sh)}
+.card:hover{box-shadow:0 14px 34px -12px rgba(0,0,0,.2);border-color:rgba(0,0,0,.09);transform:translateY(-3px)}
+.card .c-info{padding:15px 17px 17px}
+.card .c-info h4{font-size:13px;font-weight:650;letter-spacing:-.015em}
+.card .c-info .c-cat{font-size:9.5px;letter-spacing:.07em;color:rgba(0,0,0,.34)}
+.card .c-info .c-desc{font-size:11px;line-height:1.65;color:var(--t2)}
+
+/* —— 滚动条 —— */
+.content::-webkit-scrollbar,.chat-messages::-webkit-scrollbar{width:8px}
+.content::-webkit-scrollbar-thumb{background:rgba(0,0,0,.12);border-radius:8px;border:2px solid #fff}
+.content::-webkit-scrollbar-thumb:hover{background:rgba(0,0,0,.2)}
+.content::-webkit-scrollbar-track{background:transparent}
+
+
+/* 去掉作品卡假的进度条与重复分类 */
+.card .c-thumb .c-cover .c-cover-progress{display:none}
+.card .c-info .c-cat{display:none}
+.card .c-info h4{margin-bottom:5px}
+.card .c-info .c-desc{font-size:11px;line-height:1.6;color:rgba(0,0,0,.5)}
+
+@media(max-width:820px){
+  .hero{padding:28px 20px 26px;gap:22px}
+  .hero .h-info h1{font-size:26px}
+  .section{padding:34px 24px 38px}
+  .hero .h-info .h-stat{padding:0 16px}
+  .hero .h-info .h-stat .hs-num{font-size:24px}
+}
+
+/* ================= 动效层 ================= */
+.scroll-progress{position:sticky;top:0;left:0;height:2px;width:0;margin-bottom:-2px;
+  background:linear-gradient(90deg,#0A84FF,#5E5CE6);z-index:60;border-radius:0 2px 2px 0;
+  transition:width .1s linear;pointer-events:none}
+
+@keyframes heroIn{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:translateY(0)}}
+.hero .h-avatar{animation:heroIn .9s cubic-bezier(.16,1,.3,1) .04s backwards}
+.hero .h-info h1{animation:heroIn .9s cubic-bezier(.16,1,.3,1) .13s backwards}
+.hero .h-info .h-bio{animation:heroIn .9s cubic-bezier(.16,1,.3,1) .22s backwards}
+.hero .h-info .h-stats{animation:heroIn .9s cubic-bezier(.16,1,.3,1) .32s backwards}
+
+body.anim-ready .section h2{opacity:0;transform:translateY(12px);letter-spacing:.03em;
+  transition:opacity .85s cubic-bezier(.16,1,.3,1),transform .85s cubic-bezier(.16,1,.3,1),letter-spacing 1.1s cubic-bezier(.16,1,.3,1)}
+body.anim-ready .section h2.in{opacity:1;transform:translateY(0);letter-spacing:-.035em}
+
+.card{transition:transform .55s cubic-bezier(.16,1,.3,1),box-shadow .55s cubic-bezier(.16,1,.3,1),border-color .55s}
+.card:hover{transform:translateY(-6px);box-shadow:0 22px 48px -18px rgba(0,0,0,.28);border-color:rgba(0,0,0,.1)}
+.card .c-thumb .c-cover{transition:transform .7s cubic-bezier(.16,1,.3,1)}
+.card .c-thumb::after{content:'';position:absolute;inset:0;pointer-events:none;z-index:4;
+  background:radial-gradient(210px circle at var(--mx,50%) var(--my,50%),rgba(255,255,255,.16),transparent 64%);
+  opacity:0;transition:opacity .35s}
+.card:hover .c-thumb::after{opacity:1}
+.card .c-play{transition:opacity .35s ease,transform .5s cubic-bezier(.16,1,.3,1)}
+.card:hover .c-play{opacity:1;transform:scale(1)}
+.card.zoom{transform:scale(.972)!important;transition-duration:.12s!important}
+.card .c-thumb .c-cover .c-cover-play-hint{transition:opacity .3s,transform .4s cubic-bezier(.16,1,.3,1)}
+.card:hover .c-cover-play-hint{transform:scale(1.12)}
+
+.sidebar .sb-item{transition:background .25s,color .25s,transform .18s}
+.sidebar .sb-item:active{transform:scale(.975)}
+.sidebar .sb-tag{transition:background .25s,color .25s,transform .25s}
+.sidebar .sb-tag:hover{background:rgba(10,132,255,.1);color:#0A6FD8;transform:translateY(-1px)}
+
+.toolbar .tb-btn{transition:all .3s cubic-bezier(.16,1,.3,1)}
+.toolbar .tb-btn:active{transform:scale(.96)}
+
+@media(prefers-reduced-motion:reduce){
+  .hero .h-avatar,.hero .h-info h1,.hero .h-info .h-bio,.hero .h-info .h-stats{animation:none}
+  body.anim-ready .section h2{opacity:1;transform:none;letter-spacing:-.035em}
+}
 </style>
 </head>
 <body>
@@ -341,7 +505,7 @@ transition:transform .4s cubic-bezier(.16,1,.3,1),filter .4s}
           </div>
         </div>
       </div>
-      <div class="content" id="mainContent">
+      <div class="content" id="mainContent"><div class="scroll-progress" id="scrollProgress"></div>
         <div class="hero">
           <div class="h-avatar"><svg class="avatar-fx" viewBox="0 0 100 100" aria-hidden="true" focusable="false"><defs><radialGradient id="avhrg" cx="30%" cy="16%" r="88%"><stop offset="0" stop-color="#1E4E7A"/><stop offset="52%" stop-color="#0E2E52"/><stop offset="100%" stop-color="#04101F"/></radialGradient><linearGradient id="avhrs" x1="0" y1="1" x2="1" y2="0"><stop offset="0" stop-color="#22D3EE" stop-opacity="0"/><stop offset=".45" stop-color="#4CC9F0" stop-opacity=".6"/><stop offset="1" stop-color="#8EE6FF" stop-opacity=".22"/></linearGradient><linearGradient id="avhrr" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#8EE6FF" stop-opacity=".38"/><stop offset=".55" stop-color="#38BDF8" stop-opacity="0"/></linearGradient><clipPath id="avhrc"><circle cx="50" cy="50" r="50"/></clipPath></defs><g clip-path="url(#avhrc)"><rect width="100" height="100" fill="url(#avhrg)"/><circle cx="88" cy="10" r="46" fill="url(#avhrr)"/><ellipse cx="32" cy="14" rx="34" ry="16" fill="#fff" opacity=".07"/><path d="M-10 70 C 8 61 26 79 44 70 S 80 61 98 70 S 124 79 142 70" fill="none" stroke="url(#avhrs)" stroke-width="3.2" opacity=".92"/><path d="M-10 80 C 8 71 26 89 44 80 S 80 71 98 80 S 124 89 142 80" fill="none" stroke="url(#avhrs)" stroke-width="2.6" opacity=".66"/><path d="M-10 90 C 8 81 26 99 44 90 S 80 81 98 90 S 124 99 142 90" fill="none" stroke="url(#avhrs)" stroke-width="2.2" opacity=".46"/><path d="M-10 59 C 8 50 26 68 44 59 S 80 50 98 59 S 124 68 142 59" fill="none" stroke="url(#avhrs)" stroke-width="1.6" opacity=".26"/><rect y="62" width="100" height="38" fill="#7DD3FC" opacity=".05"/></g><circle cx="50" cy="50" r="48.7" fill="none" stroke="#fff" stroke-opacity=".16" stroke-width="1.8"/></svg><span>淼</span></div>
           <div class="h-info">
@@ -367,8 +531,7 @@ transition:transform .4s cubic-bezier(.16,1,.3,1),filter .4s}
         <div class="section" id="expSection">
           <h2>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-            我的历程
-          </h2>
+            我的历程<span class="en">EXPERIENCE</span></h2>
           <div class="timeline">
             <div class="tl-item"><div class="tl-year">2022.09</div><div class="tl-title">入学 · 湖南农业大学 教育技术学</div><div class="tl-desc">教育技术学本科，主修教学设计、教育软件工程、多媒体技术、教育数据分析与 Python 编程基础。</div></div>
             <div class="tl-item"><div class="tl-year">2022.09—2024.02</div><div class="tl-title">院学生会视频部 · 干事</div><div class="tl-desc">负责校级活动拍摄与后期制作，产出短视频 10 条以上，单条最高播放 2 万+；参与校园文化宣传月系列策划，作品获校团委「优秀新媒体作品」；曾任副班长。</div></div>
@@ -382,8 +545,7 @@ transition:transform .4s cubic-bezier(.16,1,.3,1),filter .4s}
         <div class="section" id="skillsSection">
           <h2>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
-            技能栈
-          </h2>
+            技能栈<span class="en">SKILLS</span></h2>
           <div class="skills-grid">
             <div class="skill-item reveal">
               <div class="sk-icon"><svg viewBox="0 0 128 128" class="ico-ab"><defs><clipPath id="adAe"><rect width="128" height="128" rx="26"/></clipPath></defs><g clip-path="url(#adAe)"><path fill="#00005B" d="M0 0h128v128H0z"/><path fill="#9999FF" d="M0 0v128h128V0H0zm121.5 121.5H6.5V6.5h115v115z"/><path fill="#9999FF" d="M103.5 59.2s-.6-14.6-16.5-14.6c-16 0-17.3 22-17.3 22v4.7S72.5 89.6 86 89.6s14.8-2.6 14.8-2.6v-8.1s-19.3 9.2-21.2-10h24v-9.7zm-9 2.4h-15s0-8.3 7.5-9.2c8.2 0 7.5 9.2 7.5 9.2zM50.5 29.9H38.4v3.8l-16 54.9h9.4l4.4-16.1H53l4.5 16.1h10.3L50.5 29.9zM38.2 63.1l6.4-24.5L51 63.1H38.2z"/></g></svg></div>
@@ -431,8 +593,7 @@ transition:transform .4s cubic-bezier(.16,1,.3,1),filter .4s}
         <div class="section" id="servicesSection">
           <h2>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v16"/></svg>
-            服务范围
-          </h2>
+            服务范围<span class="en">SERVICES</span></h2>
           <div class="services-grid">
             <div class="service-card reveal">
               <div class="sc-icon"><svg viewBox="0 0 128 128" class="ico-ab"><defs><clipPath id="adAe"><rect width="128" height="128" rx="26"/></clipPath></defs><g clip-path="url(#adAe)"><path fill="#00005B" d="M0 0h128v128H0z"/><path fill="#9999FF" d="M0 0v128h128V0H0zm121.5 121.5H6.5V6.5h115v115z"/><path fill="#9999FF" d="M103.5 59.2s-.6-14.6-16.5-14.6c-16 0-17.3 22-17.3 22v4.7S72.5 89.6 86 89.6s14.8-2.6 14.8-2.6v-8.1s-19.3 9.2-21.2-10h24v-9.7zm-9 2.4h-15s0-8.3 7.5-9.2c8.2 0 7.5 9.2 7.5 9.2zM50.5 29.9H38.4v3.8l-16 54.9h9.4l4.4-16.1H53l4.5 16.1h10.3L50.5 29.9zM38.2 63.1l6.4-24.5L51 63.1H38.2z"/></g></svg><span style="font-size:13px;font-weight:700">视频特效包装</span></div>
@@ -456,8 +617,7 @@ transition:transform .4s cubic-bezier(.16,1,.3,1),filter .4s}
         <div class="section" id="certSection">
           <h2>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="8" r="6"/><path d="M8.21 13.89L7 23l5-3 5 3-1.21-9.12"/></svg>
-            证书与资质
-          </h2>
+            证书与资质<span class="en">CREDENTIALS</span></h2>
           <div class="services-grid">
             <div class="service-card reveal">
               <div class="sc-icon">
@@ -493,8 +653,7 @@ transition:transform .4s cubic-bezier(.16,1,.3,1),filter .4s}
         <div class="section" id="worksSection">
           <h2>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
-            作品集
-          </h2>
+            作品集<span class="en">WORKS</span></h2>
           <div class="toolbar">
             <button class="tb-btn active" data-cat="all">
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z"/></svg>
@@ -949,6 +1108,104 @@ transition:transform .4s cubic-bezier(.16,1,.3,1),filter .4s}
     els.forEach(function(el){ io.observe(el); });
   } else {
     els.forEach(run);
+  }
+})();
+</script>
+
+<script>
+(function(){
+  /* 1. 滚动进度条 */
+  var content = document.getElementById('mainContent');
+  var bar = document.getElementById('scrollProgress');
+  if(content && bar){
+    var ticking = false;
+    content.addEventListener('scroll', function(){
+      if(ticking) return;
+      ticking = true;
+      requestAnimationFrame(function(){
+        ticking = false;
+        var max = content.scrollHeight - content.clientHeight;
+        bar.style.width = (max > 0 ? (content.scrollTop / max * 100) : 0) + '%';
+      });
+    }, {passive:true});
+  }
+
+  /* 2. 区块标题进场 */
+  document.body.classList.add('anim-ready');
+  var heads = document.querySelectorAll('.section h2');
+  if('IntersectionObserver' in window){
+    var io = new IntersectionObserver(function(entries){
+      entries.forEach(function(en){
+        if(en.isIntersecting){ en.target.classList.add('in'); io.unobserve(en.target); }
+      });
+    }, {threshold:.3, rootMargin:'0px 0px -40px 0px'});
+    heads.forEach(function(el){ io.observe(el); });
+  } else {
+    heads.forEach(function(el){ el.classList.add('in'); });
+  }
+
+  /* 3. 作品卡：鼠标光斑 + 视差 + 按压缩放 */
+  var grid = document.getElementById('grid');
+  if(grid){
+    var raf = null, lastEvent = null;
+    grid.addEventListener('mousemove', function(e){
+      lastEvent = e;
+      if(raf) return;
+      raf = requestAnimationFrame(function(){
+        raf = null;
+        var ev = lastEvent;
+        var card = ev.target.closest ? ev.target.closest('.card') : null;
+        if(!card) return;
+        var thumb = card.querySelector('.c-thumb');
+        var cover = card.querySelector('.c-cover');
+        if(!thumb || !cover) return;
+        var r = thumb.getBoundingClientRect();
+        var x = ev.clientX - r.left, y = ev.clientY - r.top;
+        thumb.style.setProperty('--mx', x + 'px');
+        thumb.style.setProperty('--my', y + 'px');
+        var dx = (x / r.width - .5), dy = (y / r.height - .5);
+        cover.style.transform = 'scale(1.09) translate(' + (dx * -8).toFixed(1) + 'px,' + (dy * -8).toFixed(1) + 'px)';
+      });
+    }, {passive:true});
+
+    grid.addEventListener('mouseout', function(e){
+      var card = e.target.closest ? e.target.closest('.card') : null;
+      if(!card) return;
+      if(e.relatedTarget && card.contains(e.relatedTarget)) return;
+      var cover = card.querySelector('.c-cover');
+      if(cover) cover.style.transform = '';
+    });
+
+    grid.addEventListener('mousedown', function(e){
+      var card = e.target.closest ? e.target.closest('.card') : null;
+      if(card) card.classList.add('zoom');
+    });
+    document.addEventListener('mouseup', function(){
+      document.querySelectorAll('.card.zoom').forEach(function(c){ c.classList.remove('zoom'); });
+    });
+  }
+
+  /* 4. 侧边栏分类：点击后滚动到作品集 */
+  document.querySelectorAll('.sb-item[data-cat]').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      var sec = document.getElementById('worksSection');
+      if(sec && content){
+        var top = sec.offsetTop - 8;
+        content.scrollTo({top: top, behavior:'smooth'});
+      }
+    });
+  });
+
+  /* 5. 作品卡入场错峰 */
+  var gridEl = document.getElementById('grid');
+  if(gridEl){
+    var stagger = function(){
+      gridEl.querySelectorAll('.card.reveal').forEach(function(c, i){
+        c.style.transitionDelay = Math.min(i * 45, 360) + 'ms';
+      });
+    };
+    stagger();
+    new MutationObserver(stagger).observe(gridEl, {childList:true});
   }
 })();
 </script>
