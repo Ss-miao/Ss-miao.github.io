@@ -532,6 +532,120 @@ svg{display:block}
   .reveal,.tl-item{opacity:1!important;transform:none!important}
 }
 @media(max-width:760px){body>[data-swarm-ignore]{display:none!important}}
+
+/* ============================================================
+   BoardUI-inspired refinement (v2)
+   ============================================================ */
+:root{
+  --hero-g1:rgba(37,99,235,.13);
+  --hero-g2:rgba(56,189,248,.12);
+  --hero-g3:rgba(236,114,182,.10);
+  --brand-grad:linear-gradient(180deg,#3B82F6 0%,#2563EB 100%);
+  --brand-shadow:0 1px 2px rgba(37,99,235,.28),0 8px 20px -10px rgba(37,99,235,.75);
+}
+[data-theme="dark"]{
+  --hero-g1:rgba(59,130,246,.17);
+  --hero-g2:rgba(56,189,248,.12);
+  --hero-g3:rgba(236,114,182,.11);
+  --brand-grad:linear-gradient(180deg,#4B8DFF 0%,#2F6BEB 100%);
+  --brand-shadow:0 1px 2px rgba(0,0,0,.4),0 8px 20px -10px rgba(59,130,246,.55);
+}
+.hero{padding:34px 36px 30px}
+.hero::before{
+  background:
+    radial-gradient(360px 460px at 12% -36%,var(--hero-g1),transparent 72%),
+    radial-gradient(320px 430px at 46% -40%,var(--hero-g2),transparent 74%),
+    radial-gradient(340px 400px at 84% -34%,var(--hero-g3),transparent 72%),
+    linear-gradient(180deg,rgba(37,99,235,.035),transparent 48%);
+}
+.hero::after{
+  content:'';position:absolute;left:0;right:0;top:0;height:1px;pointer-events:none;
+  background:linear-gradient(90deg,transparent 4%,rgba(59,130,246,.55) 32%,rgba(56,189,248,.4) 58%,transparent 92%);
+}
+.h-name{font-size:34px;font-weight:760;letter-spacing:-.045em}
+.h-badge{height:21px;padding:0 9px;border:1px solid rgba(14,159,110,.18);border-radius:6px;font-size:10.5px}
+.h-chip{background:var(--surface-2);border-color:var(--line);border-radius:6px;padding:3px 8px}
+.h-actions{margin-top:16px}
+.btn-primary{background:var(--brand-grad);border-color:transparent;color:#fff;box-shadow:var(--brand-shadow)}
+.btn-primary:hover{opacity:1;box-shadow:0 2px 4px rgba(37,99,235,.3),0 12px 26px -10px rgba(37,99,235,.8)}
+
+/* ---- section headers ---- */
+.section{padding:34px 36px 36px}
+.sec-ico{background:linear-gradient(180deg,var(--accent-soft),transparent);border-color:var(--accent-line);color:var(--accent-text)}
+.sec-en{color:var(--accent-text);opacity:.8}
+.sec-title{font-size:15px}
+
+/* ---- KPI sparkline (decorative texture, not real data) ---- */
+.stat:nth-child(1){--sp-color:#2563EB}
+.stat:nth-child(2){--sp-color:#0EA5A4}
+.stat:nth-child(3){--sp-color:#7C6BF5}
+.stat:nth-child(4){--sp-color:#EC4899}
+[data-theme="dark"] .stat:nth-child(1){--sp-color:#6B9BFF}
+[data-theme="dark"] .stat:nth-child(2){--sp-color:#3FD0C9}
+[data-theme="dark"] .stat:nth-child(3){--sp-color:#A695FF}
+[data-theme="dark"] .stat:nth-child(4){--sp-color:#F78AC0}
+.stat-spark{position:absolute;right:11px;bottom:11px;width:66px;height:30px;
+  opacity:.46;pointer-events:none;transition:opacity .25s,transform .35s}
+.stat:hover .stat-spark{opacity:.86;transform:translateY(-1px)}
+.stat-spark path.area{fill:var(--sp-color);opacity:.14}
+.stat-spark path.line{fill:none;stroke:var(--sp-color);stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+
+/* ---- topbar command trigger ---- */
+.cmdk-trigger{
+  display:inline-flex;align-items:center;gap:7px;height:28px;padding:0 8px 0 9px;margin-right:4px;
+  border:1px solid var(--line);border-radius:7px;background:var(--surface);color:var(--t3);
+  font-size:10.5px;font-weight:500;letter-spacing:.01em;cursor:pointer;
+  transition:border-color .18s,color .18s,box-shadow .18s,background .18s;
+}
+.cmdk-trigger:hover{border-color:var(--accent-line);color:var(--t2);box-shadow:var(--sh-xs);background:var(--surface-2)}
+.cmdk-trigger svg{opacity:.65;flex-shrink:0}
+.cmdk-trigger kbd,.cmdk kbd{
+  font-family:var(--mono);font-size:9px;font-weight:600;line-height:1;
+  padding:3px 5px;border-radius:4px;background:var(--surface-3);
+  border:1px solid var(--line);color:var(--t3);white-space:nowrap;
+}
+
+/* ---- command palette ---- */
+.cmdk{position:fixed;inset:0;z-index:9000;display:flex;justify-content:center;align-items:flex-start}
+.cmdk[hidden]{display:none}
+.cmdk-backdrop{position:absolute;inset:0;background:rgba(16,18,28,.34);backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px)}
+.cmdk-panel{
+  position:relative;margin-top:15vh;width:min(460px,calc(100vw - 32px));
+  background:var(--surface);border:1px solid var(--line-2);border-radius:14px;
+  box-shadow:0 30px 80px -20px rgba(16,24,40,.45),0 4px 16px rgba(16,24,40,.12);
+  overflow:hidden;animation:cmdk-in .18s cubic-bezier(.16,1,.3,1);
+}
+@keyframes cmdk-in{from{opacity:0;transform:translateY(-8px) scale(.985)}to{opacity:1;transform:none}}
+.cmdk-input-row{display:flex;align-items:center;gap:9px;padding:12px 13px;border-bottom:1px solid var(--line)}
+.cmdk-input-row svg{color:var(--t3);flex-shrink:0}
+.cmdk-input-row input{flex:1;min-width:0;border:0;outline:0;background:transparent;color:var(--t1);
+  font-family:var(--font);font-size:13px;font-weight:500}
+.cmdk-input-row input::placeholder{color:var(--t3);font-weight:400}
+.cmdk-list{max-height:360px;overflow-y:auto;padding:6px}
+.cmdk-item{
+  display:flex;align-items:center;gap:10px;width:100%;padding:8px 9px;border:0;border-radius:8px;
+  background:transparent;color:var(--t1);font-family:var(--font);font-size:12px;font-weight:550;
+  text-align:left;cursor:pointer;transition:background .12s;
+}
+.cmdk-item:hover,.cmdk-item.sel{background:var(--accent-soft)}
+.cmdk-item .ci-ico{
+  width:26px;height:26px;border-radius:7px;display:grid;place-items:center;flex-shrink:0;
+  background:var(--surface-3);border:1px solid var(--line);color:var(--accent-text);font-size:12px;
+}
+.cmdk-item .ci-en{margin-left:auto;font-size:9px;font-weight:600;letter-spacing:.1em;color:var(--t3)}
+.cmdk-empty{padding:22px 12px;text-align:center;font-size:11.5px;color:var(--t3)}
+.cmdk-foot{display:flex;gap:14px;padding:9px 13px;border-top:1px solid var(--line);
+  background:var(--surface-2);font-size:9.5px;color:var(--t3)}
+.cmdk-foot span{display:inline-flex;align-items:center;gap:4px}
+@media(max-width:900px){.cmdk-trigger span{display:none}}
+@media(max-width:720px){
+  .cmdk-trigger{display:none}
+  .hero{padding:24px 18px 20px}
+  .section{padding:24px 18px 28px}
+  .h-name{font-size:22px}
+  .stat-spark{width:48px;right:8px;bottom:9px;opacity:.38}
+}
+
 </style>
 </head>
 <body>
@@ -542,6 +656,10 @@ svg{display:block}
       <span class="dots"><i></i><i></i><i></i></span>
       <span class="tb-title"><span class="dot-live"></span>黄淼 · 个人主页</span>
       <div class="tb-right">
+        <button class="cmdk-trigger" id="cmdkTrigger" aria-label="快速跳转">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.6-3.6"/></svg>
+          <span>快速跳转</span><kbd>⌘K</kbd>
+        </button>
         <button class="icon-btn" id="themeBtn" aria-label="切换深浅色" title="切换深浅色">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.4v2.2M12 19.4v2.2M4.2 4.2l1.6 1.6M18.2 18.2l1.6 1.6M2.4 12h2.2M19.4 12h2.2M4.2 19.8l1.6-1.6M18.2 5.8l1.6-1.6"/></svg>
         </button>
@@ -1309,10 +1427,26 @@ svg{display:block}
   else boot();
 })();
 </script>
+
+<div class="cmdk" id="cmdk" hidden>
+  <div class="cmdk-backdrop" data-cmdk-close></div>
+  <div class="cmdk-panel" role="dialog" aria-modal="true" aria-label="快速跳转">
+    <div class="cmdk-input-row">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.6-3.6"/></svg>
+      <input id="cmdkInput" placeholder="搜索区块，快速跳转…" autocomplete="off" spellcheck="false">
+      <kbd>ESC</kbd>
+    </div>
+    <div class="cmdk-list" id="cmdkList"></div>
+    <div class="cmdk-foot"><span><kbd>↑</kbd><kbd>↓</kbd> 选择</span><span><kbd>↵</kbd> 跳转</span><span style="margin-left:auto">黄淼 · 个人主页</span></div>
+  </div>
+</div>
+<script src="/ui2.js" defer></script>
+
 <!-- swarm: 桌面端打开自动播放一次（每会话），Alt+Shift+S 可重放；移动端不加载动画 -->
 <script>window.SwarmCursorsConfig=(window.matchMedia&&matchMedia('(max-width:760px)').matches)
   ?{trigger:'none'}
   :{trigger:'auto',delay:350,once:'session',hotkey:'alt+shift+s'};</script>
 <script src="/swarm-cursors.js" defer></script>
 </body>
+<!-- ui2 deployed -->
 </html>
