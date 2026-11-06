@@ -529,6 +529,7 @@ svg{display:block}
   *{animation-duration:.001s!important;transition-duration:.001s!important}
   .reveal,.tl-item{opacity:1!important;transform:none!important}
 }
+@media(max-width:760px){body>[data-swarm-ignore]{display:none!important}}
 </style>
 </head>
 <body>
@@ -1306,5 +1307,8 @@ svg{display:block}
   else boot();
 })();
 </script>
+<!-- swarm: 点击右下角「重放这一页」触发，Alt+Shift+S 也可以（移动端隐藏按钮） -->
+<script>window.SwarmCursorsConfig={trigger:'button',label:'重放这一页',position:'bottom-right',hotkey:'alt+shift+s'};</script>
+<script src="/swarm-cursors.js" defer></script>
 </body>
 </html>
