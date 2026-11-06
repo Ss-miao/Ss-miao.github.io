@@ -6,7 +6,9 @@
 <title>黄淼 · AIGC 视频创作 / AI 内容运营</title>
 <meta name="description" content="黄淼，湖南农业大学教育技术学 2022—2026。AIGC 视频创作与 AI 内容运营：抖音 AI 视觉账号 2.53 万粉、93 天总播放 2,837.6 万；AE / PR / PS / Midjourney / 可灵 / Seedance。">
 <meta name="theme-color" content="#F4F4F6">
-<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="icon" href="/favicon-32.png" sizes="32x32" type="image/png">
+<link rel="icon" href="/favicon-180.png" sizes="180x180" type="image/png">
+<link rel="apple-touch-icon" href="/favicon-180.png">
 <style>
 /* ============================================================
    Design tokens
@@ -1307,8 +1309,10 @@ svg{display:block}
   else boot();
 })();
 </script>
-<!-- swarm: 点击右下角「重放这一页」触发，Alt+Shift+S 也可以（移动端隐藏按钮） -->
-<script>window.SwarmCursorsConfig={trigger:'button',label:'重放这一页',position:'bottom-right',hotkey:'alt+shift+s'};</script>
+<!-- swarm: 桌面端打开自动播放一次（每会话），Alt+Shift+S 可重放；移动端不加载动画 -->
+<script>window.SwarmCursorsConfig=(window.matchMedia&&matchMedia('(max-width:760px)').matches)
+  ?{trigger:'none'}
+  :{trigger:'auto',delay:350,once:'session',hotkey:'alt+shift+s'};</script>
 <script src="/swarm-cursors.js" defer></script>
 </body>
 </html>
