@@ -532,69 +532,6 @@ svg{display:block}
   .reveal,.tl-item{opacity:1!important;transform:none!important}
 }
 @media(max-width:760px){body>[data-swarm-ignore]{display:none!important}}
-/* ============================================================
-   BoardUI-inspired refinement (v2)
-   ============================================================ */
-:root{
-  --hero-g1:rgba(37,99,235,.13);
-  --hero-g2:rgba(56,189,248,.12);
-  --hero-g3:rgba(236,114,182,.10);
-  --brand-grad:linear-gradient(180deg,#3B82F6 0%,#2563EB 100%);
-  --brand-shadow:0 1px 2px rgba(37,99,235,.28),0 8px 20px -10px rgba(37,99,235,.75);
-}
-[data-theme="dark"]{
-  --hero-g1:rgba(59,130,246,.17);
-  --hero-g2:rgba(56,189,248,.12);
-  --hero-g3:rgba(236,114,182,.11);
-  --brand-grad:linear-gradient(180deg,#4B8DFF 0%,#2F6BEB 100%);
-  --brand-shadow:0 1px 2px rgba(0,0,0,.4),0 8px 20px -10px rgba(59,130,246,.55);
-}
-.hero{padding:34px 36px 30px}
-.hero::before{
-  background:
-    radial-gradient(360px 460px at 12% -36%,var(--hero-g1),transparent 72%),
-    radial-gradient(320px 430px at 46% -40%,var(--hero-g2),transparent 74%),
-    radial-gradient(340px 400px at 84% -34%,var(--hero-g3),transparent 72%),
-    linear-gradient(180deg,rgba(37,99,235,.035),transparent 48%);
-}
-.hero::after{
-  content:'';position:absolute;left:0;right:0;top:0;height:1px;pointer-events:none;
-  background:linear-gradient(90deg,transparent 4%,rgba(59,130,246,.55) 32%,rgba(56,189,248,.4) 58%,transparent 92%);
-}
-.h-name{font-size:34px;font-weight:760;letter-spacing:-.045em}
-.h-badge{height:21px;padding:0 9px;border:1px solid rgba(14,159,110,.18);border-radius:6px;font-size:10.5px}
-.h-chip{background:var(--surface-2);border-color:var(--line);border-radius:6px;padding:3px 8px}
-.h-actions{margin-top:16px}
-.btn-primary{background:var(--brand-grad);border-color:transparent;color:#fff;box-shadow:var(--brand-shadow)}
-.btn-primary:hover{opacity:1;box-shadow:0 2px 4px rgba(37,99,235,.3),0 12px 26px -10px rgba(37,99,235,.8)}
-
-/* ---- section headers ---- */
-.section{padding:34px 36px 36px}
-.sec-ico{background:linear-gradient(180deg,var(--accent-soft),transparent);border-color:var(--accent-line);color:var(--accent-text)}
-.sec-en{color:var(--accent-text);opacity:.8}
-.sec-title{font-size:15px}
-
-/* ---- KPI sparkline (decorative texture, not real data) ---- */
-.stat:nth-child(1){--sp-color:#2563EB}
-.stat:nth-child(2){--sp-color:#0EA5A4}
-.stat:nth-child(3){--sp-color:#7C6BF5}
-.stat:nth-child(4){--sp-color:#EC4899}
-[data-theme="dark"] .stat:nth-child(1){--sp-color:#6B9BFF}
-[data-theme="dark"] .stat:nth-child(2){--sp-color:#3FD0C9}
-[data-theme="dark"] .stat:nth-child(3){--sp-color:#A695FF}
-[data-theme="dark"] .stat:nth-child(4){--sp-color:#F78AC0}
-.stat-spark{position:absolute;right:11px;bottom:11px;width:66px;height:30px;
-  opacity:.46;pointer-events:none;transition:opacity .25s,transform .35s}
-.stat:hover .stat-spark{opacity:.86;transform:translateY(-1px)}
-.stat-spark path.area{fill:var(--sp-color);opacity:.14}
-.stat-spark path.line{fill:none;stroke:var(--sp-color);stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
-@media(max-width:720px){
-  .hero{padding:24px 18px 20px}
-  .section{padding:24px 18px 28px}
-  .h-name{font-size:22px}
-  .stat-spark{width:48px;right:8px;bottom:9px;opacity:.38}
-}
-
 </style>
 </head>
 <body>
@@ -760,7 +697,7 @@ svg{display:block}
                 <svg width="8" height="8" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 10V2.4M2.8 5.6 6 2.4l3.2 3.2"/></svg>
                 净增 +3,319
               </div>
-            <svg class="stat-spark" viewBox="0 0 66 30" preserveAspectRatio="none" aria-hidden="true"><path class="area" d="M0.0,22 L6.6,17 L13.2,20 L19.8,14 L26.4,16 L33.0,11 L39.6,13 L46.2,8 L52.8,10 L59.4,5 L66.0,6 L66,30 L0,30 Z"/><path class="line" d="M0.0,22 L6.6,17 L13.2,20 L19.8,14 L26.4,16 L33.0,11 L39.6,13 L46.2,8 L52.8,10 L59.4,5 L66.0,6"/></svg></div>
+            </div>
             <div class="stat">
               <div class="stat-k">
                 <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 5.5h11a2 2 0 0 1 2 2V19H6a2 2 0 0 1-2-2z"/><path d="M17 9.5l3-1.8v9.6l-3-1.8"/></svg>
@@ -768,7 +705,7 @@ svg{display:block}
               </div>
               <div class="stat-v"><span class="v" data-to="2837.6" data-dec="1">2837.6</span><span class="u">万</span></div>
               <div class="stat-d mute">均播 50.7 万</div>
-            <svg class="stat-spark" viewBox="0 0 66 30" preserveAspectRatio="none" aria-hidden="true"><path class="area" d="M0.0,10 L6.6,13 L13.2,11 L19.8,17 L26.4,15 L33.0,19 L39.6,16 L46.2,22 L52.8,19 L59.4,24 L66.0,22 L66,30 L0,30 Z"/><path class="line" d="M0.0,10 L6.6,13 L13.2,11 L19.8,17 L26.4,15 L33.0,19 L39.6,16 L46.2,22 L52.8,19 L59.4,24 L66.0,22"/></svg></div>
+            </div>
             <div class="stat">
               <div class="stat-k">
                 <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20.5s-7.5-4.4-7.5-9.4A4.1 4.1 0 0 1 12 8.6a4.1 4.1 0 0 1 7.5 2.5c0 5-7.5 9.4-7.5 9.4z"/></svg>
@@ -776,7 +713,7 @@ svg{display:block}
               </div>
               <div class="stat-v"><span class="v" data-to="104.7" data-dec="1">104.7</span><span class="u">万</span></div>
               <div class="stat-d mute">赞播率 3.7%</div>
-            <svg class="stat-spark" viewBox="0 0 66 30" preserveAspectRatio="none" aria-hidden="true"><path class="area" d="M0.0,23 L6.6,19 L13.2,21 L19.8,16 L26.4,18 L33.0,13 L39.6,15 L46.2,10 L52.8,12 L59.4,7 L66.0,8 L66,30 L0,30 Z"/><path class="line" d="M0.0,23 L6.6,19 L13.2,21 L19.8,16 L26.4,18 L33.0,13 L39.6,15 L46.2,10 L52.8,12 L59.4,7 L66.0,8"/></svg></div>
+            </div>
             <div class="stat">
               <div class="stat-k">
                 <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2.5"/><path d="M8 4v16M16 4v16"/></svg>
@@ -784,7 +721,7 @@ svg{display:block}
               </div>
               <div class="stat-v"><span class="v" data-to="56" data-dec="0">56</span><span class="u">条</span></div>
               <div class="stat-d mute">日均 0.6 条</div>
-            <svg class="stat-spark" viewBox="0 0 66 30" preserveAspectRatio="none" aria-hidden="true"><path class="area" d="M0.0,8 L6.6,11 L13.2,9 L19.8,14 L26.4,12 L33.0,17 L39.6,15 L46.2,20 L52.8,18 L59.4,23 L66.0,21 L66,30 L0,30 Z"/><path class="line" d="M0.0,8 L6.6,11 L13.2,9 L19.8,14 L26.4,12 L33.0,17 L39.6,15 L46.2,20 L52.8,18 L59.4,23 L66.0,21"/></svg></div>
+            </div>
           </div>
         </section>
 
