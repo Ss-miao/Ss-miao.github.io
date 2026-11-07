@@ -359,20 +359,16 @@ svg{display:block}
 .tc-title{font-size:12.5px;font-weight:600;letter-spacing:-.015em;color:var(--t1)}
 .tc-desc{font-size:11px;line-height:1.7;color:var(--t2);margin-top:7px;letter-spacing:0}
 
-/* credentials rows */
-.cred-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
-.cred{display:flex;align-items:center;gap:11px;padding:12px 14px;border:1px solid var(--line);
-  border-radius:var(--r-md);background:var(--surface);transition:border-color .2s,box-shadow .25s,transform .25s}
-.cred:hover{border-color:var(--line-2);box-shadow:var(--sh-sm);transform:translateY(-1px)}
-.cred-ico{width:30px;height:30px;border-radius:8px;display:grid;place-items:center;flex-shrink:0;
-  background:var(--tile-bg);border:1px solid var(--tile-line);color:var(--t2)}
-.cred-ico svg{width:14px;height:14px}
-.cred-body{min-width:0;flex:1}
-.cred-t{font-size:12px;font-weight:600;letter-spacing:-.012em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.cred-s{font-size:10px;color:var(--t3);margin-top:1px}
-.cred-check{width:16px;height:16px;border-radius:50%;display:grid;place-items:center;flex-shrink:0;
-  background:var(--ok-soft);color:var(--ok)}
-.cred-check svg{width:9px;height:9px}
+/* credentials badges */
+.cred-badges{display:flex;flex-wrap:wrap;gap:6px;margin-top:2px}
+.cred-b{display:inline-flex;align-items:center;gap:6px;height:28px;padding:0 11px;border-radius:var(--r-sm);
+  background:var(--surface-3);border:1px solid transparent;font-size:11.5px;font-weight:500;
+  color:var(--t1);letter-spacing:-.01em;cursor:default;
+  transition:background .18s,border-color .18s}
+.cred-b:hover{background:var(--surface-4)}
+.cred-b:first-child{background:var(--accent-soft);border-color:var(--accent-line)}
+.cred-dot{width:5px;height:5px;border-radius:50%;background:var(--t3);flex:none}
+.cred-b:first-child .cred-dot{background:var(--accent)}
 
 /* ---- segmented control ---- */
 .seg{display:inline-flex;align-items:center;gap:2px;padding:3px;border-radius:var(--r-sm);
@@ -505,7 +501,7 @@ svg{display:block}
   .mnav{display:flex}
   .content{padding-bottom:58px}
   .grid{grid-template-columns:repeat(2,1fr)}
-  .cards-2,.cred-grid{grid-template-columns:repeat(2,1fr)}
+  .cards-2{grid-template-columns:repeat(2,1fr)}
 }
 @media(max-width:720px){
   .topbar{gap:8px;padding:0 10px}
@@ -518,7 +514,7 @@ svg{display:block}
   .h-chip{font-size:10px}
   .section{padding:24px 18px 28px}
   .skills-grid{grid-template-columns:repeat(2,1fr)}
-  .cards-2,.cred-grid{grid-template-columns:1fr}
+  .cards-2{grid-template-columns:1fr}
   .grid{grid-template-columns:repeat(2,1fr);gap:9px}
   .c-info{padding:8px 9px 10px}
   .c-info h4{font-size:11px}
@@ -833,29 +829,13 @@ svg{display:block}
           <div class="sec-head">
             <div class="sec-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8.5" r="5.5"/><path d="M8.2 13.4 7 21l5-2.8L17 21l-1.2-7.6"/></svg></div>
             <h2 class="sec-title">证书与资质<span class="sec-en">Credentials</span></h2>
-            <span class="sec-meta">4 项</span>
+            <span class="sec-meta">已认证 4 项</span>
           </div>
-          <div class="cred-grid">
-            <div class="cred reveal">
-              <div class="cred-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 19.5A2.5 2.5 0 0 1 7 17h13"/><path d="M7 2h13v20H7a2.5 2.5 0 0 1-2.5-2.5v-15A2.5 2.5 0 0 1 7 2z"/></svg></div>
-              <div class="cred-body"><div class="cred-t">中职计算机教师资格证</div><div class="cred-s">中等职业学校 · 计算机专业课</div></div>
-              <div class="cred-check"><svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M2.4 6.2 4.9 8.7l4.7-5"/></svg></div>
-            </div>
-            <div class="cred reveal">
-              <div class="cred-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2.5a3 3 0 0 0-3 3v6.2a3 3 0 0 0 6 0V5.5a3 3 0 0 0-3-3z"/><path d="M18.5 10.5v1.2a6.5 6.5 0 0 1-13 0v-1.2"/><path d="M12 18.2V21.5"/></svg></div>
-              <div class="cred-body"><div class="cred-t">普通话二级乙等</div><div class="cred-s">教师资格认定所需等级</div></div>
-              <div class="cred-check"><svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M2.4 6.2 4.9 8.7l4.7-5"/></svg></div>
-            </div>
-            <div class="cred reveal">
-              <div class="cred-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="3.5" width="19" height="13" rx="2"/><path d="M8.5 20.5h7M12 16.5v4"/></svg></div>
-              <div class="cred-body"><div class="cred-t">计算机二级、三级</div><div class="cred-s">全国计算机等级考试</div></div>
-              <div class="cred-check"><svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M2.4 6.2 4.9 8.7l4.7-5"/></svg></div>
-            </div>
-            <div class="cred reveal">
-              <div class="cred-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 17h15l-1.6-9.4H6.1z"/><circle cx="7.5" cy="19.2" r="1.4"/><circle cx="16.5" cy="19.2" r="1.4"/></svg></div>
-              <div class="cred-body"><div class="cred-t">C1 驾驶证</div><div class="cred-s">可外拍 / 出差跟组</div></div>
-              <div class="cred-check"><svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M2.4 6.2 4.9 8.7l4.7-5"/></svg></div>
-            </div>
+          <div class="cred-badges reveal">
+            <span class="cred-b" title="中等职业学校 · 计算机专业课"><span class="cred-dot"></span>中职计算机教师资格证</span>
+            <span class="cred-b" title="教师资格认定所需等级"><span class="cred-dot"></span>普通话二级乙等</span>
+            <span class="cred-b" title="全国计算机等级考试"><span class="cred-dot"></span>计算机二级 · 三级</span>
+            <span class="cred-b" title="可外拍 / 出差跟组"><span class="cred-dot"></span>C1 驾驶证</span>
           </div>
         </section>
 
