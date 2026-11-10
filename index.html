@@ -89,6 +89,13 @@
   --tile-bg:#1C1C22;
   --tile-line:rgba(255,255,255,.07);
 }
+[data-theme="dark"] .sg{
+  --sg-ink:45,212,191;
+  background:
+    repeating-linear-gradient(0deg,rgba(255,255,255,.035) 0 1px,transparent 1px 15px),
+    repeating-linear-gradient(90deg,rgba(255,255,255,.035) 0 1px,transparent 1px 15px),
+    var(--surface-2);
+}
 
 /* ============================================================
    Reset / base
@@ -224,7 +231,52 @@ svg{display:block}
              radial-gradient(520px 220px at 84% -30%,rgba(124,107,245,.05),transparent 72%);
 }
 .hero>*{position:relative}
-.hero-top{display:flex;align-items:flex-start;gap:18px}
+.hero-top{display:grid;grid-template-columns:minmax(0,1fr) 264px;gap:28px;align-items:start}
+.hero-id{display:flex;align-items:flex-start;gap:18px;min-width:0}
+
+/* ---- hero signal field ---- */
+.sg{
+  --sg-ink:16,166,148;
+  position:relative;height:148px;border:1px solid var(--line);border-radius:var(--r-md);
+  background:
+    repeating-linear-gradient(0deg,rgba(20,20,23,.038) 0 1px,transparent 1px 15px),
+    repeating-linear-gradient(90deg,rgba(20,20,23,.038) 0 1px,transparent 1px 15px),
+    var(--surface-2);
+  overflow:hidden;transition:border-color .25s,box-shadow .25s;
+}
+.sg:hover{border-color:var(--line-2);box-shadow:var(--sh-xs)}
+.sg canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
+.sg-vec{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;
+  fill:none;stroke:rgba(var(--sg-ink),.42);stroke-width:1;stroke-linecap:round}
+.sg-vec line{stroke-dasharray:1 3}
+.sg-ticks{stroke:rgba(var(--sg-ink),.20);stroke-width:1;stroke-dasharray:none}
+.sg-focus{
+  position:absolute;left:0;top:0;width:46px;height:46px;
+  border:1px solid rgba(var(--sg-ink),.55);border-radius:1px;pointer-events:none;
+}
+.sg-focus::before,.sg-focus::after{
+  content:'';position:absolute;width:3px;height:3px;background:rgba(var(--sg-ink),.9);border-radius:50%;
+}
+.sg-focus::before{left:-2px;top:-2px}
+.sg-focus::after{right:-2px;bottom:-2px}
+.sg-lead{position:absolute;left:100%;top:50%;width:62px;height:0;
+  border-top:1px dashed rgba(var(--sg-ink),.38)}
+.sg-node{position:absolute;left:calc(100% + 62px);top:50%;width:4px;height:4px;border-radius:50%;
+  background:rgba(var(--sg-ink),.7);transform:translate(-2px,-50%)}
+.sg-tag{
+  position:absolute;left:-1px;bottom:100%;margin-bottom:4px;white-space:nowrap;
+  font-family:var(--mono);font-size:8px;line-height:1;letter-spacing:.05em;
+  color:rgb(var(--sg-ink));background:rgba(var(--sg-ink),.09);
+  border:1px solid rgba(var(--sg-ink),.22);border-radius:2px;padding:2.5px 4px;
+}
+.sg-axis{
+  position:absolute;right:7px;top:7px;display:flex;flex-direction:column;align-items:flex-end;gap:3px;
+  font-family:var(--mono);font-size:7px;letter-spacing:.1em;color:var(--t3);opacity:.75;pointer-events:none;
+}
+.sg-axis i{display:block;width:9px;height:1px;background:currentColor;opacity:.5}
+.sg-cap{display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin-top:7px}
+.sg-cap b{font-size:9.5px;font-weight:600;letter-spacing:.02em;color:var(--t2)}
+.sg-cap span{font-family:var(--mono);font-size:8px;letter-spacing:.08em;color:var(--t3);text-transform:uppercase}
 .h-avatar{
   position:relative;width:72px;height:72px;border-radius:50%;overflow:hidden;flex-shrink:0;
   display:grid;place-items:center;font-size:27px;font-weight:700;color:#fff;
@@ -493,6 +545,12 @@ svg{display:block}
 @media(max-width:1080px){
   .skills-grid{grid-template-columns:repeat(3,1fr)}
   .stat-grid{grid-template-columns:repeat(2,1fr)}
+  .hero-top{grid-template-columns:minmax(0,1fr) 216px;gap:20px}
+  .sg{height:132px}
+}
+@media(max-width:880px){
+  .sg-wrap{display:none}
+  .hero-top{grid-template-columns:minmax(0,1fr)}
 }
 @media(max-width:940px){
   .stage{padding:0}
@@ -508,6 +566,7 @@ svg{display:block}
   .topbar .tb-title{display:none}
   .hero{padding:24px 18px 20px}
   .hero-top{gap:14px;flex-direction:column;align-items:flex-start}
+  .hero-id{flex-direction:column;gap:14px}
   .h-avatar{width:58px;height:58px;font-size:22px}
   .h-name{font-size:22px}
   .h-meta{gap:5px}
@@ -649,6 +708,7 @@ svg{display:block}
         <!-- hero -->
         <section class="hero" id="hero">
           <div class="hero-top">
+            <div class="hero-id">
             <div class="h-avatar">
               <img src="/avatar.png" alt="黄淼" width="72" height="72" decoding="async">
             </div>
@@ -675,6 +735,22 @@ svg{display:block}
                   <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17 17 7"/><path d="M8 7h9v9"/></svg>
                 </a>
               </div>
+            </div>
+            </div>
+
+            <div class="sg-wrap">
+              <div class="sg" aria-hidden="true">
+                <canvas id="sgCanvas"></canvas>
+                <svg class="sg-vec" viewBox="0 0 264 148" preserveAspectRatio="none" aria-hidden="true">
+                  <line x1="3" y1="146" x2="76" y2="93" vector-effect="non-scaling-stroke"/>
+                  <g class="sg-ticks">
+                    <path d="M0 143v5M44 143v5M88 143v5M132 143v5M176 143v5M220 143v5M263 143v5"/>
+                  </g>
+                </svg>
+                <div class="sg-axis"><span>01 / 04</span><i></i></div>
+                <div class="sg-focus" id="sgFocus"><span class="sg-tag">AIGC · 生成</span><i class="sg-lead"></i><i class="sg-node"></i></div>
+              </div>
+              <div class="sg-cap"><b>内容信号场</b><span>93D · 56 posts</span></div>
             </div>
           </div>
 
@@ -1285,7 +1361,129 @@ svg{display:block}
   else boot();
 })();
 </script>
-<!-- swarm: 桌面端打开自动播放一次（每会话），Alt+Shift+S 可重放；移动端不加载动画 -->
+<!-- hero signal field: 密度场点阵（纯装饰） -->
+<script>
+(function(){
+  var cv=document.getElementById('sgCanvas');
+  if(!cv) return;
+  var box=cv.parentNode, fcv=document.getElementById('sgFocus');
+  var ctx=cv.getContext('2d',{alpha:true});
+  var W=0,H=0,dpr=1,raf=0,last=0,t0=0,running=false;
+  var mx=.5,my=.5,tmx=.5,tmy=.5;
+  var REDUCE=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var STEP=4;
+  var BLOBS=[
+    [.38,.47,25,1.00,1.50,-.35],
+    [.62,.68,15,.58,1.25, .85],
+    [.15,.73,13,.46,1.00, 0],
+    [.85,.27,14,.52,1.35,-.60],
+    [.90,.80,10,.34,1.10, .20]
+  ];
+  var pal={};
+
+  // 透明度量化成 64 级并预生成色值，避免每帧拼接字符串
+  function colors(){
+    var dark=document.documentElement.dataset.theme==='dark';
+    var ink=dark?'45,212,191':'16,166,148';
+    if(pal.ink===ink) return pal.arr;
+    var arr=[];
+    for(var i=0;i<=64;i++) arr.push('rgba('+ink+','+(i/64*0.68).toFixed(3)+')');
+    pal={ink:ink,arr:arr};
+    return arr;
+  }
+
+  function size(){
+    dpr=Math.min(2,window.devicePixelRatio||1);
+    W=box.clientWidth||0; H=box.clientHeight||0;
+    if(!W||!H) return false;
+    cv.width=Math.round(W*dpr); cv.height=Math.round(H*dpr);
+    ctx.setTransform(dpr,0,0,dpr,0,0);
+    return true;
+  }
+
+  function paint(t){
+    if(!W||!H) return;
+    ctx.clearRect(0,0,W,H);
+    var map=colors();
+    var px=(mx-.5)*10, py=(my-.5)*8;
+    var mainX=0, mainY=0;
+    for(var y=STEP*.5;y<H;y+=STEP){
+      for(var x=STEP*.5;x<W;x+=STEP){
+        var d=0;
+        for(var i=0;i<BLOBS.length;i++){
+          var b=BLOBS[i];
+          var bx=b[0]*W+Math.sin(t/2900+i*1.9)*2.6+px*b[3];
+          var by=b[1]*H+Math.cos(t/3500+i*1.3)*2.0+py*b[3];
+          if(i===0){ mainX=bx; mainY=by; }
+          var ca=Math.cos(b[5]), sa=Math.sin(b[5]);
+          var ux=x-bx, uy=y-by;
+          var vx=(ux*ca+uy*sa)/(b[2]*b[4]);
+          var vy=(-ux*sa+uy*ca)/(b[2]*.92);
+          d+=b[3]*Math.exp(-(vx*vx+vy*vy));
+        }
+        var a=d*.84;
+        if(a<.05) continue;
+        if(a<.15){
+          // 边缘用噪声打散，避免出现生硬的等密度圆环
+          var n=((x*12.9898+y*78.233)*43758.5453)%1; if(n<0)n=-n;
+          if(n>(a-.05)/.10) continue;
+          a=.115;
+        }
+        if(a>.68) a=.68;
+        ctx.fillStyle=map[Math.round(a/0.68*64)];
+        ctx.fillRect(x-.8,y-.8,1.6,1.6);
+      }
+    }
+    if(fcv) fcv.style.transform='translate3d('+(mainX-23).toFixed(1)+'px,'+(mainY-23).toFixed(1)+'px,0)';
+  }
+
+  function loop(ts){
+    raf=requestAnimationFrame(loop);
+    if(document.hidden) return;
+    if(ts-last<38) return;
+    last=ts;
+    mx+=(tmx-mx)*.08; my+=(tmy-my)*.08;
+    paint(ts-t0);
+  }
+
+  function start(){
+    if(!size()) return;
+    if(REDUCE){ paint(0); return; }
+    if(running) return;
+    running=true; t0=performance.now();
+    raf=requestAnimationFrame(loop);
+  }
+
+  box.addEventListener('pointermove',function(e){
+    var r=box.getBoundingClientRect();
+    if(!r.width) return;
+    tmx=(e.clientX-r.left)/r.width;
+    tmy=(e.clientY-r.top)/r.height;
+  },{passive:true});
+  box.addEventListener('pointerleave',function(){ tmx=.5; tmy=.5; },{passive:true});
+
+  var rt=0;
+  window.addEventListener('resize',function(){
+    clearTimeout(rt);
+    rt=setTimeout(function(){
+      if(size()){ if(running||REDUCE) paint(performance.now()-t0); else start(); }
+    },180);
+  });
+  document.addEventListener('visibilitychange',function(){
+    if(document.hidden){ running=false; cancelAnimationFrame(raf); }
+    else if(!REDUCE){ running=false; start(); }
+  });
+  // 深色模式下暂停动画时也能即时换色
+  if(window.MutationObserver){
+    new MutationObserver(function(){
+      if(REDUCE||document.hidden) paint(performance.now()-t0);
+    }).observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});
+  }
+
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',start);
+  else start();
+})();
+</script>
 <script>window.SwarmCursorsConfig=(window.matchMedia&&matchMedia('(max-width:760px)').matches)
   ?{trigger:'none'}
   :{trigger:'auto',delay:350,once:'session',hotkey:'alt+shift+s'};</script>
