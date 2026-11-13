@@ -527,6 +527,8 @@ svg{display:block}
 .lb-preview{width:100%;aspect-ratio:16/10;max-height:calc(90vh - 46px);background:#000;
   display:flex;align-items:center;justify-content:center;overflow:hidden}
 .lb-preview video{width:100%;display:block;max-height:calc(90vh - 46px);background:#000}
+.lb.is-portrait{max-width:min(860px,calc((90vh - 46px)*.75))}
+.lb.is-portrait .lb-preview{aspect-ratio:3/4}
 
 /* ---- mobile nav ---- */
 .mnav{display:none;position:fixed;left:0;right:0;bottom:0;z-index:120;
@@ -1037,8 +1039,20 @@ svg{display:block}
     {title:'工厂宣传片',cat:'biz',desc:'工厂产线宣传视频',video:'/portfolio/videos/工厂包装.mp4',poster:'/portfolio/thumbnails/工厂包装.jpg'},
     {title:'店铺推广视频',cat:'biz',desc:'店铺品牌推广视频',video:'/portfolio/videos/理发店铺推广视频.mp4',poster:'/portfolio/thumbnails/理发店铺推广视频.jpg'},
     {title:'美业品牌宣传',cat:'biz',desc:'美业品牌宣传视频',video:'/portfolio/videos/店铺宣传.mp4',poster:'/portfolio/thumbnails/店铺宣传.jpg'},
-    {title:'AI 视频制作',cat:'aigc',desc:'AIGC 工具生成视频',video:'/portfolio/videos/AI视频制作.mp4',poster:'/portfolio/thumbnails/AI视频制作.jpg'}
+    {title:'AI 视频制作',cat:'aigc',desc:'AIGC 工具生成视频',video:'/portfolio/videos/AI视频制作.mp4',poster:'/portfolio/thumbnails/AI视频制作.jpg'},
+    {title:'东方天宫 · 3D BOX',cat:'aigc',desc:'提示词 → 出图 → 3D 场景，全流程演示',video:'/portfolio/videos/东方天宫.mp4',poster:'/portfolio/thumbnails/东方天宫.jpg',portrait:true,len:85}
   ];
+
+  /* 侧栏分类计数跟随数据源，避免手写数字与实际作品数脱节 */
+  (function syncCounts(){
+    var items=document.querySelectorAll('.sb-item[data-cat]');
+    for(var i=0;i<items.length;i++){
+      var cat=items[i].getAttribute('data-cat');
+      var n=cat==='all'?WORKS.length:WORKS.filter(function(w){return w.cat===cat}).length;
+      var el=items[i].querySelector('.sb-count');
+      if(el) el.textContent=n;
+    }
+  })();
 
   var content=document.getElementById('mainContent');
   var REDUCE=window.matchMedia&&window.matchMedia('(prefers-reduced-motion:reduce)').matches;
@@ -1059,7 +1073,8 @@ svg{display:block}
     }
     grid.innerHTML=list.map(function(w,i){
       var label=CATEGORIES[w.cat]||w.cat;
-      var dur=1+(i%3), sec=(i*17+w.title.length*5)%60;
+      var total=w.len||((1+(i%3))*60+(i*17+w.title.length*5)%60);
+      var dur=Math.floor(total/60), sec=total%60;
       return '<article class="card reveal" data-cat="'+w.cat+'" style="transition-delay:'+Math.min(i*40,240)+'ms">'
         +'<div class="c-thumb">'
           +'<div class="c-cover" style="background-image:url(\''+w.poster+'\')"></div>'
@@ -1294,6 +1309,8 @@ svg{display:block}
       if(!work) return;
       title.textContent=t;
       preview.innerHTML='';
+      var lb=overlay.querySelector('.lb');
+      if(lb) lb.classList.toggle('is-portrait',!!work.portrait);
       var v=document.createElement('video');
       v.src=work.video;v.poster=work.poster;v.controls=true;v.autoplay=true;v.playsInline=true;
       preview.appendChild(v);
