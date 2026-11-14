@@ -701,13 +701,13 @@ new ResizeObserver(resize).observe(viewport);
 addEventListener('resize',resize);
 addEventListener('orientationchange',()=>setTimeout(resize,180));
 
-/* 帧率兜底：连续掉帧就降一档分辨率，只降不升，避免来回抖 */
+/* 帧率兜底：真掉到卡顿才降一档分辨率（阈值放低，别把清晰度轻易让出去），只降不升 */
 let lowStreak=0;
 function autoQuality(fps){
-  if(fps<38 && dpr>1.02){
+  if(fps<30 && dpr>1.05){
     lowStreak++;
-    if(lowStreak>=3){
-      dpr=Math.max(1, +(dpr*0.78).toFixed(2));
+    if(lowStreak>=4){
+      dpr=Math.max(1.05, +(dpr*0.85).toFixed(2));
       renderer.setPixelRatio(dpr); renderer.setSize(viewport.clientWidth,viewport.clientHeight,false);
       lowStreak=0;
     }
