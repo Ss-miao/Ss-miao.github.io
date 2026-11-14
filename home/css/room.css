@@ -234,6 +234,8 @@ body.night .nightveil{opacity:1}
   .hud-bc{gap:9px;padding:6px 11px;bottom:11px;font-size:10px}
   .hud-bc .div,.readout{display:none}
   .hint{white-space:nowrap;max-width:56vw;overflow:hidden;text-overflow:ellipsis}
+  /* 手机上底部被摇杆和按钮占满，提示条挪到顶部，别被压住 */
+  .toast{top:56px;bottom:auto;max-width:88vw;overflow:hidden;text-overflow:ellipsis}
   .ld-n{font-size:42px}
   .stage{border-radius:12px}
 }
