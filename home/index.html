@@ -1,0 +1,611 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>空间扫描 · Gaussian Splat Viewer</title>
+<meta name="description" content="把一段真实空间搬进浏览器：200 万高斯点的 3D Gaussian Splatting 实时查看器。">
+<link rel="icon" href="/favicon-32.png" sizes="32x32" type="image/png">
+<script type="importmap">
+{
+  "imports": {
+    "three": "./vendor/three.module.js",
+    "three/addons/": "./vendor/addons/",
+    "@sparkjsdev/spark": "./vendor/spark.module.min.js"
+  }
+}
+</script>
+<style>
+:root{
+  --bg:#f4f6fb; --panel:#fff; --line:#e7eaf1; --line-2:#eef0f6;
+  --ink:#171a29; --ink-2:#59617a; --ink-3:#949cb2;
+  --grad:linear-gradient(100deg,#4b63f0 0%,#7a55e8 48%,#b452d8 100%);
+  --blue:#4b63f0; --violet:#8b5cf6; --orange:#f59e42; --green:#18a86a;
+  --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+  --font:"Inter","PingFang SC","HarmonyOS Sans SC","Microsoft YaHei UI",system-ui,-apple-system,sans-serif;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%}
+body{font-family:var(--font);background:var(--bg);color:var(--ink);overflow:hidden;
+  -webkit-font-smoothing:antialiased}
+button{font:inherit;cursor:pointer;border:0;background:none;color:inherit}
+a{color:inherit;text-decoration:none}
+canvas{display:block}
+
+.app{height:100dvh;display:grid;grid-template-rows:54px minmax(0,1fr)}
+
+/* ---------- 顶栏 ---------- */
+.top{display:flex;align-items:center;gap:14px;padding:0 18px;background:var(--panel);
+  border-bottom:1px solid var(--line);position:relative;z-index:5}
+.mk{width:26px;height:26px;flex:none;position:relative}
+.mk::before,.mk::after{content:"";position:absolute;inset:0;border:1.5px solid transparent}
+.mk::before{border-image:linear-gradient(135deg,#4b63f0,#b452d8) 1;transform:rotate(0deg)}
+.mk::after{width:12px;height:12px;left:7px;top:7px;border:1.5px solid rgba(123,85,232,.55);border-radius:2px}
+.tp-name{font-size:14px;font-weight:800;letter-spacing:-.01em;white-space:nowrap}
+.tp-sep{width:1px;height:18px;background:var(--line)}
+.tp-sub{font-family:var(--mono);font-size:11px;color:var(--ink-3);letter-spacing:.1em;white-space:nowrap}
+.tp-sp{flex:1}
+.tp-badge{display:inline-flex;align-items:center;gap:7px;height:26px;padding:0 11px;
+  border:1px solid var(--line);border-radius:999px;background:#fbfcff;
+  font-family:var(--mono);font-size:10.5px;color:var(--ink-2);white-space:nowrap}
+.tp-badge i{width:6px;height:6px;border-radius:50%;background:var(--green);
+  box-shadow:0 0 0 3px rgba(24,168,106,.13);animation:pulse 2.4s ease-in-out infinite}
+@keyframes pulse{50%{box-shadow:0 0 0 6px rgba(24,168,106,.06)}}
+.tp-link{display:inline-flex;align-items:center;gap:6px;height:28px;padding:0 12px;
+  border:1px solid var(--line);border-radius:8px;font-size:12px;font-weight:600;
+  transition:border-color .16s,color .16s,background .16s}
+.tp-link:hover{border-color:#c9cffc;color:var(--blue);background:#f8f9ff}
+
+/* ---------- 工作区 ---------- */
+.ws{display:grid;grid-template-columns:286px minmax(0,1fr);gap:14px;padding:14px;min-height:0}
+
+/* 侧栏 */
+.side{background:var(--panel);border:1px solid var(--line);border-radius:14px;
+  overflow-y:auto;overflow-x:hidden;display:flex;flex-direction:column}
+.side::-webkit-scrollbar{width:0}
+.s-hero{padding:20px 18px 18px;position:relative;overflow:hidden;border-bottom:1px solid var(--line-2)}
+.s-hero::before{content:"";position:absolute;inset:0;pointer-events:none;
+  background-image:linear-gradient(var(--line-2) 1px,transparent 1px),linear-gradient(90deg,var(--line-2) 1px,transparent 1px);
+  background-size:18px 18px;opacity:.6;
+  -webkit-mask-image:linear-gradient(110deg,#000,transparent 78%);mask-image:linear-gradient(110deg,#000,transparent 78%)}
+.s-hero>*{position:relative}
+.s-kick{font-family:var(--mono);font-size:10px;letter-spacing:.18em;color:var(--ink-3)}
+.s-hero h1{margin-top:10px;font-size:23px;font-weight:900;line-height:1.25;letter-spacing:-.035em}
+.s-hero h1 span{background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}
+.s-hero p{margin-top:9px;font-size:11.5px;line-height:1.7;color:var(--ink-2)}
+
+.s-sec{padding:16px 18px;border-bottom:1px solid var(--line-2)}
+.s-sec:last-child{border-bottom:0}
+.s-t{display:flex;align-items:center;justify-content:space-between;margin-bottom:13px}
+.s-t b{font-size:10.5px;font-weight:800;letter-spacing:.14em;color:var(--ink-3)}
+.s-t em{font-style:normal;font-family:var(--mono);font-size:10px;color:var(--ink-3)}
+
+.stat{background:#f7f8fc;border:1px solid var(--line-2);border-radius:10px;padding:13px 14px}
+.stat .big{font-family:var(--mono);font-size:26px;font-weight:700;letter-spacing:-.045em;line-height:1;
+  font-variant-numeric:tabular-nums;color:var(--ink)}
+.stat .big small{font-size:11px;font-weight:600;color:var(--ink-3);letter-spacing:0;margin-left:5px}
+.stat .cap{margin-top:7px;font-size:10.5px;color:var(--ink-2)}
+
+.kv{margin-top:12px;display:flex;flex-direction:column;gap:0}
+.kv .r{display:flex;align-items:baseline;justify-content:space-between;gap:10px;
+  padding:7px 0;border-bottom:1px dashed var(--line);font-size:11.5px}
+.kv .r:last-child{border-bottom:0}
+.kv .r span{color:var(--ink-3)}
+.kv .r b{font-family:var(--mono);font-size:11px;font-weight:600;color:var(--ink);text-align:right}
+
+/* 三轴条 */
+.axis{display:flex;flex-direction:column;gap:10px}
+.ax{display:grid;grid-template-columns:16px 1fr 46px;align-items:center;gap:8px}
+.ax i{font-family:var(--mono);font-style:normal;font-size:10px;font-weight:700;color:var(--ink-3)}
+.ax .track{height:6px;border-radius:99px;background:#edeff6;overflow:hidden}
+.ax .track u{display:block;height:100%;border-radius:99px;text-decoration:none}
+.ax .x u{background:linear-gradient(90deg,#6d84ff,#4b63f0)}
+.ax .y u{background:linear-gradient(90deg,#b07cf9,#8b5cf6)}
+.ax .z u{background:linear-gradient(90deg,#ffc078,#f59e42)}
+.ax .track u{width:var(--w)}
+.ax b{font-family:var(--mono);font-size:10.5px;font-weight:600;text-align:right;color:var(--ink-2)}
+
+/* 预设视角 */
+.views{display:grid;grid-template-columns:1fr 1fr;gap:7px}
+.v-btn{height:32px;border:1px solid var(--line);border-radius:8px;background:#fff;
+  font-size:11.5px;font-weight:600;color:var(--ink-2);display:flex;align-items:center;
+  justify-content:center;gap:6px;transition:all .16s}
+.v-btn:hover{border-color:#c9cffc;color:var(--blue);background:#f8f9ff}
+.v-btn.on{border-color:transparent;background:var(--grad);color:#fff;box-shadow:0 4px 12px rgba(90,80,230,.24)}
+.v-btn svg{width:13px;height:13px}
+
+.keys{display:flex;flex-direction:column;gap:9px}
+.key{display:flex;align-items:center;gap:9px;font-size:11px;color:var(--ink-2)}
+.key .cap{flex:1}
+kbd{font-family:var(--mono);font-size:9.5px;font-weight:700;color:var(--ink-2);background:#f7f8fc;
+  border:1px solid var(--line);border-bottom-width:2px;border-radius:5px;padding:2px 5px;white-space:nowrap}
+.s-foot{padding:14px 18px 18px;margin-top:auto}
+.s-foot a{display:flex;align-items:center;justify-content:space-between;width:100%;height:36px;
+  padding:0 12px;border-radius:9px;background:#171a29;color:#fff;font-size:11.5px;font-weight:700;
+  transition:transform .16s,background .16s}
+.s-foot a:hover{transform:translateY(-1px);background:#242941}
+
+/* ---------- 舞台 ---------- */
+.stage{position:relative;border-radius:14px;overflow:hidden;background:#080a12;
+  border:1px solid #1b2030;box-shadow:0 18px 48px -22px rgba(20,24,54,.55);min-height:0}
+#viewport{position:absolute;inset:0}
+#viewport canvas{width:100%;height:100%}
+
+/* 舞台 HUD */
+.hud{position:absolute;inset:0;pointer-events:none;z-index:2}
+.hud>*{pointer-events:auto}
+.hud-tl{position:absolute;left:16px;top:16px;display:flex;align-items:center;gap:8px}
+.chip{display:inline-flex;align-items:center;gap:7px;height:28px;padding:0 11px;border-radius:8px;
+  background:rgba(16,20,32,.72);border:1px solid rgba(255,255,255,.13);
+  -webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);
+  color:rgba(255,255,255,.88);font-size:11px;font-weight:600;white-space:nowrap}
+.chip.mono{font-family:var(--mono);font-size:10.5px;letter-spacing:.02em}
+.chip i{width:6px;height:6px;border-radius:50%;background:#4ade80;box-shadow:0 0 8px #4ade80}
+.hud-tr{position:absolute;right:16px;top:16px;display:flex;gap:7px}
+.ic{width:32px;height:32px;border-radius:9px;display:grid;place-items:center;
+  background:rgba(16,20,32,.72);border:1px solid rgba(255,255,255,.13);
+  -webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);color:rgba(255,255,255,.82);
+  transition:background .16s,color .16s,transform .16s}
+.ic:hover{background:rgba(75,99,240,.85);color:#fff;transform:translateY(-1px)}
+.ic svg{width:15px;height:15px}
+
+.hud-bl{position:absolute;left:16px;bottom:16px;display:flex;flex-direction:column;gap:8px}
+.readout{font-family:var(--mono);font-size:10px;line-height:1.7;color:rgba(255,255,255,.5);
+  letter-spacing:.04em;text-shadow:0 1px 6px #000}
+.readout b{color:rgba(255,255,255,.82);font-weight:600}
+.readout .lb{color:rgba(255,255,255,.34)}
+
+.hud-bc{position:absolute;left:50%;bottom:18px;transform:translateX(-50%);
+  display:flex;align-items:center;gap:14px;padding:9px 16px;border-radius:11px;
+  background:rgba(14,17,28,.78);border:1px solid rgba(255,255,255,.12);
+  -webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px);white-space:nowrap}
+.hint{font-size:10.5px;color:rgba(255,255,255,.5)}
+.hint b{color:rgba(255,255,255,.86);font-weight:600}
+.hud-bc .div{width:1px;height:16px;background:rgba(255,255,255,.14)}
+.tog{display:flex;align-items:center;gap:8px;font-size:11px;color:rgba(255,255,255,.82);cursor:pointer}
+.tog input{appearance:none;width:28px;height:16px;border-radius:99px;background:rgba(255,255,255,.2);
+  position:relative;transition:background .18s;cursor:pointer;flex:none}
+.tog input::after{content:"";position:absolute;left:2px;top:2px;width:12px;height:12px;border-radius:50%;
+  background:#fff;transition:transform .18s}
+.tog input:checked{background:var(--blue)}
+.tog input:checked::after{transform:translateX(12px)}
+.spd{display:flex;align-items:center;gap:7px;font-size:10.5px;color:rgba(255,255,255,.55)}
+.spd input{width:64px;accent-color:#7a68f5;cursor:pointer}
+
+/* 加载层 */
+.load{position:absolute;inset:0;z-index:6;
+  background:linear-gradient(rgba(6,8,16,.74),rgba(6,8,16,.84)),url(./assets/preview.jpg) center/cover no-repeat;
+  display:flex;
+  flex-direction:column;align-items:center;justify-content:center;gap:0;
+  transition:opacity .6s ease,visibility .6s}
+.load.done{opacity:0;visibility:hidden;pointer-events:none}
+.load::before{content:"";position:absolute;inset:0;pointer-events:none;
+  background-image:linear-gradient(rgba(120,140,255,.055) 1px,transparent 1px),
+                   linear-gradient(90deg,rgba(120,140,255,.055) 1px,transparent 1px);
+  background-size:32px 32px;
+  -webkit-mask-image:radial-gradient(circle at 50% 48%,#000,transparent 72%);
+  mask-image:radial-gradient(circle at 50% 48%,#000,transparent 72%)}
+.load::after{content:"";position:absolute;left:0;right:0;height:1px;top:0;
+  background:linear-gradient(90deg,transparent,#6d7dff,transparent);opacity:.5;
+  animation:scan 3.2s linear infinite}
+@keyframes scan{to{top:100%}}
+.ld-in{position:relative;width:min(340px,78%);text-align:center}
+.ld-k{font-family:var(--mono);font-size:10px;letter-spacing:.26em;color:#6b769c}
+.ld-n{font-family:var(--mono);font-size:74px;font-weight:700;line-height:1.1;letter-spacing:-.06em;
+  margin-top:12px;font-variant-numeric:tabular-nums;
+  background:linear-gradient(120deg,#8fa2ff,#c58cf5 60%,#ff9f7a);
+  -webkit-background-clip:text;background-clip:text;color:transparent}
+.ld-n sup{font-size:20px;vertical-align:top;margin-left:4px;letter-spacing:0}
+.ld-bar{height:3px;border-radius:99px;background:rgba(255,255,255,.1);overflow:hidden;margin-top:22px}
+.ld-bar u{display:block;height:100%;width:0%;border-radius:99px;text-decoration:none;
+  background:linear-gradient(90deg,#4b63f0,#a35ce8,#f59e42);transition:width .18s linear}
+.ld-msg{margin-top:15px;font-size:11.5px;color:#8a94b5;letter-spacing:.02em;min-height:18px}
+.ld-meta{margin-top:26px;display:flex;justify-content:center;gap:18px;
+  font-family:var(--mono);font-size:10px;color:#525c7e}
+.ld-meta b{color:#8a94b5;font-weight:600}
+
+/* 错误 */
+.err{position:absolute;inset:0;z-index:7;display:none;align-items:center;justify-content:center;
+  background:linear-gradient(rgba(6,8,16,.78),rgba(6,8,16,.9)),url(./assets/preview.jpg) center/cover no-repeat;
+  padding:24px;text-align:center}
+.err.on{display:flex}
+.err div{max-width:380px}
+.err h3{font-size:16px;font-weight:800;color:#fff;margin-bottom:10px}
+.err p{font-size:12px;line-height:1.8;color:#8a94b5}
+
+/* 移动端 */
+@media(max-width:900px){
+  .ws{grid-template-columns:1fr;grid-template-rows:auto minmax(0,1fr);padding:10px;gap:10px}
+  .side{flex-direction:row;align-items:center;overflow:hidden;padding:0 12px;height:52px;flex:none}
+  .s-hero,.s-sec,.s-foot{display:none}
+  .side::before{content:"空间扫描 / 2,000,000 splats";font-family:var(--mono);font-size:10.5px;
+    color:var(--ink-2);white-space:nowrap}
+  .tp-sub,.tp-badge{display:none}
+  .hud-bc{gap:10px;padding:8px 12px;bottom:12px}
+  .hint{display:none}
+  .hud-bc .div{display:none}
+  .hud-bl{display:none}
+  .ld-n{font-size:58px}
+}
+@media(max-width:520px){
+  .spd{display:none}
+  .hud-tl .chip.mono{display:none}
+}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <header class="top">
+    <div class="mk" aria-hidden="true"></div>
+    <span class="tp-name">空间扫描</span>
+    <span class="tp-sep"></span>
+    <span class="tp-sub">GAUSSIAN SPLAT / VIEWER 01</span>
+    <span class="tp-sp"></span>
+    <span class="tp-badge"><i></i><span id="liveTxt">WebGL2 · 初始化</span></span>
+    <a class="tp-link" href="/">
+      <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 17l-5-5 5-5"/><path d="M5 12h11"/><path d="M19 5v14"/></svg>
+      返回原站
+    </a>
+  </header>
+
+  <main class="ws">
+    <aside class="side">
+      <div class="s-hero">
+        <div class="s-kick">CAPTURED SPACE / 001</div>
+        <h1>把现场<br><span>搬进浏览器</span></h1>
+        <p>一段由 200 万高斯点重建的真实空间。拖动即可绕行、靠近、俯看——点云不改一刀，实时渲染。</p>
+      </div>
+
+      <section class="s-sec">
+        <div class="s-t"><b>数据概览</b><em>ASSET</em></div>
+        <div class="stat">
+          <div class="big">2,000,000<small>splats</small></div>
+          <div class="cap">点云规模 · 实时高斯泼溅</div>
+        </div>
+        <div class="kv">
+          <div class="r"><span>格式</span><b>SPZ v2 / SH 0</b></div>
+          <div class="r"><span>文件体积</span><b>29.9 MB</b></div>
+          <div class="r"><span>坐标精度</span><b>24-bit / 12 frac</b></div>
+          <div class="r"><span>来源</span><b>Chisel Scan</b></div>
+        </div>
+      </section>
+
+      <section class="s-sec">
+        <div class="s-t"><b>空间尺度</b><em>METERS</em></div>
+        <div class="axis">
+          <div class="ax x"><i>X</i><div class="track"><u style="--w:89%"></u></div><b>11.36</b></div>
+          <div class="ax y"><i>Y</i><div class="track"><u style="--w:38%"></u></div><b>4.90</b></div>
+          <div class="ax z"><i>Z</i><div class="track"><u style="--w:100%"></u></div><b>12.75</b></div>
+        </div>
+      </section>
+
+      <section class="s-sec">
+        <div class="s-t"><b>视角预设</b><em>VIEW</em></div>
+        <div class="views" id="views">
+          <button class="v-btn on" data-v="orbit"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="8"/><ellipse cx="12" cy="12" rx="4" ry="8"/></svg>环绕</button>
+          <button class="v-btn" data-v="front"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="5" y="5" width="14" height="14" rx="2"/><path d="M12 5v14"/></svg>正视</button>
+          <button class="v-btn" data-v="top"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3"/></svg>俯视</button>
+          <button class="v-btn" data-v="side"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 7h16M4 12h16M4 17h16"/></svg>侧视</button>
+        </div>
+      </section>
+
+      <section class="s-sec">
+        <div class="s-t"><b>操作</b><em>CONTROL</em></div>
+        <div class="keys">
+          <div class="key"><span class="cap">旋转 / 缩放 / 平移</span><kbd>拖动</kbd></div>
+          <div class="key"><span class="cap">前后左右移动</span><kbd>W A S D</kbd></div>
+          <div class="key"><span class="cap">回到初始视角</span><kbd>R</kbd></div>
+          <div class="key"><span class="cap">全屏查看</span><kbd>F</kbd></div>
+        </div>
+      </section>
+
+      <div class="s-foot">
+        <a href="/">回到个人主页 <span>→</span></a>
+      </div>
+    </aside>
+
+    <section class="stage" id="stage">
+      <div id="viewport"></div>
+
+      <div class="hud">
+        <div class="hud-tl">
+          <span class="chip"><i></i>实时渲染</span>
+          <span class="chip mono">CHISEL_UNTITLED_SPLAT.SPZ</span>
+        </div>
+
+        <div class="hud-tr">
+          <button class="ic" id="btnReset" title="重置视角 (R)" aria-label="重置视角">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg>
+          </button>
+          <button class="ic" id="btnFull" title="全屏 (F)" aria-label="全屏">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H3v5M16 3h5v5M8 21H3v-5M16 21h5v-5"/></svg>
+          </button>
+        </div>
+
+        <div class="hud-bl">
+          <div class="readout">
+            <span class="lb">CAM&nbsp; </span><b id="rdCam">0.00, 0.00, 0.00</b><br>
+            <span class="lb">FPS&nbsp; </span><b id="rdFps">--</b>
+            <span class="lb">&nbsp;·&nbsp; SPLATS&nbsp; </span><b id="rdN">--</b>
+          </div>
+        </div>
+
+        <div class="hud-bc">
+          <span class="hint"><b>左键</b> 旋转 · <b>滚轮</b> 缩放 · <b>右键</b> 平移</span>
+          <span class="div"></span>
+          <label class="tog"><input type="checkbox" id="spin" checked>自转</label>
+          <span class="div"></span>
+          <label class="tog"><input type="checkbox" id="grid">网格</label>
+          <span class="div"></span>
+          <span class="spd">速度 <input type="range" id="speed" min="0.1" max="2" step="0.1" value="0.4"></span>
+        </div>
+      </div>
+
+      <div class="load" id="load">
+        <div class="ld-in">
+          <div class="ld-k">LOADING POINT CLOUD</div>
+          <div class="ld-n"><span id="ldNum">0</span><sup>%</sup></div>
+          <div class="ld-bar"><u id="ldBar"></u></div>
+          <div class="ld-msg" id="ldMsg">正在连接资产…</div>
+          <div class="ld-meta"><span>SPZ · <b>29.9 MB</b></span><span><b>2,000,000</b> splats</span></div>
+        </div>
+      </div>
+
+      <div class="err" id="err">
+        <div>
+          <h3>无法加载这段空间</h3>
+          <p id="errMsg">浏览器可能不支持 WebGL2，或资产加载中断。请换用较新的 Chrome / Edge / Safari，并确认网络正常后刷新。</p>
+        </div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { SparkRenderer, SplatMesh } from '@sparkjsdev/spark';
+
+const stage = document.getElementById('stage');
+const viewport = document.getElementById('viewport');
+const loadEl = document.getElementById('load');
+const ldNum = document.getElementById('ldNum');
+const ldBar = document.getElementById('ldBar');
+const ldMsg = document.getElementById('ldMsg');
+const liveTxt = document.getElementById('liveTxt');
+const errEl = document.getElementById('err');
+const isMobile = matchMedia('(max-width:900px)').matches;
+
+function setLoad(p, msg){
+  const v = Math.max(0, Math.min(100, Math.round(p * 100)));
+  ldNum.textContent = v;
+  ldBar.style.width = v + '%';
+  if(msg) ldMsg.textContent = msg;
+}
+function fail(msg){
+  if(msg) document.getElementById('errMsg').textContent = msg;
+  loadEl.classList.add('done');
+  errEl.classList.add('on');
+  liveTxt.textContent = '渲染不可用';
+}
+
+/* ---------- WebGL2 检查 ---------- */
+const probe = document.createElement('canvas');
+if(!probe.getContext('webgl2')){
+  fail('当前浏览器不支持 WebGL2，无法渲染高斯点云。请使用较新的 Chrome / Edge / Safari，或开启硬件加速。');
+  throw new Error('WebGL2 unsupported');
+}
+
+let renderer;
+try{
+  renderer = new THREE.WebGLRenderer({ antialias:false, alpha:false, powerPreference:'high-performance' });
+}catch(e){
+  fail('WebGL 初始化失败：' + e.message);
+  throw e;
+}
+renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, isMobile ? 1 : 1.6));
+renderer.setClearColor(0x080a12, 1);
+renderer.setSize(viewport.clientWidth, viewport.clientHeight, false);
+viewport.appendChild(renderer.domElement);
+
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(55, viewport.clientWidth / viewport.clientHeight, 0.05, 400);
+const spark = new SparkRenderer({ renderer });
+scene.add(spark);
+
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true;
+controls.dampingFactor = 0.075;
+controls.rotateSpeed = 0.72;
+controls.zoomSpeed = 0.9;
+controls.panSpeed = 0.8;
+controls.minDistance = 1.0;
+controls.maxDistance = 70;
+controls.maxPolarAngle = Math.PI * 0.96;
+controls.autoRotate = true;
+controls.autoRotateSpeed = 0.4;
+controls.target.set(0, 0, 0);
+
+/* 依据 spz 包围盒中心把场景摆到原点 */
+const BBOX_CENTER = new THREE.Vector3(1.1354, 1.6389, 0.9126);
+const R180X = new THREE.Quaternion(1, 0, 0, 0);       // SPZ 通常是 Y-down
+const rotatedCenter = BBOX_CENTER.clone().applyQuaternion(R180X);
+const meshOffset = rotatedCenter.clone().negate();
+
+/* 坐标网格（默认关闭） */
+const grid = new THREE.GridHelper(20, 20, 0x4b63f0, 0x252b44);
+grid.material.transparent = true;
+grid.material.opacity = 0.5;
+grid.position.y = -2.45;
+grid.visible = false;
+scene.add(grid);
+
+const VIEWS = {
+  orbit: { p:[9.5, 5.8, 13.5], t:[0,0,0] },
+  front: { p:[0, 1.2, 16.5],   t:[0,0,0] },
+  top:   { p:[0.01, 17, 0.01], t:[0,0,0] },
+  side:  { p:[16.5, 2.4, 0.01],t:[0,0,0] }
+};
+camera.position.set(...VIEWS.orbit.p);
+controls.update();
+
+/* ---------- 视角过渡 ---------- */
+let flying = null;
+function flyTo(name){
+  const v = VIEWS[name]; if(!v) return;
+  flying = {
+    t0: performance.now(), dur: 850,
+    p0: camera.position.clone(), p1: new THREE.Vector3(...v.p),
+    t0v: controls.target.clone(), t1v: new THREE.Vector3(...v.t),
+    spin: controls.autoRotate
+  };
+  controls.autoRotate = false;
+  document.querySelectorAll('.v-btn').forEach(b => b.classList.toggle('on', b.dataset.v === name));
+}
+function stepFly(now){
+  if(!flying) return;
+  const k = Math.min(1, (now - flying.t0) / flying.dur);
+  const e = k < .5 ? 4*k*k*k : 1 - Math.pow(-2*k+2, 3)/2;
+  camera.position.lerpVectors(flying.p0, flying.p1, e);
+  controls.target.lerpVectors(flying.t0v, flying.t1v, e);
+  if(k >= 1){
+    controls.autoRotate = flying.spin;
+    flying = null;
+  }
+}
+
+/* ---------- 键盘漫游 ---------- */
+const keys = Object.create(null);
+const MOVE_KEYS = ['KeyW','KeyA','KeyS','KeyD','ArrowUp','ArrowDown','ArrowLeft','ArrowRight'];
+addEventListener('keydown', e => {
+  if(MOVE_KEYS.includes(e.code)){ keys[e.code] = true; if(!isMobile) e.preventDefault(); }
+  if(e.code === 'KeyR'){ flyTo('orbit'); }
+  if(e.code === 'KeyF'){ toggleFull(); }
+});
+addEventListener('keyup', e => { keys[e.code] = false; });
+addEventListener('blur', () => MOVE_KEYS.forEach(k => keys[k] = false));
+
+const fwd = new THREE.Vector3(), right = new THREE.Vector3(), move = new THREE.Vector3();
+function applyMove(dt){
+  const active = MOVE_KEYS.some(k => keys[k]);
+  if(!active) return;
+  camera.getWorldDirection(fwd); fwd.y = 0; fwd.normalize();
+  right.crossVectors(fwd, camera.up).normalize();
+  move.set(0,0,0);
+  if(keys.KeyW || keys.ArrowUp)    move.add(fwd);
+  if(keys.KeyS || keys.ArrowDown)  move.sub(fwd);
+  if(keys.KeyD || keys.ArrowRight) move.add(right);
+  if(keys.KeyA || keys.ArrowLeft)  move.sub(right);
+  if(move.lengthSq() === 0) return;
+  move.normalize().multiplyScalar(dt * 4.2);
+  camera.position.add(move);
+  controls.target.add(move);
+  document.querySelectorAll('.v-btn').forEach(b => b.classList.remove('on'));
+}
+
+/* ---------- 控件 ---------- */
+document.getElementById('views').addEventListener('click', e => {
+  const b = e.target.closest('.v-btn'); if(b) flyTo(b.dataset.v);
+});
+document.getElementById('btnReset').addEventListener('click', () => flyTo('orbit'));
+document.getElementById('spin').addEventListener('change', e => {
+  controls.autoRotate = e.target.checked;
+  if(flying) flying.spin = e.target.checked;
+});
+document.getElementById('grid').addEventListener('change', e => { grid.visible = e.target.checked; });
+document.getElementById('speed').addEventListener('input', e => {
+  controls.autoRotateSpeed = parseFloat(e.target.value);
+});
+function toggleFull(){
+  if(document.fullscreenElement) document.exitFullscreen();
+  else stage.requestFullscreen && stage.requestFullscreen();
+}
+document.getElementById('btnFull').addEventListener('click', toggleFull);
+stage.addEventListener('dblclick', toggleFull);
+
+/* ---------- 尺寸 ---------- */
+function resize(){
+  const w = viewport.clientWidth, h = viewport.clientHeight;
+  if(!w || !h) return;
+  renderer.setSize(w, h, false);
+  camera.aspect = w / h;
+  camera.updateProjectionMatrix();
+}
+new ResizeObserver(resize).observe(viewport);
+addEventListener('resize', resize);
+
+/* ---------- 加载 SPZ（自己读取以便精确进度） ---------- */
+/* 依据点云真实包围盒自动校准相机距离，避免过近/过远 */
+function autoFrame(m){
+  try{
+    const box = m.getBoundingBox(true);
+    if(!box || box.isEmpty()) return;
+    m.updateMatrixWorld(true);
+    box.applyMatrix4(m.matrixWorld);
+    const size = box.getSize(new THREE.Vector3());
+    const radius = Math.max(1, size.length() * 0.5);
+    const dist = THREE.MathUtils.clamp(
+      radius / Math.tan(THREE.MathUtils.degToRad(camera.fov * 0.5)) * 0.78, 10, 46);
+    const k = dist / Math.hypot(...VIEWS.orbit.p);
+    Object.keys(VIEWS).forEach(key => {
+      VIEWS[key].p = VIEWS[key].p.map(v => v * k);
+    });
+    camera.position.set(...VIEWS.orbit.p);
+    controls.target.set(0,0,0);
+    controls.update();
+  }catch(_){}
+}
+
+async function loadScene(){
+  setLoad(0.02, '正在连接资产…');
+  let lastP = 0.02;
+  const mesh = new SplatMesh({
+    url: './assets/scan.spz',
+    onProgress: (e) => {
+      if(e && e.lengthComputable && e.total){
+        const p = Math.min(0.96, e.loaded / e.total * 0.96);
+        if(p > lastP + 0.005){
+          lastP = p;
+          setLoad(p, '正在下载点云 · ' + (e.loaded/1048576).toFixed(1) + ' / ' + (e.total/1048576).toFixed(1) + ' MB');
+        }
+      }
+    },
+    onLoad: (m) => {
+      const n = (m.packedSplats && m.packedSplats.numSplats) || 2000000;
+      document.getElementById('rdN').textContent = n.toLocaleString('en-US');
+      autoFrame(m);
+      setLoad(1, '就绪');
+      liveTxt.textContent = 'WebGL2 · 实时';
+      loadEl.classList.add('done');
+    }
+  });
+  mesh.quaternion.copy(R180X);
+  mesh.position.copy(meshOffset);
+  scene.add(mesh);
+  if(mesh.initialized && mesh.initialized.catch){
+    mesh.initialized.catch(e => fail('点云解码失败：' + (e && e.message ? e.message : '未知错误') + '。请刷新重试。'));
+  }
+}
+loadScene().catch(e => fail('资产加载失败：' + e.message + '。请刷新重试，或确认浏览器允许加载较大的 3D 文件。'));
+
+/* ---------- 渲染循环 ---------- */
+let last = performance.now(), frames = 0, fpsT = last;
+const rdCam = document.getElementById('rdCam'), rdFps = document.getElementById('rdFps');
+renderer.setAnimationLoop(now => {
+  const dt = Math.min(0.1, (now - last) / 1000); last = now;
+  stepFly(now);
+  applyMove(dt);
+  controls.update();
+  renderer.render(scene, camera);
+  frames++;
+  if(now - fpsT > 600){
+    rdFps.textContent = Math.round(frames * 1000 / (now - fpsT));
+    frames = 0; fpsT = now;
+    rdCam.textContent = [camera.position.x, camera.position.y, camera.position.z]
+      .map(v => v.toFixed(2)).join(', ');
+  }
+});
+</script>
+</body>
+</html>
