@@ -1,0 +1,790 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>走进房间 · 住过的地方</title>
+<meta name="description" content="两间住过的房子，用高斯点云原样留在浏览器里。用第一人称走进去，坐下、开灯、拉抽屉。">
+<link rel="icon" href="/favicon-32.png" sizes="32x32" type="image/png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<script type="importmap">
+{
+  "imports": {
+    "three": "./vendor/three.module.js",
+    "three/addons/": "./vendor/addons/",
+    "@sparkjsdev/spark": "./vendor/spark.module.min.js",
+    "cannon-es": "./vendor/cannon-es.js"
+  }
+}
+</script>
+<link rel="stylesheet" href="./css/room.css">
+<script src="./data/projects.js"></script>
+</head>
+<body>
+<div class="app">
+
+  <header class="top">
+    <a class="brand" href="./"><span class="mk" aria-hidden="true"></span><b>余温</b></a>
+    <span class="br-sub">住过的地方</span>
+    <span class="sep"></span>
+    <a class="back" href="./">
+      <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+      全部
+    </a>
+    <span class="sp"></span>
+    <span class="pill"><i></i><span id="liveTxt">读取中</span></span>
+  </header>
+
+  <main class="ws">
+    <aside class="side" id="side">
+      <div class="s-head">
+        <div class="s-no" id="sNo">SCAN / 001</div>
+        <h1 id="sName">—</h1>
+        <div class="s-en" id="sEn"></div>
+        <p id="sBlurb"></p>
+      </div>
+
+      <div class="s-meta" id="sMeta"></div>
+
+      <section class="s-sec">
+        <div class="s-t"><b>站到哪</b><em>SPOT</em></div>
+        <div class="views" id="views"></div>
+      </section>
+
+      <section class="s-sec">
+        <div class="s-t"><b>能做的事</b><em>DO</em></div>
+        <div class="does" id="does"></div>
+      </section>
+
+      <div class="keys">
+        <span><kbd>WASD</kbd>走</span><span><kbd>E</kbd>交互</span><span><kbd>L</kbd>灯</span>
+        <span><kbd>C</kbd>蹲</span><span><kbd>R</kbd>回门口</span><span><kbd>F</kbd>全屏</span>
+      </div>
+    </aside>
+
+    <section class="stage" id="stage">
+      <div id="viewport"></div>
+      <div class="nightveil"></div>
+
+      <div class="hud">
+        <div class="hud-tl">
+          <span class="chip"><i></i>实时渲染</span>
+          <span class="chip mono" id="chipMode">站在房间里</span>
+        </div>
+        <div class="hud-tr">
+          <button class="ic" id="btnLight" title="开关灯 (L)" aria-label="开关灯">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 18h6"/><path d="M10 22h4"/><path d="M12 2a7 7 0 0 0-4 12.7V18h8v-3.3A7 7 0 0 0 12 2z"/></svg>
+          </button>
+          <button class="ic" id="btnReset" title="回到门口 (R)" aria-label="复位">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg>
+          </button>
+          <button class="ic" id="btnFull" title="全屏 (F)" aria-label="全屏">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H3v5M16 3h5v5M8 21H3v-5M16 21h5v-5"/></svg>
+          </button>
+        </div>
+
+        <div class="reticle" id="reticle"></div>
+        <div class="toast" id="toast"></div>
+
+        <div class="readout">
+          <span class="lb">POS&nbsp; </span><b id="rdCam">0.00, 0.00, 0.00</b><br>
+          <span class="lb">FPS&nbsp; </span><b id="rdFps">--</b>
+        </div>
+
+        <div class="hud-bc" id="bar">
+          <div class="act" id="act"><kbd>E</kbd><span id="actTxt">坐下</span><span class="sub" id="actSub"></span></div>
+          <span class="div" id="barDiv"></span>
+          <span class="hint" id="hint"><kbd>WASD</kbd>走动 · <b>鼠标</b>转头 · <kbd>E</kbd>交互 · <kbd>L</kbd>关灯</span>
+        </div>
+      </div>
+
+      <div class="touch" id="touch">
+        <div class="stick" id="stick"><i id="stickKnob"></i></div>
+        <button class="t-btn light" id="tJump">灯</button>
+        <button class="t-btn e" id="tE">E</button>
+      </div>
+
+      <div class="panel on" id="panel"><div class="p-card" id="pCard"></div></div>
+
+      <div class="load" id="load">
+        <div class="ld-in">
+          <div class="ld-k" id="ldK">RESTORING THE ROOM</div>
+          <div class="ld-n"><span id="ldNum">0</span><sup>%</sup></div>
+          <div class="ld-bar"><u id="ldBar"></u></div>
+          <div class="ld-msg" id="ldMsg">正在读取扫描数据…</div>
+          <div class="ld-meta" id="ldMeta"><span>SPZ</span><span><b>2,000,000</b> splats</span></div>
+        </div>
+      </div>
+
+      <div class="err" id="err"><div><h3>没能读出这段空间</h3><p id="errMsg">浏览器可能不支持 WebGL2，或资产加载中断。请换用较新的 Chrome / Edge / Safari 再试。</p></div></div>
+    </section>
+  </main>
+</div>
+
+<script type="module">
+import * as THREE from 'three';
+import { SparkRenderer, SplatMesh, SplatEdit, SplatEditSdf } from '@sparkjsdev/spark';
+import * as CANNON from 'cannon-es';
+
+/* ============ 选中的那间房子 ============ */
+const PID = new URLSearchParams(location.search).get('p') || window.PROJECT_ORDER[0];
+const P = window.PROJECTS[PID] || window.PROJECTS[window.PROJECT_ORDER[0]];
+const R = P.R;                                            // 实测尺寸（世界坐标）
+const OFF = new THREE.Vector3(P.off[0], P.off[1], P.off[2]);   // 点云原始坐标 → 世界坐标
+/* 真实人体的尺度：站着眼高 1.60 m，肩半径 0.26 m。
+   没有跳跃、没有飞行，视线永远在地板以上 1.60 m —— 因为人就是这么高。 */
+const EYE = 1.60, RADIUS = 0.26;
+
+const SPOTS = P.spots;
+const SEATS = P.seats;
+const PUSHABLES = P.pushables;
+const SLIDES = P.slides;
+const DOES = P.does;
+const OBJ_SRC = {};
+for(const o of (P.objs||[])) OBJ_SRC[o.id] = o.src;
+
+/* ============ 基础 ============ */
+const stage=document.getElementById('stage'), viewport=document.getElementById('viewport');
+const loadEl=document.getElementById('load'), ldNum=document.getElementById('ldNum'),
+      ldBar=document.getElementById('ldBar'), ldMsg=document.getElementById('ldMsg');
+const liveTxt=document.getElementById('liveTxt'), errEl=document.getElementById('err'),
+      panel=document.getElementById('panel'), pCard=document.getElementById('pCard');
+const bar=document.getElementById('bar'), act=document.getElementById('act'),
+      actTxt=document.getElementById('actTxt'), actSub=document.getElementById('actSub'),
+      barDiv=document.getElementById('barDiv'), hint=document.getElementById('hint'),
+      reticle=document.getElementById('reticle'), chipMode=document.getElementById('chipMode');
+const isMobile = matchMedia('(max-width:980px)').matches || (navigator.maxTouchPoints>0 && matchMedia('(pointer:coarse)').matches);
+
+function setLoad(p,msg){
+  const v=Math.max(0,Math.min(100,Math.round(p*100)));
+  ldNum.textContent=v; ldBar.style.width=v+'%';
+  if(msg) ldMsg.textContent=msg;
+}
+function fail(msg){
+  if(msg) document.getElementById('errMsg').textContent=msg;
+  loadEl.classList.add('done'); errEl.classList.add('on'); liveTxt.textContent='渲染不可用';
+}
+
+const probe=document.createElement('canvas');
+if(!probe.getContext('webgl2')){ fail('当前浏览器不支持 WebGL2，无法渲染点云。'); throw new Error('no webgl2'); }
+let renderer;
+try{ renderer=new THREE.WebGLRenderer({antialias:false,alpha:false,powerPreference:'high-performance'}); }
+catch(e){ fail('WebGL 初始化失败：'+e.message); throw e; }
+renderer.setPixelRatio(Math.min(window.devicePixelRatio||1, isMobile?1:1.55));
+renderer.setClearColor(0x0a0c14,1);
+renderer.setSize(viewport.clientWidth, viewport.clientHeight, false);
+viewport.appendChild(renderer.domElement);
+
+const scene=new THREE.Scene();
+const camera=new THREE.PerspectiveCamera(72, viewport.clientWidth/viewport.clientHeight, 0.06, 200);
+const spark=new SparkRenderer({renderer, maxPixelRadius:120});
+scene.add(spark);
+
+let splatMesh=null, edit=null, pushSdfs={}, slideSdfs={};
+const slideT={}, slideObjs={};   // slideT: 0 = 关着，1 = 拉开
+let world=null, player=null, doorBody=null;
+let yaw=SPOTS.entry.yaw, pitch=-0.06, crouch=false;
+let seated=null, lightsOn=true, running=false, ready=false;
+let focus=null, toastT=0;
+const keys=Object.create(null);
+const MOVE_KEYS=['KeyW','KeyA','KeyS','KeyD','ArrowUp','ArrowDown','ArrowLeft','ArrowRight','ShiftLeft','ShiftRight'];
+
+/* ============ 物理：墙、地、天花板、家具 ============ */
+function addBox(x0,x1,z0,z1,bottom,top){
+  const w=x1-x0,d=z1-z0,h=top-bottom;
+  if(w<=0||d<=0||h<=0) return;
+  const body=new CANNON.Body({mass:0,
+    shape:new CANNON.Box(new CANNON.Vec3(w/2,h/2,d/2)),
+    position:new CANNON.Vec3((x0+x1)/2,(bottom+top)/2,(z0+z1)/2)});
+  world.addBody(body);
+}
+function buildPhysics(){
+  world=new CANNON.World({gravity:new CANNON.Vec3(0,-9.82,0)});
+  world.broadphase=new CANNON.SAPBroadphase(world);
+  world.defaultContactMaterial.friction=0;
+  world.defaultContactMaterial.restitution=0;
+  world.allowSleep=false;
+
+  const T=0.12;
+  // 地面 / 天花板
+  addBox(R.x0-0.4,R.x1+0.4,R.z0-0.4,R.z1+0.4, R.floor-0.3, R.floor);
+  addBox(R.x0-0.4,R.x1+0.4,R.z0-0.4,R.z1+0.4, R.ceil, R.ceil+0.3);
+  // 四面墙
+  addBox(R.x0-T,R.x0,R.z0-0.1,R.z1, R.floor,R.ceil);                 // 西
+  addBox(R.x1,R.x1+T,R.z0-0.1,R.z1, R.floor,R.ceil);                 // 东
+  addBox(R.x0-0.1,R.x1+0.1,R.z1,R.z1+T, R.floor,R.ceil);             // 南
+
+  // 北墙：有门洞就分两段 + 门楣
+  const D=R.door;
+  if(D){
+    addBox(R.x0-0.1,D.x0,R.z0-T,R.z0, R.floor,R.ceil);
+    addBox(D.x1,R.x1+0.1,R.z0-T,R.z0, R.floor,R.ceil);
+    addBox(D.x0,D.x1,R.z0-T,R.z0, D.top,R.ceil);
+    doorBody=new CANNON.Body({mass:0,
+      shape:new CANNON.Box(new CANNON.Vec3((D.x1-D.x0)/2+0.03,(D.top-R.floor)/2,0.04)),
+      position:new CANNON.Vec3((D.x0+D.x1)/2,(R.floor+D.top)/2,R.z0-0.01)});
+    doorBody.collisionResponse=false;
+    world.addBody(doorBody);
+  }else{
+    addBox(R.x0-0.1,R.x1+0.1,R.z0-T,R.z0, R.floor,R.ceil);
+  }
+
+  // 阳台（只有第一间有）
+  const B=R.balcony;
+  if(B){
+    addBox(B.x0,B.x1,B.z0-0.3,B.z1, B.floor-0.3, B.floor);
+    addBox(B.x0,B.x1,B.z0,B.z1, B.ceil, B.ceil+0.3);
+    addBox(B.x0-T,B.x1+T,B.z0-T,B.z0, B.floor,B.ceil);
+    addBox(B.x0-T,B.x0,B.z0,B.z1, B.floor,B.ceil);
+    addBox(B.x1,B.x1+T,B.z0,B.z1, B.floor,B.ceil);
+  }
+
+  // 家具：只挡大件，避免到处是隐形墙
+  for(const b of (P.boxes||[])) addBox(b[0],b[1],b[2],b[3], R.floor, b[4]);
+
+  player=new CANNON.Body({
+    mass:5, shape:new CANNON.Sphere(RADIUS),
+    position:new CANNON.Vec3(...SPOTS.entry.p),
+    linearDamping:0, angularDamping:1, fixedRotation:true,
+  });
+  player.collisionFilterGroup=2; player.collisionFilterMask=1;
+  player.updateMassProperties();
+  world.addBody(player);
+}
+
+/* ============ 交互目标 ============ */
+const INTERACTS=[
+  ...SEATS.map(s=>({kind:'seat', id:s.id, label:'坐下', sub:s.label,
+    p:[s.at[0], R.floor+0.55, s.at[1]], r:1.05, dot:-0.15})),
+  ...SLIDES.map(s=>({kind:'slide', id:s.id, label:s.verb, sub:s.name,
+    p:s.look, r:s.r, dot:-0.55})),
+];
+const done={seat:0, light:0, push:0, balcony:0, slide:0, walk:0};
+
+/* ============ 角色控制 ============ */
+function playerFeetY(){ return player.position.y - RADIUS; }
+
+function stepPlayer(dt){
+  const p=player.position;
+  if(seated){
+    player.velocity.set(0,0,0);
+    world.step(1/60, dt, 2);
+    return;
+  }
+  let f=0, r=0;
+  if(keys.KeyW||keys.ArrowUp) f+=1;
+  if(keys.KeyS||keys.ArrowDown) f-=1;
+  if(keys.KeyD||keys.ArrowRight) r+=1;
+  if(keys.KeyA||keys.ArrowLeft) r-=1;
+  const len=Math.hypot(f,r)||1;
+  f/=len; r/=len;
+  const speed=(keys.ShiftLeft||keys.ShiftRight)?2.6:1.55;
+  const fx=-Math.sin(yaw), fz=-Math.cos(yaw);
+  const rx=Math.cos(yaw), rz=-Math.sin(yaw);
+  const tvx=(fx*f+rx*r)*speed, tvz=(fz*f+rz*r)*speed;
+  const k=Math.min(1, dt*11);
+  player.velocity.x += (tvx-player.velocity.x)*k;
+  player.velocity.z += (tvz-player.velocity.z)*k;
+  world.step(1/60, dt, 3);
+  pushChairs(dt, tvx, tvz);
+  // 安全：掉出世界 → 回门口
+  if(p.y < R.floor-2) resetTo('entry');
+}
+
+function pushChairs(dt, tvx, tvz){
+  const px=player.position.x, pz=player.position.z;
+  for(const item of PUSHABLES){
+    const sdf=pushSdfs[item.id]; if(!sdf) continue;
+    const d=Math.hypot(px-item.c[0], pz-item.c[2]);
+    const moving=Math.hypot(tvx,tvz)>0.3;
+    if(d < item.r+0.42 && moving){
+      const vl=Math.hypot(tvx,tvz)||1;
+      const step=Math.min(1.0,vl)*dt*0.6;
+      const cur=sdf.displace;
+      const nx=cur.x+tvx/vl*step, nz=cur.z+tvz/vl*step;
+      if(Math.hypot(nx,nz)<item.max){ cur.x=nx; cur.z=nz; markDone('push'); }
+    }
+  }
+}
+
+/* ============ 拉开 / 推回 ============ */
+function toggleSlide(id, force){
+  const s=SLIDES.find(o=>o.id===id); if(!s) return null;
+  const cur=slideT[id]??0;
+  const want = force===undefined ? (cur<0.5) : (force?1:0);
+  // 门要推过去合上时，先看脚有没有站在门口
+  if(s.id==='door' && want && player){
+    const px=player.position.x, pz=player.position.z;
+    if(px>R.door.x0-0.30 && px<R.door.x1+0.30 && pz>R.z0-0.62 && pz<R.z0+0.35){
+      toast('先退开一点'); return null;
+    }
+  }
+  s.target = want;
+  if(want){ markDone('slide'); toast(s.say[0]); }
+  else toast(s.say[1]);
+  return want;
+}
+function updateSlides(dt){
+  for(const s of SLIDES){
+    const want=s.target??0, cur=slideT[s.id]??0;
+    if(Math.abs(want-cur)<0.0015){
+      slideT[s.id]=want;
+      applySlide(s, want);
+      continue;
+    }
+    const next = cur + (want-cur)*Math.min(1, dt*7.5);
+    slideT[s.id]= next;
+    const e = next<0.5 ? 2*next*next : 1-Math.pow(-2*next+2,2)/2;   // easeInOutQuad
+    applySlide(s, e);
+    if(s.id==='door' && doorBody) doorBody.collisionResponse = e>0.45;
+  }
+}
+function applySlide(s, e){
+  const d=s.dist*e;
+  if(s.obj){
+    const o=slideObjs[s.obj]; if(!o) return;
+    if(s.rotY!==undefined){ o.rotation.y = s.rotY*e; return; }   // 柜门：绕铰链转
+    o.position.set(o.userData.base.x + s.axis[0]*d,
+                   o.userData.base.y + s.axis[1]*d,
+                   o.userData.base.z + s.axis[2]*d);
+  }else{
+    const sdf=slideSdfs[s.id]; if(!sdf) return;
+    sdf.displace.set(s.axis[0]*d, s.axis[1]*d, s.axis[2]*d);
+  }
+}
+
+/* ============ 相机 ============ */
+let camY=null, camFree=null;
+function placeCamera(dt, snap){
+  const p=player.position;
+  if(camFree){
+    camera.position.copy(camFree.p);
+    camera.rotation.set(camFree.pitch, camFree.yaw, 0, 'YXZ');
+    return;
+  }
+  if(seated){
+    const s=seated;
+    const target=new THREE.Vector3(s.at[0], s.eyeY, s.at[1]);
+    camera.position.lerp(target, snap?1:Math.min(1,dt*6));
+    const look=new THREE.Vector3(s.face[0], s.eyeY-0.10, s.face[1]);
+    camera.lookAt(look);
+    return;
+  }
+  const eyeY=playerFeetY()+EYE-(crouch?0.32:0);
+  camY = (camY===null||snap) ? eyeY : camY + (eyeY-camY)*Math.min(1,dt*14);
+  camera.position.set(p.x, Math.min(camY, R.ceil-0.12), p.z);
+  camera.rotation.set(pitch, yaw, 0, 'YXZ');
+}
+
+/* ============ 交互提示 ============ */
+function findFocus(){
+  if(seated) return {kind:'stand', id:'stand', label:'起身', sub:seated.label};
+  const p=player.position;
+  const fwd=new THREE.Vector3(-Math.sin(yaw),0,-Math.cos(yaw));
+  let best=null, bestD=1e9;
+  for(const it of INTERACTS){
+    const dx=it.p[0]-p.x, dz=it.p[2]-p.z;
+    const d=Math.hypot(dx,dz,it.p[1]-p.y);
+    if(d>it.r) continue;
+    const dot=(dx*fwd.x+dz*fwd.z)/(Math.hypot(dx,dz)||1);
+    if(dot<-0.9) continue;
+    if(d<bestD){ bestD=d; best=it; }
+  }
+  return best;
+}
+function updatePrompt(){
+  focus=findFocus();
+  reticle.classList.toggle('hot', !!focus);
+  if(focus){
+    act.classList.add('on'); barDiv.style.display='none'; hint.style.display='none';
+    if(focus.kind==='stand'){ actTxt.textContent='起身'; actSub.textContent=''; }
+    else if(focus.kind==='slide'){
+      const s=SLIDES.find(o=>o.id===focus.id)||{};
+      const t=(slideT[focus.id]??0);
+      // invert 的（阳台门）t=0 是开着的，其余 t=0 是关着的
+      const openNow = s.invert ? (t<0.5) : (t>0.5);
+      if(s.verb==='推') actTxt.textContent = openNow ? '关上' : '推开';
+      else actTxt.textContent = openNow ? '推回去' : '拉开';
+      actSub.textContent='· '+focus.sub;
+    }else{ actTxt.textContent='坐下'; actSub.textContent='· '+focus.sub; }
+    bar.classList.remove('dim');
+  }else{
+    act.classList.remove('on'); barDiv.style.display=''; hint.style.display='';
+    bar.classList.add('dim');
+  }
+}
+function markDone(k){
+  if(done[k]) return;
+  done[k]=1; renderDoes();
+}
+function renderDoes(){
+  document.getElementById('does').innerHTML=DOES.map(d=>
+    `<div class="do${done[d.k]?' done':''}"><i>${done[d.k]?'✓':d.i}</i><b>${d.t}</b>
+      <span>${done[d.k]?'已完成':d.d}</span></div>`).join('');
+}
+
+/* ============ 动作 ============ */
+function sit(seat){
+  seated=seat;
+  player.velocity.set(0,0,0);
+  markDone('seat');
+  toast('坐下来 · '+seat.label);
+  chipMode.textContent='坐在'+seat.label;
+  bar.classList.add('dim');
+}
+function standUp(){
+  if(!seated) return;
+  const s=seated; seated=null;
+  player.position.set(s.stand[0],s.stand[1],s.stand[2]);
+  player.velocity.set(0,0,0);
+  camY=null;
+  chipMode.textContent='站在房间里';
+}
+function toggleLight(){
+  lightsOn=!lightsOn;
+  hint.innerHTML='<kbd>WASD</kbd>走动 · <b>鼠标</b>转头 · <kbd>E</kbd>交互 · <kbd>L</kbd>'+(lightsOn?'关灯':'开灯');
+  document.body.classList.toggle('night', !lightsOn);
+  document.getElementById('btnLight').classList.toggle('on', !lightsOn);
+  if(!lightsOn) markDone('light');
+  toast(lightsOn?'灯亮了':'关灯了 · 只剩窗外');
+}
+function toast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.classList.add('on');
+  clearTimeout(toastT); toastT=setTimeout(()=>t.classList.remove('on'),1900);
+}
+function resetTo(name){
+  const s=SPOTS[name]; if(!s) return;
+  if(seated) seated=null;
+  player.position.set(s.p[0],s.p[1],s.p[2]);
+  player.velocity.set(0,0,0);
+  yaw=s.yaw; pitch=s.pitch??-0.05;
+  camY=null;
+  chipMode.textContent = (R.balcony && name==='balcony') ? '在阳台上' : '站在房间里';
+  document.querySelectorAll('#views .v-btn').forEach(b=>b.classList.toggle('on', b.dataset.s===name));
+  if(name==='balcony') markDone('balcony');
+}
+
+/* ============ 菜单 / 开始 ============ */
+function showPanel(kind){
+  if(kind===null){ panel.classList.remove('on'); return; }
+  panel.classList.add('on');
+  if(kind==='start'){
+    pCard.innerHTML=
+      '<div class="p-k">'+P.kicker+' · '+P.span+'</div>'+
+      '<h2>走进<span>'+P.name+'</span></h2>'+
+      '<p>'+P.blurb+'</p>'+
+      '<div class="p-keys">'+
+        '<div><kbd>W A S D</kbd> 走动</div><div><kbd>鼠标</kbd> 转头</div>'+
+        '<div><kbd>E</kbd> 坐下 / 交互</div><div><kbd>L</kbd> 开关灯</div>'+
+        '<div><kbd>C</kbd> 蹲下</div><div><kbd>R</kbd> 回门口</div>'+
+      '</div>'+
+      '<button class="p-btn" id="pStart"'+(ready?'':' disabled')+'>'+
+        (ready?'推门进去 →':'正在恢复房间…')+'</button>'+
+      '<div class="p-alt">房间有点大，建议全屏看</div>';
+    document.getElementById('pStart').onclick=start;
+  }else{
+    pCard.innerHTML=
+      '<div class="p-k">PAUSED</div><h2>先站一会儿</h2>'+
+      '<p>鼠标已经放开了。点下面的按钮回到房间里。</p>'+
+      '<button class="p-btn" id="pResume">继续逛 →</button>'+
+      '<div class="p-alt"><button id="pHome">回到门口</button></div>';
+    document.getElementById('pResume').onclick=start;
+    document.getElementById('pHome').onclick=()=>{ resetTo('entry'); start(); };
+  }
+}
+function start(){
+  running=true;
+  showPanel(null);
+  if(!isMobile && renderer.domElement.requestPointerLock){
+    try{ renderer.domElement.requestPointerLock(); }catch(_){}
+  }
+}
+function pause(){
+  running=false;
+  if(document.pointerLockElement) document.exitPointerLock();
+  if(!isMobile) showPanel('pause');
+}
+
+/* ============ 键鼠 ============ */
+addEventListener('keydown', e=>{
+  if(MOVE_KEYS.includes(e.code)){ keys[e.code]=true; }
+  if(e.code==='KeyE'){ doInteract(); }
+  if(e.code==='KeyL'){ toggleLight(); }
+  if(e.code==='KeyC'){ crouch=!crouch; toast(crouch?'蹲下':'站直'); }
+  if(e.code==='KeyR'){ resetTo('entry'); toast('回到门口'); }
+  if(e.code==='KeyF'){ toggleFull(); }
+  if(e.code==='Escape' && running && !document.pointerLockElement) pause();
+});
+addEventListener('keyup', e=>{ keys[e.code]=false; });
+window.__room={
+  THREE, OFF, camera, scene, SplatEdit, SplatEditSdf,
+  addEdit(e){ if(splatMesh) splatMesh.add(e); },
+  get pos(){return player&&player.position;},
+  get seated(){return !!seated;},
+  get edit(){return edit;}, get mesh(){return splatMesh;},
+  get yaw(){return yaw;}, get pitch(){return pitch;},
+  setPose(p,yw,pt){
+    if(seated) seated=null;
+    player.position.set(p[0],p[1],p[2]); player.velocity.set(0,0,0);
+    if(yw!==undefined) yaw=yw;
+    if(pt!==undefined) pitch=pt;
+    camY=null;
+  },
+  cam(p,yw,pt){
+    camFree = p ? {p:new THREE.Vector3(p[0],p[1],p[2]), yaw:yw||0, pitch:pt||0} : null;
+  },
+  open(id){ return toggleSlide(id, true); },
+  close(id){ return toggleSlide(id, false); },
+  state(){ return SLIDES.map(o=>({id:o.id, t:+(slideT[o.id]||0).toFixed(3)})); },
+};
+addEventListener('blur', ()=>MOVE_KEYS.forEach(k=>keys[k]=false));
+
+function doInteract(){
+  const f=findFocus();
+  if(!f) return;
+  if(f.kind==='stand'){ standUp(); return; }
+  if(f.kind==='slide'){ toggleSlide(f.id); return; }
+  if(f.kind==='seat'){
+    const s=SEATS.find(x=>x.id===f.id);
+    if(s) sit(s);
+  }
+}
+
+let dragging=false,lastM=null;
+stage.addEventListener('pointerdown', e=>{
+  if(!running||isMobile) return;
+  if(e.target.closest('button')||e.target.closest('.panel')) return;
+  if(document.pointerLockElement!==renderer.domElement){ dragging=true; lastM={x:e.clientX,y:e.clientY}; }
+});
+addEventListener('pointerup', ()=>{ dragging=false; lastM=null; });
+document.addEventListener('mousemove', e=>{
+  if(!running) return;
+  const locked=document.pointerLockElement===renderer.domElement;
+  let dx=0,dy=0,sens=0.0021;
+  if(locked){ dx=e.movementX; dy=e.movementY; }
+  else if(!isMobile&&dragging&&lastM){ dx=e.clientX-lastM.x; dy=e.clientY-lastM.y; sens=0.0034; lastM={x:e.clientX,y:e.clientY}; }
+  else return;
+  if(seated) { /* 坐着也能转头，但幅度小一些 */ }
+  yaw-=dx*sens; pitch-=dy*sens;
+  pitch=Math.max(-1.35,Math.min(1.15,pitch));
+});
+stage.addEventListener('click', e=>{
+  if(!running||isMobile) return;
+  if(e.target.closest('button')||e.target.closest('.panel')) return;
+  if(document.pointerLockElement!==renderer.domElement && renderer.domElement.requestPointerLock){
+    try{ renderer.domElement.requestPointerLock(); }catch(_){}
+  }
+});
+document.addEventListener('pointerlockchange', ()=>{
+  const locked=document.pointerLockElement===renderer.domElement;
+  stage.classList.toggle('playing', locked);
+  if(!locked && running && !isMobile) pause();
+});
+
+/* 触控 */
+let stickId=null,lookId=null,lastLook=null,stickVec={x:0,y:0};
+const stick=document.getElementById('stick'),knob=document.getElementById('stickKnob');
+stick.addEventListener('pointerdown',e=>{ stickId=e.pointerId; stick.setPointerCapture(e.pointerId); e.preventDefault(); });
+stick.addEventListener('pointermove',e=>{
+  if(e.pointerId!==stickId) return;
+  const r=stick.getBoundingClientRect();
+  let dx=e.clientX-(r.left+r.width/2), dy=e.clientY-(r.top+r.height/2);
+  const lim=r.width/2-22, len=Math.hypot(dx,dy);
+  if(len>lim){ dx*=lim/len; dy*=lim/len; }
+  knob.style.transform=`translate(calc(-50% + ${dx}px), calc(-50% + ${dy}px))`;
+  stickVec.x=dx/lim; stickVec.y=dy/lim;
+});
+function endStick(e){ if(e.pointerId!==stickId) return; stickId=null; stickVec={x:0,y:0}; knob.style.transform='translate(-50%,-50%)'; }
+stick.addEventListener('pointerup',endStick); stick.addEventListener('pointercancel',endStick);
+viewport.addEventListener('pointerdown',e=>{ if(!isMobile||!running) return; lookId=e.pointerId; lastLook={x:e.clientX,y:e.clientY}; });
+viewport.addEventListener('pointermove',e=>{
+  if(e.pointerId!==lookId||!lastLook) return;
+  yaw-=(e.clientX-lastLook.x)*0.005; pitch-=(e.clientY-lastLook.y)*0.005;
+  pitch=Math.max(-1.35,Math.min(1.15,pitch));
+  lastLook={x:e.clientX,y:e.clientY};
+});
+function endLook(e){ if(e.pointerId===lookId){ lookId=null; lastLook=null; } }
+viewport.addEventListener('pointerup',endLook); viewport.addEventListener('pointercancel',endLook);
+document.getElementById('tE').addEventListener('pointerdown',e=>{ e.preventDefault(); doInteract(); });
+document.getElementById('tJump').addEventListener('pointerdown',e=>{ e.preventDefault(); toggleLight(); });
+
+/* 按钮 */
+document.getElementById('views').addEventListener('click',e=>{
+  const b=e.target.closest('.v-btn'); if(!b) return;
+  resetTo(b.dataset.s); toast('移动到 · '+b.textContent);
+});
+document.getElementById('btnReset').addEventListener('click',()=>{ resetTo('entry'); toast('回到门口'); });
+document.getElementById('btnLight').addEventListener('click',toggleLight);
+document.getElementById('btnFull').addEventListener('click',toggleFull);
+function toggleFull(){
+  if(document.fullscreenElement) document.exitFullscreen();
+  else stage.requestFullscreen && stage.requestFullscreen();
+}
+stage.addEventListener('dblclick',()=>{ if(!document.pointerLockElement) toggleFull(); });
+
+/* ============ 尺寸 ============ */
+function resize(){
+  const w=viewport.clientWidth,h=viewport.clientHeight;
+  if(!w||!h) return;
+  renderer.setSize(w,h,false);
+  camera.aspect=w/h; camera.updateProjectionMatrix();
+}
+new ResizeObserver(resize).observe(viewport);
+addEventListener('resize',resize);
+
+/* ============ 载入点云 ============ */
+let shownPts=0;
+function showCount(n){
+  shownPts+=n;
+  liveTxt.textContent=(shownPts/1e4).toFixed(0)+' 万点 · 就绪';
+}
+function loadScene(){
+  return new Promise((resolve,reject)=>{
+    let doneFlag=false;
+    const mesh=new SplatMesh({
+      url:P.src,
+      editable:true,
+      onProgress:(e)=>{
+        if(e&&e.lengthComputable&&e.total){
+          const p=Math.min(.96, e.loaded/e.total*.96);
+          setLoad(p,'正在下载点云 · '+(e.loaded/1048576).toFixed(1)+' / '+(e.total/1048576).toFixed(1)+' MB');
+        }
+      },
+      onLoad:(m)=>{
+        const n=(m.packedSplats&&m.packedSplats.numSplats)||2000000;
+        setLoad(1,'就绪');
+        loadEl.classList.add('done');
+        showCount(n);
+        if(!doneFlag){ doneFlag=true; resolve(); }
+      }
+    });
+    splatMesh=mesh;
+    mesh.position.copy(OFF.clone().negate());
+    scene.add(mesh);
+
+    /* 拆出来的独立物件（推拉门）：挂在一个 group 上整体挪 / 转 */
+    for(const s of SLIDES){
+      if(!s.obj) continue;
+      /* 这扇推拉门是两扇的，扫描时右边那扇被推到了左边、叠在第一扇上。
+         把同一点云再放一扇，停在左边当「固定扇」，关起来才是整扇玻璃。 */
+      if(s.dupe){
+        const g0=new THREE.Group();
+        g0.position.copy(OFF.clone().negate());
+        g0.userData.base=g0.position.clone();
+        const om0=new SplatMesh({url:OBJ_SRC[s.obj]});
+        g0.add(om0); scene.add(g0);
+      }
+      const g=new THREE.Group();
+      const H=s.hinge;
+      if(H){
+        // 有铰链的（柜门）：把 group 的原点挪到铰链上，门才会绕着边转
+        g.position.set(-OFF.x+H[0], -OFF.y+H[1], -OFF.z+H[2]);
+      }else{
+        g.position.copy(OFF.clone().negate());
+        g.position.z += s.dz||0;
+      }
+      g.userData.base=g.position.clone();
+      const om=new SplatMesh({url:OBJ_SRC[s.obj],
+        onLoad:(m)=>showCount((m.packedSplats&&m.packedSplats.numSplats)||0)});
+      if(H) om.position.set(-H[0], -H[1], -H[2]);
+      g.add(om);
+      scene.add(g);
+      slideObjs[s.obj]=g;
+    }
+
+    /* 可推动 / 可拉开的：用 SDF 把那一团点整体挪走 */
+    edit=new SplatEdit({sdfs:[]});
+    for(const item of PUSHABLES){
+      const sdf=new SplatEditSdf({type:'sphere', radius:item.r, displace:new THREE.Vector3(0,0,0)});
+      // 关键：SDF 的 position 直接用世界坐标（引擎内部已经吸收了 mesh 的平移）
+      sdf.position.set(item.c[0], item.c[1], item.c[2]);
+      edit.addSdf(sdf);
+      pushSdfs[item.id]=sdf;
+    }
+    for(const s of SLIDES){
+      if(!s.c) continue;
+      const sdf=new SplatEditSdf({type:'box', radius:0.006, displace:new THREE.Vector3(0,0,0)});
+      sdf.scale.set(s.h[0], s.h[1], s.h[2]);
+      sdf.position.set(s.c[0], s.c[1], s.c[2]);
+      edit.addSdf(sdf);
+      slideSdfs[s.id]=sdf;
+      slideT[s.id]=0; s.target=0;
+    }
+    mesh.add(edit);
+
+    if(mesh.initialized&&mesh.initialized.catch){
+      mesh.initialized.catch(e=>{
+        if(!doneFlag){ doneFlag=true; reject(new Error('点云解码失败：'+(e&&e.message?e.message:'未知'))); }
+      });
+    }
+  });
+}
+
+async function boot(){
+  setLoad(.02,'正在恢复房间…');
+  try{
+    buildPhysics();
+    setLoad(.05,'正在读取点云…');
+  }catch(e){ fail('碰撞构建失败：'+e.message); return; }
+  try{
+    await loadScene();
+    ready=true;
+    showPanel('start');
+  }catch(e){
+    fail('资产加载失败：'+e.message+'。请刷新重试。');
+  }
+}
+boot();
+
+/* ============ 主循环 ============ */
+let last=performance.now(), frames=0, fpsT=last, miniT=0;
+const rdCam=document.getElementById('rdCam'), rdFps=document.getElementById('rdFps');
+renderer.setAnimationLoop(now=>{
+  const dt=Math.min(.05,(now-last)/1000); last=now;
+  if(world&&player&&running) stepPlayer(dt);
+  if(edit) updateSlides(dt);
+  if(world&&player) placeCamera(dt,false);
+  if(running && now-miniT>110){ miniT=now; updatePrompt(); }
+  if(!seated && player){
+    const z=player.position.z;
+    const txt = (R.balcony && z<R.z0-0.02) ? '在阳台上' : '站在房间里';
+    if(chipMode.textContent!==txt) chipMode.textContent=txt;
+  }
+  if(seated){ /* 坐着时轻微呼吸感 */ }
+  renderer.render(scene,camera);
+  frames++;
+  if(now-fpsT>700){
+    rdFps.textContent=Math.round(frames*1000/(now-fpsT));
+    frames=0; fpsT=now;
+    rdCam.textContent=[camera.position.x,camera.position.y,camera.position.z].map(v=>v.toFixed(2)).join(', ');
+  }
+});
+
+/* 初始 UI：把这一间的档案写进页面 */
+function fillChrome(){
+  const $=id=>document.getElementById(id);
+  document.title=P.name+' · 走进去';
+  $('sNo').textContent=P.kicker;
+  $('sName').textContent=P.name;
+  $('sEn').textContent=P.en;
+  $('sBlurb').textContent=P.blurb;
+  const st=[['扫描点',P.stats.splats],['面积',P.stats.area],['尺寸',P.stats.size],['层高',P.stats.height]];
+  $('sMeta').innerHTML=st.map(([k,v])=>'<div><span>'+k+'</span><b>'+v+'</b></div>').join('');
+  const keys=Object.keys(SPOTS);
+  $('views').innerHTML=keys.map((k,i)=>
+    '<button class="v-btn'+(i===0?' wide':'')+'" data-s="'+k+'">'+(P.spotNames[k]||k)+'</button>').join('');
+  $('ldK').textContent='RESTORING '+P.no+' · '+P.en;
+  $('ldMeta').innerHTML='<span>SPZ · '+P.stats.size+'</span><span><b>'+P.stats.splats+'</b> splats</span>';
+  $('side').dataset.title=P.no+' · '+P.name;
+}
+fillChrome();
+document.getElementById('touch').classList.toggle('on', isMobile);
+if(isMobile) hint.textContent='摇杆走 · 拖画面转头 · 按 E 交互';
+renderDoes();
+document.body.classList.toggle('night', false);
+placeCamera(0,true);
+showPanel('start');
+</script>
+</body>
+</html>
