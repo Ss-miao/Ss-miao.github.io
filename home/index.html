@@ -3,15 +3,16 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>空间扫描 · Gaussian Splat Viewer</title>
-<meta name="description" content="把一段真实空间搬进浏览器：200 万高斯点的 3D Gaussian Splatting 实时查看器。">
+<title>空间扫描 · 可交互物理空间</title>
+<meta name="description" content="把一段真实空间搬进浏览器：200 万高斯点 + 刚体物理，可以走、可以跳、可以撞墙的第一人称交互。">
 <link rel="icon" href="/favicon-32.png" sizes="32x32" type="image/png">
 <script type="importmap">
 {
   "imports": {
     "three": "./vendor/three.module.js",
     "three/addons/": "./vendor/addons/",
-    "@sparkjsdev/spark": "./vendor/spark.module.min.js"
+    "@sparkjsdev/spark": "./vendor/spark.module.min.js",
+    "cannon-es": "./vendor/cannon-es.js"
   }
 }
 </script>
@@ -39,12 +40,16 @@ canvas{display:block}
   border-bottom:1px solid var(--line);position:relative;z-index:5}
 .mk{width:26px;height:26px;flex:none;position:relative}
 .mk::before,.mk::after{content:"";position:absolute;inset:0;border:1.5px solid transparent}
-.mk::before{border-image:linear-gradient(135deg,#4b63f0,#b452d8) 1;transform:rotate(0deg)}
+.mk::before{border-image:linear-gradient(135deg,#4b63f0,#b452d8) 1}
 .mk::after{width:12px;height:12px;left:7px;top:7px;border:1.5px solid rgba(123,85,232,.55);border-radius:2px}
 .tp-name{font-size:14px;font-weight:800;letter-spacing:-.01em;white-space:nowrap}
 .tp-sep{width:1px;height:18px;background:var(--line)}
 .tp-sub{font-family:var(--mono);font-size:11px;color:var(--ink-3);letter-spacing:.1em;white-space:nowrap}
 .tp-sp{flex:1}
+.mode-sw{display:flex;gap:3px;padding:3px;border-radius:9px;background:#f2f4fa;border:1px solid var(--line)}
+.mode-sw button{height:25px;padding:0 12px;border-radius:6px;font-size:11.5px;font-weight:700;
+  color:var(--ink-2);white-space:nowrap;transition:all .16s}
+.mode-sw button.on{background:#fff;color:var(--blue);box-shadow:0 1px 5px rgba(30,40,90,.1)}
 .tp-badge{display:inline-flex;align-items:center;gap:7px;height:26px;padding:0 11px;
   border:1px solid var(--line);border-radius:999px;background:#fbfcff;
   font-family:var(--mono);font-size:10.5px;color:var(--ink-2);white-space:nowrap}
@@ -58,8 +63,6 @@ canvas{display:block}
 
 /* ---------- 工作区 ---------- */
 .ws{display:grid;grid-template-columns:286px minmax(0,1fr);gap:14px;padding:14px;min-height:0}
-
-/* 侧栏 */
 .side{background:var(--panel);border:1px solid var(--line);border-radius:14px;
   overflow-y:auto;overflow-x:hidden;display:flex;flex-direction:column}
 .side::-webkit-scrollbar{width:0}
@@ -85,7 +88,6 @@ canvas{display:block}
   font-variant-numeric:tabular-nums;color:var(--ink)}
 .stat .big small{font-size:11px;font-weight:600;color:var(--ink-3);letter-spacing:0;margin-left:5px}
 .stat .cap{margin-top:7px;font-size:10.5px;color:var(--ink-2)}
-
 .kv{margin-top:12px;display:flex;flex-direction:column;gap:0}
 .kv .r{display:flex;align-items:baseline;justify-content:space-between;gap:10px;
   padding:7px 0;border-bottom:1px dashed var(--line);font-size:11.5px}
@@ -93,19 +95,19 @@ canvas{display:block}
 .kv .r span{color:var(--ink-3)}
 .kv .r b{font-family:var(--mono);font-size:11px;font-weight:600;color:var(--ink);text-align:right}
 
-/* 三轴条 */
-.axis{display:flex;flex-direction:column;gap:10px}
-.ax{display:grid;grid-template-columns:16px 1fr 46px;align-items:center;gap:8px}
-.ax i{font-family:var(--mono);font-style:normal;font-size:10px;font-weight:700;color:var(--ink-3)}
-.ax .track{height:6px;border-radius:99px;background:#edeff6;overflow:hidden}
-.ax .track u{display:block;height:100%;border-radius:99px;text-decoration:none}
-.ax .x u{background:linear-gradient(90deg,#6d84ff,#4b63f0)}
-.ax .y u{background:linear-gradient(90deg,#b07cf9,#8b5cf6)}
-.ax .z u{background:linear-gradient(90deg,#ffc078,#f59e42)}
-.ax .track u{width:var(--w)}
-.ax b{font-family:var(--mono);font-size:10.5px;font-weight:600;text-align:right;color:var(--ink-2)}
+/* 目标清单 */
+.goals{display:flex;flex-direction:column;gap:5px}
+.goal{display:flex;align-items:center;gap:9px;padding:7px 9px;border-radius:8px;
+  background:#f7f8fc;border:1px solid var(--line-2);font-size:11px;color:var(--ink-2);
+  transition:all .2s}
+.goal i{width:14px;height:14px;border-radius:50%;border:1.5px solid #c9cfe6;flex:none;
+  display:grid;place-items:center;font-style:normal;font-size:9px;color:transparent}
+.goal em{font-style:normal;margin-left:auto;font-family:var(--mono);font-size:9.5px;color:var(--ink-3)}
+.goal.got{background:#effaf4;border-color:#cdeedb;color:#138a58}
+.goal.got i{background:#18a86a;border-color:#18a86a;color:#fff}
+.goal.got em{color:#18a86a}
 
-/* 预设视角 */
+/* 视角 / 键位 */
 .views{display:grid;grid-template-columns:1fr 1fr;gap:7px}
 .v-btn.wide{grid-column:1/-1}
 .v-btn{height:32px;border:1px solid var(--line);border-radius:8px;background:#fff;
@@ -114,7 +116,6 @@ canvas{display:block}
 .v-btn:hover{border-color:#c9cffc;color:var(--blue);background:#f8f9ff}
 .v-btn.on{border-color:transparent;background:var(--grad);color:#fff;box-shadow:0 4px 12px rgba(90,80,230,.24)}
 .v-btn svg{width:13px;height:13px}
-
 .keys{display:flex;flex-direction:column;gap:9px}
 .key{display:flex;align-items:center;gap:9px;font-size:11px;color:var(--ink-2)}
 .key .cap{flex:1}
@@ -131,8 +132,8 @@ kbd{font-family:var(--mono);font-size:9.5px;font-weight:700;color:var(--ink-2);b
   border:1px solid #1b2030;box-shadow:0 18px 48px -22px rgba(20,24,54,.55);min-height:0}
 #viewport{position:absolute;inset:0}
 #viewport canvas{width:100%;height:100%}
+.stage.playing{cursor:none}
 
-/* 舞台 HUD */
 .hud{position:absolute;inset:0;pointer-events:none;z-index:2}
 .hud>*{pointer-events:auto}
 .hud-tl{position:absolute;left:16px;top:16px;display:flex;align-items:center;gap:8px}
@@ -149,7 +150,6 @@ kbd{font-family:var(--mono);font-size:9.5px;font-weight:700;color:var(--ink-2);b
   transition:background .16s,color .16s,transform .16s}
 .ic:hover{background:rgba(75,99,240,.85);color:#fff;transform:translateY(-1px)}
 .ic svg{width:15px;height:15px}
-
 .hud-bl{position:absolute;left:16px;bottom:16px;display:flex;flex-direction:column;gap:8px}
 .readout{font-family:var(--mono);font-size:10px;line-height:1.7;color:rgba(255,255,255,.5);
   letter-spacing:.04em;text-shadow:0 1px 6px #000}
@@ -173,11 +173,113 @@ kbd{font-family:var(--mono);font-size:9.5px;font-weight:700;color:var(--ink-2);b
 .spd{display:flex;align-items:center;gap:7px;font-size:10.5px;color:rgba(255,255,255,.55)}
 .spd input{width:64px;accent-color:#7a68f5;cursor:pointer}
 
+/* ---------- 游戏 HUD ---------- */
+.game-ui{position:absolute;inset:0;z-index:3;pointer-events:none;display:none}
+.game-ui.on{display:block}
+.g-top{position:absolute;left:16px;top:60px;display:flex;flex-direction:column;gap:9px}
+.g-card{border-radius:11px;padding:11px 14px;background:rgba(12,16,27,.76);
+  border:1px solid rgba(255,255,255,.13);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);
+  color:#fff;min-width:172px}
+.g-k{font-family:var(--mono);font-size:9.5px;letter-spacing:.2em;color:#7e8aad}
+.g-big{font-family:var(--mono);font-size:24px;font-weight:700;letter-spacing:-.04em;
+  font-variant-numeric:tabular-nums;margin-top:5px;line-height:1}
+.g-big small{font-size:13px;color:#8e9ac0;font-weight:500;margin-left:3px}
+.g-bar{height:4px;border-radius:9px;background:rgba(255,255,255,.12);overflow:hidden;margin-top:10px}
+.g-bar u{display:block;height:100%;width:0%;border-radius:9px;text-decoration:none;
+  background:linear-gradient(90deg,#4b63f0,#a35ce8,#ffb648);transition:width .34s}
+.g-target{margin-top:9px;font-size:10.5px;color:#aab5d4;line-height:1.5}
+.g-target b{color:#ffd978;font-weight:700}
+
+/* 准星 */
+.cross{position:absolute;left:50%;top:50%;width:22px;height:22px;transform:translate(-50%,-50%);
+  transition:transform .16s,opacity .16s;opacity:.9}
+.cross::before,.cross::after{content:"";position:absolute;background:rgba(255,255,255,.85);
+  box-shadow:0 0 4px rgba(0,0,0,.7)}
+.cross::before{left:50%;top:0;width:1.5px;height:100%;transform:translateX(-50%)}
+.cross::after{top:50%;left:0;height:1.5px;width:100%;transform:translateY(-50%)}
+.cross i{position:absolute;left:50%;top:50%;width:4px;height:4px;border-radius:50%;
+  background:#fff;transform:translate(-50%,-50%);box-shadow:0 0 5px rgba(0,0,0,.7)}
+.cross.near{transform:translate(-50%,-50%) scale(1.45)}
+.cross.near::before,.cross.near::after,.cross.near i{background:#ffd45e}
+.cross.hide{opacity:0}
+
+/* 小地图 */
+.mini{position:absolute;right:16px;bottom:16px;width:158px;border-radius:12px;overflow:hidden;
+  background:rgba(12,16,27,.82);border:1px solid rgba(255,255,255,.14);
+  -webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);padding:8px}
+.mini .mh{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;
+  font-family:var(--mono);font-size:9px;letter-spacing:.14em;color:#8a97ba}
+.mini .mh b{color:#4ade80;font-weight:700}
+.mini canvas{width:142px;height:142px;border-radius:7px;display:block}
+
+/* 键位条 */
+.g-keys{position:absolute;left:50%;bottom:18px;transform:translateX(-50%);
+  display:flex;align-items:center;gap:11px;padding:8px 14px;border-radius:10px;
+  background:rgba(12,16,27,.72);border:1px solid rgba(255,255,255,.12);
+  -webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);
+  font-size:10.5px;color:rgba(255,255,255,.62);white-space:nowrap}
+.g-keys b{color:rgba(255,255,255,.92);font-weight:700}
+.g-keys kbd{background:rgba(255,255,255,.11);border-color:rgba(255,255,255,.16);
+  border-bottom-width:1px;color:#fff;padding:1px 5px;font-size:9px}
+
+/* toast */
+.toast{position:absolute;left:50%;top:86px;transform:translate(-50%,-10px);opacity:0;
+  padding:9px 17px;border-radius:999px;background:rgba(18,22,36,.9);
+  border:1px solid rgba(255,212,94,.38);color:#ffe6a6;font-size:11.5px;font-weight:700;
+  white-space:nowrap;transition:opacity .26s,transform .26s;pointer-events:none}
+.toast.on{opacity:1;transform:translate(-50%,0)}
+
+/* 面板（开始 / 暂停 / 通关） */
+.panel{position:absolute;inset:0;z-index:8;display:none;align-items:center;justify-content:center;
+  background:linear-gradient(rgba(6,8,16,.72),rgba(6,8,16,.86)),url(./assets/preview.jpg) center/cover no-repeat;
+  padding:24px;text-align:center}
+.panel.on{display:flex}
+.p-card{width:min(430px,92%);padding:32px 30px 28px;border-radius:20px;
+  background:rgba(15,19,32,.9);border:1px solid rgba(255,255,255,.14);
+  box-shadow:0 30px 80px -24px rgba(0,0,0,.8);
+  -webkit-backdrop-filter:blur(20px);backdrop-filter:blur(20px)}
+.p-k{font-family:var(--mono);font-size:10px;letter-spacing:.24em;color:#7b88b4}
+.p-card h2{margin-top:12px;font-size:27px;font-weight:900;letter-spacing:-.03em;color:#fff;line-height:1.25}
+.p-card h2 span{background:linear-gradient(100deg,#8fa2ff,#c58cf5 55%,#ffb27a);
+  -webkit-background-clip:text;background-clip:text;color:transparent}
+.p-card p{margin-top:12px;font-size:12px;line-height:1.85;color:#9ba7c7}
+.p-keys{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:22px 0 24px;text-align:left}
+.p-keys div{display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:8px;
+  background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);
+  font-size:10.5px;color:#aab5d2}
+.p-keys kbd{background:rgba(255,255,255,.1);border-color:rgba(255,255,255,.14);
+  border-bottom-width:1px;color:#fff;font-size:9px;padding:2px 5px}
+.p-btn{display:inline-flex;align-items:center;justify-content:center;gap:9px;
+  height:42px;padding:0 28px;border-radius:11px;font-size:13px;font-weight:800;color:#fff;
+  background:var(--grad);box-shadow:0 10px 26px -8px rgba(105,80,235,.7);
+  transition:transform .16s,box-shadow .16s}
+.p-btn:hover{transform:translateY(-2px);box-shadow:0 14px 32px -8px rgba(105,80,235,.85)}
+.p-btn[disabled]{opacity:.45;cursor:default;transform:none;box-shadow:none}
+.p-alt{margin-top:14px;font-size:11px;color:#7d89ac}
+.p-alt button{color:#a8b6ff;font-weight:700;text-decoration:underline;text-underline-offset:3px}
+.p-score{display:flex;justify-content:center;gap:26px;margin:20px 0 22px}
+.p-score div{text-align:center}
+.p-score b{display:block;font-family:var(--mono);font-size:27px;font-weight:700;color:#fff;
+  font-variant-numeric:tabular-nums}
+.p-score span{display:block;margin-top:5px;font-size:10px;color:#7f8bad;letter-spacing:.1em}
+
+/* 移动端触控 */
+.touch{position:absolute;inset:0;z-index:4;pointer-events:none;display:none}
+.touch.on{display:block}
+.stick{position:absolute;left:24px;bottom:28px;width:112px;height:112px;border-radius:50%;
+  background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.2);pointer-events:auto}
+.stick i{position:absolute;left:50%;top:50%;width:46px;height:46px;border-radius:50%;
+  transform:translate(-50%,-50%);background:rgba(255,255,255,.24);
+  border:1px solid rgba(255,255,255,.36)}
+.t-jump{position:absolute;right:26px;bottom:52px;width:74px;height:74px;border-radius:50%;
+  background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.3);color:#fff;
+  font-size:12px;font-weight:800;pointer-events:auto}
+.t-jump:active{background:rgba(75,99,240,.65)}
+
 /* 加载层 */
-.load{position:absolute;inset:0;z-index:6;
+.load{position:absolute;inset:0;z-index:9;
   background:linear-gradient(rgba(6,8,16,.58),rgba(6,8,16,.72)),url(./assets/preview.jpg) center/cover no-repeat;
-  display:flex;
-  flex-direction:column;align-items:center;justify-content:center;gap:0;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0;
   transition:opacity .6s ease,visibility .6s}
 .load.done{opacity:0;visibility:hidden;pointer-events:none}
 .load::before{content:"";position:absolute;inset:0;pointer-events:none;
@@ -207,8 +309,7 @@ kbd{font-family:var(--mono);font-size:9.5px;font-weight:700;color:var(--ink-2);b
   font-family:var(--mono);font-size:10px;color:#525c7e}
 .ld-meta b{color:#8a94b5;font-weight:600}
 
-/* 错误 */
-.err{position:absolute;inset:0;z-index:7;display:none;align-items:center;justify-content:center;
+.err{position:absolute;inset:0;z-index:10;display:none;align-items:center;justify-content:center;
   background:linear-gradient(rgba(6,8,16,.68),rgba(6,8,16,.84)),url(./assets/preview.jpg) center/cover no-repeat;
   padding:24px;text-align:center}
 .err.on{display:flex}
@@ -216,7 +317,6 @@ kbd{font-family:var(--mono);font-size:9.5px;font-weight:700;color:var(--ink-2);b
 .err h3{font-size:16px;font-weight:800;color:#fff;margin-bottom:10px}
 .err p{font-size:12px;line-height:1.8;color:#8a94b5}
 
-/* 移动端 */
 @media(max-width:900px){
   .ws{grid-template-columns:1fr;grid-template-rows:auto minmax(0,1fr);padding:10px;gap:10px}
   .side{flex-direction:row;align-items:center;overflow:hidden;padding:0 12px;height:52px;flex:none}
@@ -225,14 +325,17 @@ kbd{font-family:var(--mono);font-size:9.5px;font-weight:700;color:var(--ink-2);b
     color:var(--ink-2);white-space:nowrap}
   .tp-sub,.tp-badge{display:none}
   .hud-bc{gap:10px;padding:8px 12px;bottom:12px}
-  .hint{display:none}
-  .hud-bc .div{display:none}
-  .hud-bl{display:none}
+  .hint,.hud-bc .div,.hud-bl{display:none}
   .ld-n{font-size:58px}
+  .g-keys,.mini{display:none}
+  .g-top{top:56px;left:10px}
+  .g-card{min-width:140px;padding:9px 11px}
+  .p-keys{grid-template-columns:1fr}
 }
 @media(max-width:520px){
   .spd{display:none}
   .hud-tl .chip.mono{display:none}
+  .tp-name{display:none}
 }
 </style>
 </head>
@@ -243,8 +346,12 @@ kbd{font-family:var(--mono);font-size:9.5px;font-weight:700;color:var(--ink-2);b
     <div class="mk" aria-hidden="true"></div>
     <span class="tp-name">空间扫描</span>
     <span class="tp-sep"></span>
-    <span class="tp-sub">GAUSSIAN SPLAT / VIEWER 01</span>
+    <span class="tp-sub">GAUSSIAN SPLAT / PHYSICS 01</span>
     <span class="tp-sp"></span>
+    <div class="mode-sw" id="modeSw">
+      <button class="on" data-m="game">游戏模式</button>
+      <button data-m="view">观赏模式</button>
+    </div>
     <span class="tp-badge"><i></i><span id="liveTxt">WebGL2 · 初始化</span></span>
     <a class="tp-link" href="/">
       <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 17l-5-5 5-5"/><path d="M5 12h11"/><path d="M19 5v14"/></svg>
@@ -256,8 +363,8 @@ kbd{font-family:var(--mono);font-size:9.5px;font-weight:700;color:var(--ink-2);b
     <aside class="side">
       <div class="s-hero">
         <div class="s-kick">CAPTURED SPACE / 001</div>
-        <h1>把现场<br><span>搬进浏览器</span></h1>
-        <p>一进门就站在屋里。200 万高斯点重建的真实空间，拖动环视、WASD 走动——点云不改一刀，实时渲染。</p>
+        <h1>把现场<br><span>做成游戏</span></h1>
+        <p>200 万高斯点重建的真实房间，叠加一层刚体物理：有重力、能跳、撞得到墙和桌子。收集 6 个信号碎片完成探索。</p>
       </div>
 
       <section class="s-sec">
@@ -269,23 +376,44 @@ kbd{font-family:var(--mono);font-size:9.5px;font-weight:700;color:var(--ink-2);b
         <div class="kv">
           <div class="r"><span>格式</span><b>SPZ v2 / SH 0</b></div>
           <div class="r"><span>文件体积</span><b>29.9 MB</b></div>
-          <div class="r"><span>坐标精度</span><b>24-bit / 12 frac</b></div>
-          <div class="r"><span>来源</span><b>Chisel Scan</b></div>
           <div class="r"><span>坐标系</span><b>RUB / Y-up</b></div>
+          <div class="r"><span>来源</span><b>Chisel Scan</b></div>
         </div>
       </section>
 
       <section class="s-sec">
-        <div class="s-t"><b>空间尺度</b><em>METERS</em></div>
-        <div class="axis">
-          <div class="ax x"><i>X</i><div class="track"><u style="--w:89%"></u></div><b>11.36</b></div>
-          <div class="ax y"><i>Y</i><div class="track"><u style="--w:38%"></u></div><b>4.90</b></div>
-          <div class="ax z"><i>Z</i><div class="track"><u style="--w:100%"></u></div><b>12.75</b></div>
+        <div class="s-t"><b>物理世界</b><em>RIGID BODY</em></div>
+        <div class="kv" style="margin-top:0">
+          <div class="r"><span>引擎</span><b>cannon-es</b></div>
+          <div class="r"><span>重力</span><b>-9.82 m/s²</b></div>
+          <div class="r"><span>地面高度</span><b>-1.62 m</b></div>
+          <div class="r"><span>静态碰撞体</span><b id="kvBodies">--</b></div>
+          <div class="r"><span>碰撞来源</span><b>点云反推</b></div>
+        </div>
+        <div class="s-t" style="margin:16px 0 9px"><b>说明</b><em>HOW</em></div>
+        <p style="font-size:10.5px;line-height:1.75;color:var(--ink-2)">高斯点云只有光斑、没有三角面，所以从点云的密度投影量出墙面和家具顶面，生成一层看不见的碰撞盒。看得见的是扫描，撞得到的是这层盒子。</p>
+      </section>
+
+      <section class="s-sec">
+        <div class="s-t"><b>探索目标</b><em id="goalProgress">0 / 6</em></div>
+        <div class="goals" id="goals"></div>
+      </section>
+
+      <section class="s-sec">
+        <div class="s-t"><b>游戏操作</b><em>CONTROL</em></div>
+        <div class="keys">
+          <div class="key"><span class="cap">移动 / 转视角</span><kbd>WASD · 鼠标</kbd></div>
+          <div class="key"><span class="cap">跳跃（能上桌）</span><kbd>SPACE</kbd></div>
+          <div class="key"><span class="cap">奔跑</span><kbd>SHIFT</kbd></div>
+          <div class="key"><span class="cap">第一 / 第三人称</span><kbd>C</kbd></div>
+          <div class="key"><span class="cap">重生点</span><kbd>R</kbd></div>
+          <div class="key"><span class="cap">显示碰撞体</span><kbd>B</kbd></div>
+          <div class="key"><span class="cap">暂停 / 释放鼠标</span><kbd>ESC</kbd></div>
         </div>
       </section>
 
       <section class="s-sec">
-        <div class="s-t"><b>视角预设</b><em>VIEW</em></div>
+        <div class="s-t"><b>观赏视角</b><em>VIEW</em></div>
         <div class="views" id="views">
           <button class="v-btn wide on" data-v="inside"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 10l9-7 9 7v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1z"/><path d="M9 21v-7h6v7"/></svg>站在屋里</button>
           <button class="v-btn" data-v="orbit"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="8"/><ellipse cx="12" cy="12" rx="4" ry="8"/></svg>环绕</button>
@@ -293,17 +421,7 @@ kbd{font-family:var(--mono);font-size:9.5px;font-weight:700;color:var(--ink-2);b
           <button class="v-btn" data-v="top"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3"/></svg>俯视</button>
           <button class="v-btn" data-v="side"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 7h16M4 12h16M4 17h16"/></svg>侧视</button>
         </div>
-      </section>
-
-      <section class="s-sec">
-        <div class="s-t"><b>操作</b><em>CONTROL</em></div>
-        <div class="keys">
-          <div class="key"><span class="cap">旋转 / 缩放 / 平移</span><kbd>拖动</kbd></div>
-          <div class="key"><span class="cap">前后左右移动</span><kbd>W A S D</kbd></div>
-          <div class="key"><span class="cap">回到室内视角</span><kbd>R</kbd></div>
-          <div class="key"><span class="cap">全屏查看</span><kbd>F</kbd></div>
-          <div class="key"><span class="cap">上下翻转（备用）</span><kbd>V</kbd></div>
-        </div>
+        <p style="margin-top:9px;font-size:10px;color:var(--ink-3);line-height:1.6">点任意视角会自动切到观赏模式（浮空自由相机，不受物理约束）。</p>
       </section>
 
       <div class="s-foot">
@@ -314,30 +432,28 @@ kbd{font-family:var(--mono);font-size:9.5px;font-weight:700;color:var(--ink-2);b
     <section class="stage" id="stage">
       <div id="viewport"></div>
 
+      <!-- 通用 HUD -->
       <div class="hud">
         <div class="hud-tl">
           <span class="chip"><i></i>实时渲染</span>
           <span class="chip mono">CHISEL_UNTITLED_SPLAT.SPZ</span>
         </div>
-
         <div class="hud-tr">
-          <button class="ic" id="btnReset" title="回到室内 (R)" aria-label="回到室内">
+          <button class="ic" id="btnReset" title="重生 / 回到室内" aria-label="重置">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg>
           </button>
           <button class="ic" id="btnFull" title="全屏 (F)" aria-label="全屏">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H3v5M16 3h5v5M8 21H3v-5M16 21h5v-5"/></svg>
           </button>
         </div>
-
         <div class="hud-bl">
           <div class="readout">
-            <span class="lb">CAM&nbsp; </span><b id="rdCam">0.00, 0.00, 0.00</b><br>
+            <span class="lb">POS&nbsp; </span><b id="rdCam">0.00, 0.00, 0.00</b><br>
             <span class="lb">FPS&nbsp; </span><b id="rdFps">--</b>
             <span class="lb">&nbsp;·&nbsp; SPLATS&nbsp; </span><b id="rdN">--</b>
           </div>
         </div>
-
-        <div class="hud-bc">
+        <div class="hud-bc" id="viewBar">
           <span class="hint"><b>左键</b> 旋转 · <b>滚轮</b> 缩放 · <b>右键</b> 平移</span>
           <span class="div"></span>
           <label class="tog"><input type="checkbox" id="spin">自转</label>
@@ -350,9 +466,49 @@ kbd{font-family:var(--mono);font-size:9.5px;font-weight:700;color:var(--ink-2);b
         </div>
       </div>
 
+      <!-- 游戏 HUD -->
+      <div class="game-ui" id="gameUi">
+        <div class="g-top">
+          <div class="g-card">
+            <div class="g-k">SIGNAL FRAGMENTS</div>
+            <div class="g-big"><span id="gCount">0</span><small>/ 6</small></div>
+            <div class="g-bar"><u id="gBar"></u></div>
+            <div class="g-target">最近目标 · <b id="gTarget">--</b></div>
+          </div>
+          <div class="g-card" style="min-width:0">
+            <div class="g-k">TIME</div>
+            <div class="g-big" id="gTime" style="font-size:19px">00:00.0</div>
+          </div>
+        </div>
+
+        <div class="cross" id="cross"><i></i></div>
+
+        <div class="mini">
+          <div class="mh"><span>MAP / 1F</span><b id="miniState">PHYSICS ON</b></div>
+          <canvas id="miniCv" width="284" height="284"></canvas>
+        </div>
+
+        <div class="g-keys">
+          <b>WASD</b> 移动 · <kbd>SPACE</kbd> 跳 · <kbd>SHIFT</kbd> 跑 · <kbd>C</kbd> 视角 · <kbd>B</kbd> 碰撞体 · <kbd>ESC</kbd> 暂停
+        </div>
+
+        <div class="toast" id="toast"></div>
+      </div>
+
+      <!-- 移动端触控 -->
+      <div class="touch" id="touch">
+        <div class="stick" id="stick"><i id="stickKnob"></i></div>
+        <button class="t-jump" id="tJump">跳</button>
+      </div>
+
+      <!-- 开始 / 暂停 / 通关面板 -->
+      <div class="panel on" id="panel">
+        <div class="p-card" id="pCard"></div>
+      </div>
+
       <div class="load" id="load">
         <div class="ld-in">
-          <div class="ld-k">LOADING POINT CLOUD</div>
+          <div class="ld-k">BUILDING PHYSICS WORLD</div>
           <div class="ld-n"><span id="ldNum">0</span><sup>%</sup></div>
           <div class="ld-bar"><u id="ldBar"></u></div>
           <div class="ld-msg" id="ldMsg">正在连接资产…</div>
@@ -374,245 +530,726 @@ kbd{font-family:var(--mono);font-size:9.5px;font-weight:700;color:var(--ink-2);b
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { SparkRenderer, SplatMesh } from '@sparkjsdev/spark';
+import * as CANNON from 'cannon-es';
 
-const stage = document.getElementById('stage');
-const viewport = document.getElementById('viewport');
-const loadEl = document.getElementById('load');
-const ldNum = document.getElementById('ldNum');
-const ldBar = document.getElementById('ldBar');
-const ldMsg = document.getElementById('ldMsg');
+const stage   = document.getElementById('stage');
+const viewport= document.getElementById('viewport');
+const loadEl  = document.getElementById('load');
+const ldNum   = document.getElementById('ldNum');
+const ldBar   = document.getElementById('ldBar');
+const ldMsg   = document.getElementById('ldMsg');
 const liveTxt = document.getElementById('liveTxt');
-const errEl = document.getElementById('err');
-const isMobile = matchMedia('(max-width:900px)').matches;
+const errEl   = document.getElementById('err');
+const panel   = document.getElementById('panel');
+const pCard   = document.getElementById('pCard');
+const gameUi  = document.getElementById('gameUi');
+const viewBar = document.getElementById('viewBar');
+const isMobile= matchMedia('(max-width:900px)').matches || navigator.maxTouchPoints > 0;
 
 function setLoad(p, msg){
   const v = Math.max(0, Math.min(100, Math.round(p * 100)));
-  ldNum.textContent = v;
-  ldBar.style.width = v + '%';
+  ldNum.textContent = v; ldBar.style.width = v + '%';
   if(msg) ldMsg.textContent = msg;
 }
 function fail(msg){
   if(msg) document.getElementById('errMsg').textContent = msg;
-  loadEl.classList.add('done');
-  errEl.classList.add('on');
+  loadEl.classList.add('done'); errEl.classList.add('on');
   liveTxt.textContent = '渲染不可用';
 }
 
-/* ---------- WebGL2 检查 ---------- */
+/* ---------- WebGL2 ---------- */
 const probe = document.createElement('canvas');
 if(!probe.getContext('webgl2')){
   fail('当前浏览器不支持 WebGL2，无法渲染高斯点云。请使用较新的 Chrome / Edge / Safari，或开启硬件加速。');
   throw new Error('WebGL2 unsupported');
 }
-
 let renderer;
 try{
   renderer = new THREE.WebGLRenderer({ antialias:false, alpha:false, powerPreference:'high-performance' });
-}catch(e){
-  fail('WebGL 初始化失败：' + e.message);
-  throw e;
-}
+}catch(e){ fail('WebGL 初始化失败：' + e.message); throw e; }
 renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, isMobile ? 1 : 1.6));
 renderer.setClearColor(0x080a12, 1);
 renderer.setSize(viewport.clientWidth, viewport.clientHeight, false);
 viewport.appendChild(renderer.domElement);
 
-const scene = new THREE.Scene();
-const camera = new THREE.PerspectiveCamera(65, viewport.clientWidth / viewport.clientHeight, 0.05, 400);
-const spark = new SparkRenderer({ renderer, maxPixelRadius: 120 });
+const scene  = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(72, viewport.clientWidth / viewport.clientHeight, 0.05, 400);
+const spark  = new SparkRenderer({ renderer, maxPixelRadius: 120 });
 scene.add(spark);
 
 const controls = new OrbitControls(camera, renderer.domElement);
-controls.enableDamping = true;
-controls.dampingFactor = 0.075;
-controls.rotateSpeed = 0.72;
-controls.zoomSpeed = 0.9;
-controls.panSpeed = 0.8;
-controls.minDistance = 1.0;
-controls.maxDistance = 70;
+controls.enableDamping = true; controls.dampingFactor = 0.075;
+controls.rotateSpeed = 0.72; controls.zoomSpeed = 0.9; controls.panSpeed = 0.8;
+controls.minDistance = 1.0; controls.maxDistance = 70;
 controls.maxPolarAngle = Math.PI * 0.96;
-controls.autoRotate = false;
-controls.autoRotateSpeed = 0.4;
-controls.target.set(0, 0, 0);
+controls.enabled = false;
+controls.target.set(0,0,0);
 
-/* SPZ v2 默认坐标系是 RUB (Right-Up-Back)，也就是 Three.js 坐标系，Y 已经是上方向。
-   这份 Chisel 导出的文件没有 coordinate-system 扩展，因此不做任何旋转，
-   只把包围盒中心平移到原点。 */
+/* SPZ v2 默认 RUB = Three.js Y-up，不做任何旋转，只平移包围盒中心 */
 const BBOX_CENTER = new THREE.Vector3(1.1354, 1.6389, 0.9126);
-const meshOffset = BBOX_CENTER.clone().negate();
-const FLIP_X = new THREE.Quaternion(1, 0, 0, 0);   // 仅供「上下翻转」开关使用
+const meshOffset  = BBOX_CENTER.clone().negate();
+const FLIP_X = new THREE.Quaternion(1,0,0,0);
 let splatMesh = null, flipped = false;
 
-/* 坐标网格（默认关闭） */
 const grid = new THREE.GridHelper(20, 20, 0x4b63f0, 0x252b44);
-grid.material.transparent = true;
-grid.material.opacity = 0.5;
-grid.position.y = -1.65;
-grid.visible = false;
-scene.add(grid);
+grid.material.transparent = true; grid.material.opacity = 0.5;
+grid.position.y = -1.62; grid.visible = false; scene.add(grid);
 
-/* 默认直接站在房间里面：眼高 Y=0（地面约 -1.65），朝 -Z 看窗户。
-   室内 target 只放在眼前 1.4m，避免自转时相机绕太远穿墙。 */
 const VIEWS = {
-  inside:{ p:[-1.0, 0.0, 0.6],  t:[-1.0,-0.15,-0.8], spin:false },
-  orbit: { p:[7.2, 4.4, 10.3],  t:[0,0,0], spin:true },
-  front: { p:[0, 0.9, 12.5],    t:[0,0,0], spin:true },
-  top:   { p:[0.01, 12.9, 0.01],t:[0,0,0], spin:true },
-  side:  { p:[12.5, 1.8, 0.01], t:[0,0,0], spin:true }
+  inside:{ p:[-1.0,0.0,0.6],   t:[-1.0,-0.15,-0.8], spin:false },
+  orbit: { p:[7.2,4.4,10.3],   t:[0,0,0], spin:true },
+  front: { p:[0,0.9,12.5],     t:[0,0,0], spin:true },
+  top:   { p:[0.01,12.9,0.01], t:[0,0,0], spin:true },
+  side:  { p:[12.5,1.8,0.01],  t:[0,0,0], spin:true }
 };
-camera.position.set(...VIEWS.inside.p);
-controls.target.set(...VIEWS.inside.t);
-controls.update();
 
-/* ---------- 视角过渡 ---------- */
-let flying = null;
-function flyTo(name){
-  const v = VIEWS[name]; if(!v) return;
-  flying = {
-    t0: performance.now(), dur: 850,
-    p0: camera.position.clone(), p1: new THREE.Vector3(...v.p),
-    t0v: controls.target.clone(), t1v: new THREE.Vector3(...v.t),
-    spin: !!v.spin
-  };
-  controls.autoRotate = false;
-  document.getElementById('spin').checked = !!v.spin;
-  document.querySelectorAll('.v-btn').forEach(b => b.classList.toggle('on', b.dataset.v === name));
+/* ---------- 全局状态 ---------- */
+let CFG = null, world = null, player = null;
+let mode = 'game', running = false, won = false, finished = false;
+let assetsReady = false, physicsReady = false;
+let yaw = 0, pitch = 0, thirdPerson = false;
+let t0 = 0, elapsed = 0, got = 0;
+let grounded = false, jumpLatch = false;
+let debugGroup = null, pickupObjs = [], avatar = null;
+let toastTimer = 0;
+const keys = Object.create(null);
+const MOVE_KEYS = ['KeyW','KeyA','KeyS','KeyD','ArrowUp','ArrowDown','ArrowLeft','ArrowRight','Space','ShiftLeft','ShiftRight'];
+
+/* ---------- 物理世界 ---------- */
+function addBox(world, group, x0,x1,z0,z1,bottom,top, label, isProp){
+  const w = x1-x0, d = z1-z0, h = top-bottom;
+  if(w<=0 || d<=0 || h<=0) return null;
+  const shape = new CANNON.Box(new CANNON.Vec3(w/2, h/2, d/2));
+  const body  = new CANNON.Body({ mass:0, shape, position:new CANNON.Vec3((x0+x1)/2,(bottom+top)/2,(z0+z1)/2) });
+  body.collisionFilterGroup = 1;
+  world.addBody(body);
+  // 可视化线框
+  const line = new THREE.LineSegments(
+    new THREE.EdgesGeometry(new THREE.BoxGeometry(w,h,d)),
+    new THREE.LineBasicMaterial({ color: isProp ? 0x54ff9a : 0xff7a7a, transparent:true, opacity:.65, depthTest:false }));
+  line.position.set((x0+x1)/2,(bottom+top)/2,(z0+z1)/2);
+  line.renderOrder = 999;
+  group.add(line);
+  return body;
 }
-function stepFly(now){
-  if(!flying) return;
-  const k = Math.min(1, (now - flying.t0) / flying.dur);
-  const e = k < .5 ? 4*k*k*k : 1 - Math.pow(-2*k+2, 3)/2;
-  camera.position.lerpVectors(flying.p0, flying.p1, e);
-  controls.target.lerpVectors(flying.t0v, flying.t1v, e);
-  if(k >= 1){
-    controls.autoRotate = flying.spin;
-    flying = null;
+
+function buildPhysics(cfg){
+  const P = cfg.physics;
+  world = new CANNON.World({ gravity:new CANNON.Vec3(0, P.gravity, 0) });
+  world.broadphase = new CANNON.SAPBroadphase(world);
+  world.defaultContactMaterial.friction = 0.02;
+  world.defaultContactMaterial.restitution = 0;
+  world.allowSleep = false;
+
+  debugGroup = new THREE.Group(); debugGroup.visible = false; scene.add(debugGroup);
+  const bx = cfg.bounds.x, bz = cfg.bounds.z;
+  // 地板与天花板用薄盒（走出边界会真的掉下去）
+  addBox(world, debugGroup, bx[0]-.6,bx[1]+.6,bz[0]-.6,bz[1]+.6, cfg.meta.ground-.4, cfg.meta.ground, '地板', false);
+  addBox(world, debugGroup, bx[0]-.6,bx[1]+.6,bz[0]-.6,bz[1]+.6, cfg.meta.ceiling, cfg.meta.ceiling+.3, '天花板', false);
+  cfg.walls.forEach(w => addBox(world, debugGroup, w.x0,w.x1,w.z0,w.z1,w.bottom,w.top,w.label,false));
+  cfg.props.forEach(p => addBox(world, debugGroup, p.x0,p.x1,p.z0,p.z1,p.bottom,p.top,p.label,true));
+
+  player = new CANNON.Body({
+    mass: 6,
+    shape: new CANNON.Sphere(P.radius),
+    position: new CANNON.Vec3(cfg.spawn.x, cfg.spawn.y, cfg.spawn.z),
+    linearDamping: 0.02, angularDamping: 1,
+    fixedRotation: true
+  });
+  player.collisionFilterGroup = 2;   // 射线只打 group 1，避免打到自己
+  player.collisionFilterMask  = 1;
+  player.updateMassProperties();
+  world.addBody(player);
+  document.getElementById('kvBodies').textContent = (world.bodies.length - 1) + ' 个';
+
+  buildAvatar(P);
+  buildPickups(cfg);
+  buildGoals(cfg);
+  buildMiniMap(cfg);
+  physicsReady = true;
+  tryEnable();
+}
+
+/* 第三人称角色 */
+function buildAvatar(P){
+  avatar = new THREE.Group();
+  const bodyMat = new THREE.MeshBasicMaterial({ color:0xdfe6ff });
+  const glowMat = new THREE.MeshBasicMaterial({ color:0x6d84ff });
+  const torso = new THREE.Mesh(new THREE.CapsuleGeometry(.19,.42,4,10), bodyMat);
+  torso.position.y = -.12; avatar.add(torso);
+  const head = new THREE.Mesh(new THREE.SphereGeometry(.16,14,10), new THREE.MeshBasicMaterial({color:0xf3f6ff}));
+  head.position.y = .44; avatar.add(head);
+  const band = new THREE.Mesh(new THREE.TorusGeometry(.165,.022,8,20), glowMat);
+  band.rotation.x = Math.PI/2; band.position.y = .44; avatar.add(band);
+  const pack = new THREE.Mesh(new THREE.BoxGeometry(.26,.28,.12), glowMat);
+  pack.position.set(0,-.08,.2); avatar.add(pack);
+  avatar.visible = false;
+  scene.add(avatar);
+}
+
+/* ---------- 收集物 ---------- */
+function buildPickups(cfg){
+  const coreGeo = new THREE.OctahedronGeometry(.105,0);
+  const ringGeo = new THREE.TorusGeometry(.19,.013,8,28);
+  const haloGeo = new THREE.SphereGeometry(.27,12,10);
+  const stemGeo = new THREE.CylinderGeometry(.006,.03,.9,8,1,true);
+  cfg.pickups.forEach((p,i) => {
+    const g = new THREE.Group();
+    g.position.set(p.x,p.y,p.z);
+    const core = new THREE.Mesh(coreGeo, new THREE.MeshBasicMaterial({color:0xffd45e}));
+    const ring = new THREE.Mesh(ringGeo, new THREE.MeshBasicMaterial({color:0xffe9a8,transparent:true,opacity:.9}));
+    ring.rotation.x = Math.PI/2;
+    const halo= new THREE.Mesh(haloGeo, new THREE.MeshBasicMaterial({color:0xffb648,transparent:true,opacity:.1,depthWrite:false}));
+    const stem= new THREE.Mesh(stemGeo, new THREE.MeshBasicMaterial({color:0xffcf70,transparent:true,opacity:.13,depthWrite:false,side:THREE.DoubleSide}));
+    stem.position.y = .45;
+    g.add(core,ring,halo,stem);
+    scene.add(g);
+    pickupObjs.push({ cfg:p, obj:g, core, ring, taken:false, baseY:p.y, phase:i*1.1 });
+  });
+}
+function buildGoals(cfg){
+  document.getElementById('goals').innerHTML = cfg.pickups.map((p,i)=>
+    '<div class="goal" data-i="'+i+'"><i>✓</i><span>'+p.label+'</span><em>'+p.on+'</em></div>').join('');
+}
+
+/* ---------- 小地图 ---------- */
+let miniCv, miniCtx, miniT = 0;
+function buildMiniMap(cfg){
+  miniCv = document.getElementById('miniCv');
+  miniCtx = miniCv.getContext('2d');
+  drawMini(0);
+}
+function drawMini(now){
+  if(!CFG || !miniCtx) return;
+  const S = miniCv.width;
+  const bx = CFG.bounds.x, bz = CFG.bounds.z;
+  const span = Math.max(bx[1]-bx[0], bz[1]-bz[0]) * 1.08;
+  const cx = (bx[0]+bx[1])/2, cz = (bz[0]+bz[1])/2;
+  const M = (x,z) => [S/2 + (x-cx)/span*S, S/2 + (z-cz)/span*S];
+  const k = S/span;
+  miniCtx.clearRect(0,0,S,S);
+  miniCtx.fillStyle = '#0c1020'; miniCtx.fillRect(0,0,S,S);
+  // 细网格
+  miniCtx.strokeStyle = 'rgba(120,140,200,.08)'; miniCtx.lineWidth = 1;
+  for(let i=0;i<=8;i++){
+    const v = i*S/8;
+    miniCtx.beginPath(); miniCtx.moveTo(v,0); miniCtx.lineTo(v,S); miniCtx.stroke();
+    miniCtx.beginPath(); miniCtx.moveTo(0,v); miniCtx.lineTo(S,v); miniCtx.stroke();
+  }
+  // 家具
+  miniCtx.fillStyle = 'rgba(84,255,154,.16)';
+  CFG.props.forEach(p=>{
+    const [a,b]=M(p.x0,p.z0);
+    miniCtx.fillRect(a,b,(p.x1-p.x0)*k,(p.z1-p.z0)*k);
+  });
+  // 墙
+  miniCtx.fillStyle = 'rgba(255,122,122,.85)';
+  CFG.walls.forEach(w=>{
+    const [a,b]=M(w.x0,w.z0);
+    miniCtx.fillRect(a,b,Math.max(2,(w.x1-w.x0)*k),Math.max(2,(w.z1-w.z0)*k));
+  });
+  // 收集点
+  pickupObjs.forEach(o=>{
+    const [a,b]=M(o.cfg.x,o.cfg.z);
+    miniCtx.beginPath(); miniCtx.arc(a,b,o.taken?3:5.5,0,Math.PI*2);
+    miniCtx.fillStyle = o.taken ? 'rgba(120,140,170,.35)' : '#ffd45e';
+    miniCtx.fill();
+    if(!o.taken){
+      miniCtx.strokeStyle='rgba(255,212,94,'+(0.25+0.2*Math.sin(now/320+o.phase))+')';
+      miniCtx.lineWidth=2; miniCtx.beginPath(); miniCtx.arc(a,b,10,0,Math.PI*2); miniCtx.stroke();
+    }
+  });
+  // 玩家（三角朝向）
+  if(player){
+    const [a,b]=M(player.position.x,player.position.z);
+    miniCtx.save(); miniCtx.translate(a,b); miniCtx.rotate(-yaw);
+    miniCtx.beginPath(); miniCtx.moveTo(0,-9); miniCtx.lineTo(6,6); miniCtx.lineTo(0,3); miniCtx.lineTo(-6,6);
+    miniCtx.closePath(); miniCtx.fillStyle='#6d9dff'; miniCtx.fill();
+    miniCtx.strokeStyle='#fff'; miniCtx.lineWidth=1.4; miniCtx.stroke();
+    miniCtx.restore();
   }
 }
 
-/* ---------- 键盘漫游 ---------- */
-const keys = Object.create(null);
-const MOVE_KEYS = ['KeyW','KeyA','KeyS','KeyD','ArrowUp','ArrowDown','ArrowLeft','ArrowRight'];
-addEventListener('keydown', e => {
-  if(MOVE_KEYS.includes(e.code)){ keys[e.code] = true; if(!isMobile) e.preventDefault(); }
-  if(e.code === 'KeyR'){ flyTo('inside'); }
-  if(e.code === 'KeyF'){ toggleFull(); }
-  if(e.code === 'KeyV'){ setFlip(!flipped); document.getElementById('flip').checked = flipped; }
-});
-addEventListener('keyup', e => { keys[e.code] = false; });
-addEventListener('blur', () => MOVE_KEYS.forEach(k => keys[k] = false));
-
-const fwd = new THREE.Vector3(), right = new THREE.Vector3(), move = new THREE.Vector3();
-function applyMove(dt){
-  const active = MOVE_KEYS.some(k => keys[k]);
-  if(!active) return;
-  camera.getWorldDirection(fwd); fwd.y = 0; fwd.normalize();
-  right.crossVectors(fwd, camera.up).normalize();
-  move.set(0,0,0);
-  if(keys.KeyW || keys.ArrowUp)    move.add(fwd);
-  if(keys.KeyS || keys.ArrowDown)  move.sub(fwd);
-  if(keys.KeyD || keys.ArrowRight) move.add(right);
-  if(keys.KeyA || keys.ArrowLeft)  move.sub(right);
-  if(move.lengthSq() === 0) return;
-  move.normalize().multiplyScalar(dt * 2.2);
-  camera.position.add(move);
-  controls.target.add(move);
-  document.querySelectorAll('.v-btn').forEach(b => b.classList.remove('on'));
+/* ---------- 面板 ---------- */
+function showPanel(kind){
+  if(kind === null){ panel.classList.remove('on'); return; }
+  panel.classList.add('on');
+  if(kind === 'start'){
+    pCard.innerHTML =
+      '<div class="p-k">INTERACTIVE SPACE / 001</div>'+
+      '<h2>走进这个<span>房间</span></h2>'+
+      '<p>这不是浮空观赏：你有体重、会落地、撞得到墙，也能跳上桌子。<br>找齐 6 个散落的信号碎片，就算通关。</p>'+
+      '<div class="p-keys">'+
+        '<div><kbd>W A S D</kbd> 走动</div><div><kbd>鼠标</kbd> 转头</div>'+
+        '<div><kbd>SPACE</kbd> 跳跃</div><div><kbd>SHIFT</kbd> 奔跑</div>'+
+        '<div><kbd>C</kbd> 第三人称</div><div><kbd>B</kbd> 看碰撞体</div>'+
+      '</div>'+
+      '<button class="p-btn" id="pStart"'+(assetsReady?'':' disabled')+'>'+
+        (assetsReady ? '点击进入房间 →' : '正在构建空间…')+'</button>'+
+      '<div class="p-alt">或者 <button id="pView">切到观赏模式</button>（浮空自由相机）</div>';
+    document.getElementById('pStart').onclick = startGame;
+    document.getElementById('pView').onclick = () => setMode('view');
+  }else if(kind === 'pause'){
+    pCard.innerHTML =
+      '<div class="p-k">PAUSED</div><h2>已暂停</h2>'+
+      '<p>物理世界停住了。随时回来继续探索。</p>'+
+      '<div class="p-score"><div><b>'+got+' / 6</b><span>已收集</span></div>'+
+      '<div><b>'+fmtTime(elapsed)+'</b><span>用时</span></div></div>'+
+      '<button class="p-btn" id="pResume">继续游戏 →</button>'+
+      '<div class="p-alt"><button id="pView2">切到观赏模式</button> · <button id="pRestart">重新开始</button></div>';
+    document.getElementById('pResume').onclick = startGame;
+    document.getElementById('pView2').onclick = () => setMode('view');
+    document.getElementById('pRestart').onclick = () => { resetGame(); startGame(); };
+  }else if(kind === 'win'){
+    pCard.innerHTML =
+      '<div class="p-k">SPACE EXPLORED</div><h2>房间已<span>走透</span></h2>'+
+      '<p>6 个信号碎片全部回收。你刚才走过的每一寸地面，<br>都是从 200 万个高斯点里量出来的。</p>'+
+      '<div class="p-score"><div><b>'+fmtTime(elapsed)+'</b><span>用时</span></div>'+
+      '<div><b>6 / 6</b><span>收集</span></div></div>'+
+      '<button class="p-btn" id="pAgain">再玩一次 →</button>'+
+      '<div class="p-alt"><button id="pView3">切到观赏模式</button></div>';
+    document.getElementById('pAgain').onclick = () => { resetGame(); startGame(); };
+    document.getElementById('pView3').onclick = () => setMode('view');
+  }
+}
+function fmtTime(ms){
+  const s = ms/1000;
+  return String(Math.floor(s/60)).padStart(2,'0')+':'+String(Math.floor(s%60)).padStart(2,'0')+'.'+Math.floor(s*10)%10;
+}
+function tryEnable(){
+  if(assetsReady && physicsReady && !running && !won && mode==='game') showPanel('start');
 }
 
-/* ---------- 控件 ---------- */
-document.getElementById('views').addEventListener('click', e => {
+/* ---------- 游戏流程 ---------- */
+function resetGame(){
+  got = 0; won = false; finished = false; elapsed = 0; t0 = 0;
+  yaw = CFG.spawn.yaw; pitch = 0; thirdPerson = false;
+  avatar.visible = false;
+  player.position.set(CFG.spawn.x, CFG.spawn.y, CFG.spawn.z);
+  player.velocity.set(0,0,0); player.angularVelocity.set(0,0,0);
+  player.wakeUp();
+  pickupObjs.forEach(o=>{ o.taken=false; o.obj.visible=true; });
+  document.querySelectorAll('.goal').forEach(g=>g.classList.remove('got'));
+  document.getElementById('gCount').textContent = '0';
+  document.getElementById('gBar').style.width = '0%';
+  document.getElementById('gTime').textContent = '00:00.0';
+  document.getElementById('goalProgress').textContent = '0 / 6';
+  document.getElementById('miniState').textContent = 'PHYSICS ON';
+}
+function startGame(){
+  if(!assetsReady || !physicsReady) return;
+  if(won){ resetGame(); }
+  running = true; t0 = performance.now() - elapsed;
+  showPanel(null);
+  if(!isMobile && renderer.domElement.requestPointerLock){
+    try{ renderer.domElement.requestPointerLock(); }catch(_){}
+  }
+}
+function pauseGame(){
+  running = false;
+  if(document.pointerLockElement) document.exitPointerLock();
+  if(mode==='game' && !won) showPanel('pause');
+}
+function takePickup(o){
+  o.taken = true; o.obj.visible = false; got++;
+  document.getElementById('gCount').textContent = got;
+  document.getElementById('gBar').style.width = (got/pickupObjs.length*100)+'%';
+  document.querySelector('.goal[data-i="'+pickupObjs.indexOf(o)+'"]').classList.add('got');
+  document.getElementById('goalProgress').textContent = got+' / '+pickupObjs.length;
+  const t = document.getElementById('toast');
+  t.textContent = '已回收 · '+o.cfg.label+'  '+got+' / '+pickupObjs.length;
+  t.classList.add('on'); clearTimeout(toastTimer);
+  toastTimer = setTimeout(()=>t.classList.remove('on'), 1800);
+  if(got === pickupObjs.length){
+    won = true; finished = true; running = false; elapsed = performance.now()-t0;
+    liveTxt.textContent = '探索完成 · '+fmtTime(elapsed);
+    document.getElementById('miniState').textContent = 'CLEARED';
+    if(document.pointerLockElement) document.exitPointerLock();
+    setTimeout(()=>showPanel('win'), 420);
+  }
+}
+
+/* ---------- 模式 ---------- */
+let flying = null;
+function flyTo(name){
+  const v = VIEWS[name]; if(!v) return;
+  if(mode !== 'view') setMode('view', true);
+  flying = { t0:performance.now(), dur:850,
+    p0:camera.position.clone(), p1:new THREE.Vector3(...v.p),
+    a0:controls.target.clone(), a1:new THREE.Vector3(...v.t), spin:!!v.spin };
+  controls.autoRotate = false;
+  document.getElementById('spin').checked = !!v.spin;
+  document.querySelectorAll('.v-btn').forEach(b=>b.classList.toggle('on', b.dataset.v===name));
+}
+function stepFly(now){
+  if(!flying) return;
+  const k = Math.min(1,(now-flying.t0)/flying.dur);
+  const e = k<.5 ? 4*k*k*k : 1-Math.pow(-2*k+2,3)/2;
+  camera.position.lerpVectors(flying.p0,flying.p1,e);
+  controls.target.lerpVectors(flying.a0,flying.a1,e);
+  if(k>=1){ controls.autoRotate = flying.spin; flying = null; }
+}
+function setMode(m, silent){
+  mode = m;
+  document.querySelectorAll('#modeSw button').forEach(b=>b.classList.toggle('on',b.dataset.m===m));
+  gameUi.classList.toggle('on', m==='game');
+  viewBar.style.display = m==='view' ? 'flex' : 'none';
+  document.getElementById('touch').classList.toggle('on', m==='game' && isMobile);
+  document.getElementById('cross').classList.toggle('hide', m!=='game' || thirdPerson);
+  controls.enabled = (m==='view');
+  camera.fov = m==='game' ? (CFG ? CFG.fov : 72) : 60;
+  camera.updateProjectionMatrix();
+  if(m==='view'){
+    running = false;
+    if(document.pointerLockElement) document.exitPointerLock();
+    avatar.visible = false;
+    controls.target.set(0,0,0);
+    camera.position.set(...VIEWS.orbit.p);
+    controls.autoRotate = true;
+    document.getElementById('spin').checked = true;
+    document.querySelectorAll('.v-btn').forEach(b=>b.classList.toggle('on',b.dataset.v==='orbit'));
+    controls.update();
+    showPanel(null);
+    liveTxt.textContent = 'WebGL2 · 观赏';
+  }else{
+    controls.autoRotate = false;
+    document.getElementById('spin').checked = false;
+    liveTxt.textContent = won ? '探索完成' : 'WebGL2 · 刚体物理';
+    if(!silent){
+      if(won) showPanel('win'); else showPanel(finished ? 'pause' : 'start');
+    }
+  }
+}
+document.getElementById('modeSw').addEventListener('click', e=>{
+  const b = e.target.closest('button'); if(b) setMode(b.dataset.m);
+});
+
+/* ---------- 视角过渡 / 原有观赏控件 ---------- */
+document.getElementById('views').addEventListener('click', e=>{
   const b = e.target.closest('.v-btn'); if(b) flyTo(b.dataset.v);
 });
-document.getElementById('btnReset').addEventListener('click', () => flyTo('inside'));
-document.getElementById('spin').addEventListener('change', e => {
-  controls.autoRotate = e.target.checked;
-  if(flying) flying.spin = e.target.checked;
+document.getElementById('btnReset').addEventListener('click', ()=>{
+  if(mode==='game'){ if(physicsReady){ resetGame(); } }
+  else flyTo('inside');
 });
-document.getElementById('grid').addEventListener('change', e => { grid.visible = e.target.checked; });
-document.getElementById('speed').addEventListener('input', e => {
-  controls.autoRotateSpeed = parseFloat(e.target.value);
+document.getElementById('spin').addEventListener('change', e=>{
+  controls.autoRotate = e.target.checked; if(flying) flying.spin = e.target.checked;
 });
-/* 默认就是数据本身的朝向；这个开关只用于极少数导出方向相反的扫描件 */
+document.getElementById('grid').addEventListener('change', e=>{ grid.visible = e.target.checked; });
+document.getElementById('speed').addEventListener('input', e=>{ controls.autoRotateSpeed = parseFloat(e.target.value); });
 function setFlip(on){
   flipped = on;
   if(!splatMesh) return;
   splatMesh.quaternion.copy(on ? FLIP_X : new THREE.Quaternion());
-  splatMesh.position.copy(on
-    ? BBOX_CENTER.clone().applyQuaternion(FLIP_X).negate()
-    : meshOffset);
+  splatMesh.position.copy(on ? BBOX_CENTER.clone().applyQuaternion(FLIP_X).negate() : meshOffset);
   splatMesh.updateMatrixWorld(true);
-  grid.position.y = on ? 1.65 : -1.65;
+  grid.position.y = on ? 1.62 : -1.62;
 }
-document.getElementById('flip').addEventListener('change', e => setFlip(e.target.checked));
+document.getElementById('flip').addEventListener('change', e=>setFlip(e.target.checked));
 function toggleFull(){
   if(document.fullscreenElement) document.exitFullscreen();
   else stage.requestFullscreen && stage.requestFullscreen();
 }
 document.getElementById('btnFull').addEventListener('click', toggleFull);
-stage.addEventListener('dblclick', toggleFull);
+stage.addEventListener('dblclick', ()=>{ if(mode==='view') toggleFull(); });
+
+/* ---------- 键盘 ---------- */
+addEventListener('keydown', e=>{
+  if(MOVE_KEYS.includes(e.code)){ keys[e.code]=true; if(e.code==='Space') e.preventDefault(); }
+  if(e.code==='KeyF'){ toggleFull(); }
+  if(e.code==='KeyR'){
+    if(mode==='game' && physicsReady) resetGame(); else flyTo('inside');
+  }
+  if(e.code==='KeyV'){ setFlip(!flipped); document.getElementById('flip').checked=flipped; }
+  if(e.code==='KeyB' && debugGroup){
+    const on = !debugGroup.visible;
+    debugGroup.visible = on;
+    liveTxt.textContent = on ? '碰撞体可视化' : 'WebGL2 · 刚体物理';
+  }
+  if(e.code==='KeyC' && mode==='game' && physicsReady){
+    thirdPerson = !thirdPerson;
+    avatar.visible = thirdPerson;
+    document.getElementById('cross').classList.toggle('hide', thirdPerson);
+  }
+  if(e.code==='Tab'){ e.preventDefault(); setMode(mode==='game'?'view':'game'); }
+});
+addEventListener('keyup', e=>{ keys[e.code]=false; if(e.code==='Space') jumpLatch=false; });
+addEventListener('blur', ()=>MOVE_KEYS.forEach(k=>keys[k]=false));
+
+/* ---------- 鼠标 / Pointer Lock ---------- */
+let dragging = false, lastMouse = null;
+stage.addEventListener('pointerdown', e=>{
+  if(mode!=='game' || !running || isMobile) return;
+  if(e.target.closest('button') || e.target.closest('.panel')) return;
+  if(document.pointerLockElement !== renderer.domElement){
+    dragging = true; lastMouse = { x:e.clientX, y:e.clientY };
+  }
+});
+addEventListener('pointerup', ()=>{ dragging=false; lastMouse=null; });
+document.addEventListener('mousemove', e=>{
+  if(mode!=='game' || !running) return;
+  const locked = document.pointerLockElement === renderer.domElement;
+  let dx=0, dy=0, sens=0.0022;
+  if(locked){ dx=e.movementX; dy=e.movementY; }
+  else if(!isMobile && dragging && lastMouse){
+    dx=e.clientX-lastMouse.x; dy=e.clientY-lastMouse.y; sens=0.0035;
+    lastMouse={x:e.clientX,y:e.clientY};
+  } else return;
+  yaw   -= dx*sens;
+  pitch -= dy*sens;
+  pitch  = Math.max(-1.45, Math.min(1.45, pitch));
+});
+stage.addEventListener('click', e=>{
+  if(mode!=='game' || !running || isMobile) return;
+  if(e.target.closest('button') || e.target.closest('.panel')) return;
+  if(document.pointerLockElement !== renderer.domElement && renderer.domElement.requestPointerLock){
+    try{ renderer.domElement.requestPointerLock(); }catch(_){}
+  }
+});
+document.addEventListener('pointerlockchange', ()=>{
+  const locked = document.pointerLockElement === renderer.domElement;
+  stage.classList.toggle('playing', locked && mode==='game');
+  if(!locked && mode==='game' && running && !won) pauseGame();
+});
+
+/* ---------- 移动端触控 ---------- */
+let stickId = null, lookId = null, lastLook = null, stickVec = {x:0,y:0};
+const stick = document.getElementById('stick'), knob = document.getElementById('stickKnob');
+stick.addEventListener('pointerdown', e=>{
+  stickId = e.pointerId; stick.setPointerCapture(e.pointerId); e.preventDefault();
+});
+stick.addEventListener('pointermove', e=>{
+  if(e.pointerId !== stickId) return;
+  const r = stick.getBoundingClientRect();
+  let dx = e.clientX-(r.left+r.width/2), dy = e.clientY-(r.top+r.height/2);
+  const lim = r.width/2-22, len = Math.hypot(dx,dy);
+  if(len>lim){ dx*=lim/len; dy*=lim/len; }
+  knob.style.transform = 'translate(calc(-50% + '+dx+'px), calc(-50% + '+dy+'px))';
+  stickVec.x = dx/lim; stickVec.y = dy/lim;
+});
+function endStick(e){
+  if(e.pointerId!==stickId) return;
+  stickId=null; stickVec={x:0,y:0}; knob.style.transform='translate(-50%,-50%)';
+}
+stick.addEventListener('pointerup', endStick); stick.addEventListener('pointercancel', endStick);
+viewport.addEventListener('pointerdown', e=>{
+  if(!isMobile || mode!=='game' || !running) return;
+  lookId=e.pointerId; lastLook={x:e.clientX,y:e.clientY};
+});
+viewport.addEventListener('pointermove', e=>{
+  if(e.pointerId!==lookId || !lastLook) return;
+  yaw   -= (e.clientX-lastLook.x)*0.005;
+  pitch -= (e.clientY-lastLook.y)*0.005;
+  pitch  = Math.max(-1.45,Math.min(1.45,pitch));
+  lastLook={x:e.clientX,y:e.clientY};
+});
+function endLook(e){ if(e.pointerId===lookId){ lookId=null; lastLook=null; } }
+viewport.addEventListener('pointerup', endLook); viewport.addEventListener('pointercancel', endLook);
+document.getElementById('tJump').addEventListener('pointerdown', e=>{
+  e.preventDefault(); keys.Space=true; jumpLatch=false;
+});
+document.getElementById('tJump').addEventListener('pointerup', ()=>{ keys.Space=false; jumpLatch=false; });
+
+/* ---------- 物理步进 ---------- */
+const rayResult = new CANNON.RaycastResult();
+const vFrom = new CANNON.Vec3(), vTo = new CANNON.Vec3();
+const rayOpt = { collisionFilterMask:1, skipBackfaces:true };
+function stepPhysics(dt){
+  if(!world || !player) return;
+  const P = CFG.physics;
+  // 接地检测：从球心向下打一条短射线，只命中静态碰撞体
+  const p = player.position;
+  vFrom.set(p.x,p.y,p.z); vTo.set(p.x,p.y-(P.radius+0.16),p.z);
+  rayResult.reset();
+  world.raycastClosest(vFrom,vTo,rayOpt,rayResult);
+  grounded = rayResult.hasHit && player.velocity.y < 1.2;
+
+  let fwdAxis = 0, rightAxis = 0;
+  if(keys.KeyW||keys.ArrowUp)    fwdAxis += 1;
+  if(keys.KeyS||keys.ArrowDown)  fwdAxis -= 1;
+  if(keys.KeyD||keys.ArrowRight) rightAxis += 1;
+  if(keys.KeyA||keys.ArrowLeft)  rightAxis -= 1;
+  if(isMobile && (stickVec.x||stickVec.y)){ rightAxis += stickVec.x; fwdAxis -= stickVec.y; }
+
+  const len = Math.hypot(fwdAxis,rightAxis);
+  let speed = (keys.ShiftLeft||keys.ShiftRight) ? P.run : P.walk;
+  if(!grounded) speed *= 0.72;
+  if(len > 0){
+    fwdAxis/=Math.max(1,len); rightAxis/=Math.max(1,len);
+  }
+  // yaw=0 → 前方 -Z，右手 +X
+  const fx=-Math.sin(yaw), fz=-Math.cos(yaw);
+  const rx= Math.cos(yaw), rz=-Math.sin(yaw);
+  const targetVX = (fx*fwdAxis + rx*rightAxis)*speed;
+  const targetVZ = (fz*fwdAxis + rz*rightAxis)*speed;
+  // 松手立刻停，避免冰面滑行；空中保留一点惯性
+  const blend = grounded ? 1 : 0.16;
+  player.velocity.x += (targetVX-player.velocity.x)*blend;
+  player.velocity.z += (targetVZ-player.velocity.z)*blend;
+
+  if(keys.Space && grounded && !jumpLatch){
+    player.velocity.y = P.jump;
+    jumpLatch = true; grounded = false;
+  }
+  world.step(1/60, dt, 3);
+
+  // 掉出世界 → 重生
+  if(player.position.y < CFG.meta.ground-4){
+    player.position.set(CFG.spawn.x,CFG.spawn.y,CFG.spawn.z);
+    player.velocity.set(0,0,0);
+  }
+  // 相机跟随
+  const q = player.position;
+  if(thirdPerson){
+    avatar.visible = true;
+    avatar.position.set(q.x, q.y+0.20, q.z);
+    avatar.rotation.y = yaw;
+    const head = new CANNON.Vec3(q.x, q.y+0.64, q.z);
+    const bx=Math.sin(yaw), bz=Math.cos(yaw);       // 背后方向
+    const desired = new CANNON.Vec3(q.x+bx*2.5, q.y+2.02, q.z+bz*2.5);
+    rayResult.reset();
+    world.raycastClosest(head,desired,{collisionFilterMask:1,skipBackfaces:true},rayResult);
+    const k = rayResult.hasHit ? Math.max(.22, rayResult.distance/2.86-.11) : 1;
+    camera.position.set(q.x+bx*2.5*k, q.y+0.64+1.38*k, q.z+bz*2.5*k);
+    camera.lookAt(q.x, q.y+0.50, q.z);
+  }else{
+    camera.position.set(q.x, q.y+P.eye, q.z);
+    camera.rotation.set(pitch, yaw, 0, 'YXZ');
+  }
+}
+
+/* ---------- 游戏每帧逻辑 ---------- */
+let hudT = 0, nearTarget = null;
+function stepGame(now, dt){
+  if(!running || mode!=='game') return;
+  elapsed = now - t0;
+  document.getElementById('gTime').textContent = fmtTime(elapsed);
+  // 收集判定：需大致同高，逼玩家真的跳上家具
+  let best = null, bestD = 1e9;
+  const px=player.position.x, py=player.position.y, pz=player.position.z;
+  pickupObjs.forEach(o=>{
+    o.core.rotation.y += dt*1.8;
+    o.core.rotation.x += dt*.7;
+    o.ring.rotation.z += dt*.9;
+    const t = now/1000 + o.phase;
+    o.obj.position.y = o.baseY + Math.sin(t*1.7)*0.055;
+    if(o.taken) return;
+    const d = Math.hypot(px-o.cfg.x, py-o.cfg.y, pz-o.cfg.z);
+    if(d < bestD){ bestD=d; best=o; }
+    if(d < 0.72 && Math.abs(py-o.cfg.y) < 0.45) takePickup(o);
+  });
+  nearTarget = best;
+  if(now-hudT > 120){
+    hudT = now;
+    document.getElementById('gTarget').textContent = best
+      ? best.cfg.label+' · '+bestD.toFixed(1)+'m' : '全部回收';
+    document.getElementById('cross').classList.toggle('near',
+      !!best && bestD < 1.25 && Math.abs(py-best.cfg.y) < 0.6);
+  }
+  if(now-miniT > 70){ miniT=now; drawMini(now); }
+}
 
 /* ---------- 尺寸 ---------- */
 function resize(){
-  const w = viewport.clientWidth, h = viewport.clientHeight;
-  if(!w || !h) return;
-  renderer.setSize(w, h, false);
-  camera.aspect = w / h;
-  camera.updateProjectionMatrix();
+  const w=viewport.clientWidth, h=viewport.clientHeight;
+  if(!w||!h) return;
+  renderer.setSize(w,h,false);
+  camera.aspect=w/h; camera.updateProjectionMatrix();
 }
 new ResizeObserver(resize).observe(viewport);
 addEventListener('resize', resize);
 
-/* ---------- 加载 SPZ（自己读取以便精确进度） ---------- */
-async function loadScene(){
-  setLoad(0.02, '正在连接资产…');
-  let lastP = 0.02;
-  const mesh = new SplatMesh({
-    url: './assets/scan.spz',
-    onProgress: (e) => {
-      if(e && e.lengthComputable && e.total){
-        const p = Math.min(0.96, e.loaded / e.total * 0.96);
-        if(p > lastP + 0.005){
-          lastP = p;
-          setLoad(p, '正在下载点云 · ' + (e.loaded/1048576).toFixed(1) + ' / ' + (e.total/1048576).toFixed(1) + ' MB');
+/* ---------- 资产加载 ---------- */
+async function loadCollision(){
+  const r = await fetch('./assets/collision.json');
+  if(!r.ok) throw new Error('collision.json HTTP '+r.status);
+  return r.json();
+}
+function loadScene(){
+  return new Promise((resolve, reject)=>{
+    let done = false;
+    const mesh = new SplatMesh({
+      url:'./assets/scan.spz',
+      onProgress:(e)=>{
+        if(e && e.lengthComputable && e.total){
+          const p = Math.min(.96, e.loaded/e.total*.96);
+          setLoad(p, '正在下载点云 · '+(e.loaded/1048576).toFixed(1)+' / '+(e.total/1048576).toFixed(1)+' MB');
         }
+      },
+      onLoad:(m)=>{
+        const n=(m.packedSplats && m.packedSplats.numSplats)||2000000;
+        document.getElementById('rdN').textContent = n.toLocaleString('en-US');
+        setLoad(1,'就绪');
+        liveTxt.textContent='WebGL2 · 刚体物理';
+        loadEl.classList.add('done');
+        if(!done){ done=true; resolve(); }
       }
-    },
-    onLoad: (m) => {
-      const n = (m.packedSplats && m.packedSplats.numSplats) || 2000000;
-      document.getElementById('rdN').textContent = n.toLocaleString('en-US');
-      setLoad(1, '就绪');
-      liveTxt.textContent = 'WebGL2 · 实时';
-      loadEl.classList.add('done');
+    });
+    splatMesh = mesh;
+    mesh.position.copy(meshOffset);
+    scene.add(mesh);
+    if(flipped) setFlip(true);
+    if(mesh.initialized && mesh.initialized.catch){
+      mesh.initialized.catch(e=>{
+        if(!done){ done=true; reject(new Error('点云解码失败：'+(e&&e.message?e.message:'未知错误'))); }
+      });
     }
   });
-  splatMesh = mesh;
-  mesh.position.copy(meshOffset);   /* 不旋转：SPZ v2 已是 Three.js Y-up */
-  scene.add(mesh);
-  if(flipped) setFlip(true);
-  if(mesh.initialized && mesh.initialized.catch){
-    mesh.initialized.catch(e => fail('点云解码失败：' + (e && e.message ? e.message : '未知错误') + '。请刷新重试。'));
+}
+
+async function boot(){
+  setLoad(.02,'正在构建物理世界…');
+  try{
+    CFG = await loadCollision();
+    camera.fov = CFG.fov || 72; camera.updateProjectionMatrix();
+    yaw = CFG.spawn.yaw;
+    buildPhysics(CFG);
+    setLoad(.06,'物理刚体已就绪 · 正在下载点云…');
+  }catch(e){
+    fail('碰撞数据加载失败：'+e.message); return;
+  }
+  try{
+    await loadScene();
+    assetsReady = true;
+    tryEnable();
+  }catch(e){
+    fail('资产加载失败：'+e.message+'。请刷新重试，或确认浏览器允许加载较大的 3D 文件。');
   }
 }
-loadScene().catch(e => fail('资产加载失败：' + e.message + '。请刷新重试，或确认浏览器允许加载较大的 3D 文件。'));
+boot();
 
 /* ---------- 渲染循环 ---------- */
 let last = performance.now(), frames = 0, fpsT = last;
 const rdCam = document.getElementById('rdCam'), rdFps = document.getElementById('rdFps');
-renderer.setAnimationLoop(now => {
-  const dt = Math.min(0.1, (now - last) / 1000); last = now;
-  stepFly(now);
-  applyMove(dt);
-  controls.update();
-  renderer.render(scene, camera);
+renderer.setAnimationLoop(now=>{
+  const dt = Math.min(.05,(now-last)/1000); last = now;
+  if(mode==='view'){
+    stepFly(now);
+    controls.update();
+  }else{
+    if(running) stepPhysics(dt);
+    else if(world && player && !thirdPerson){
+      camera.position.set(player.position.x, player.position.y+CFG.physics.eye, player.position.z);
+      camera.rotation.set(pitch,yaw,0,'YXZ');
+    }
+    stepGame(now,dt);
+    pickupObjs.forEach(o=>{
+      if(!running && !o.taken) o.core.rotation.y += dt*.5;
+    });
+  }
+  renderer.render(scene,camera);
   frames++;
-  if(now - fpsT > 600){
-    rdFps.textContent = Math.round(frames * 1000 / (now - fpsT));
-    frames = 0; fpsT = now;
-    rdCam.textContent = [camera.position.x, camera.position.y, camera.position.z]
-      .map(v => v.toFixed(2)).join(', ');
+  if(now-fpsT > 600){
+    rdFps.textContent = Math.round(frames*1000/(now-fpsT));
+    frames=0; fpsT=now;
+    rdCam.textContent = [camera.position.x,camera.position.y,camera.position.z].map(v=>v.toFixed(2)).join(', ');
   }
 });
+
+/* 初始 UI 状态 */
+viewBar.style.display = 'none';
+gameUi.classList.add('on');
+showPanel('start');
 </script>
 </body>
 </html>
