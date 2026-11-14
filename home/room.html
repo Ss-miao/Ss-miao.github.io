@@ -170,14 +170,25 @@ if(!probe.getContext('webgl2')){ fail('当前浏览器不支持 WebGL2，无法�
 let renderer;
 try{ renderer=new THREE.WebGLRenderer({antialias:false,alpha:false,powerPreference:'high-performance'}); }
 catch(e){ fail('WebGL 初始化失败：'+e.message); throw e; }
-renderer.setPixelRatio(Math.min(window.devicePixelRatio||1, isMobile?1:1.55));
+/* 清晰度：手机屏大多是 3 倍像素密度，之前锁成 1 倍等于把画面放大三倍 —— 又糊又慢。
+   现在按屏幕密度给到 2 倍，同时用总像素预算兜住（别让 2K 屏手机直接爆帧）。 */
+const DPR_CAP = isMobile ? 2 : 1.6;
+function fitDpr(){
+  const w=viewport.clientWidth||390, h=viewport.clientHeight||700;
+  const budget = isMobile ? 2.3e6 : 4.4e6;          // 渲染总像素上限
+  const capByBudget = Math.sqrt(budget/(w*h));
+  return Math.max(1, Math.min(window.devicePixelRatio||1, DPR_CAP, capByBudget));
+}
+let dpr = fitDpr();
+renderer.setPixelRatio(dpr);
 renderer.setClearColor(0x0a0c14,1);
 renderer.setSize(viewport.clientWidth, viewport.clientHeight, false);
 viewport.appendChild(renderer.domElement);
 
 const scene=new THREE.Scene();
 const camera=new THREE.PerspectiveCamera(72, viewport.clientWidth/viewport.clientHeight, 0.06, 200);
-const spark=new SparkRenderer({renderer, maxPixelRadius:120});
+/* maxPixelRadius 太大时，近处一颗点会被拉成半屏大的白团（天花板上那团光就是这么来的） */
+const spark=new SparkRenderer({renderer, maxPixelRadius: isMobile?72:96});
 scene.add(spark);
 
 let splatMesh=null, edit=null, pushSdfs={}, slideSdfs={};
@@ -276,9 +287,16 @@ function stepPlayer(dt){
   if(keys.KeyS||keys.ArrowDown) f-=1;
   if(keys.KeyD||keys.ArrowRight) r+=1;
   if(keys.KeyA||keys.ArrowLeft) r-=1;
+  /* 摇杆：屏幕上往上推 = 往前走（knob 的 y 向上是负值） */
+  let mag=1;
+  if(stickVec.x||stickVec.y){
+    f += -stickVec.y; r += stickVec.x;
+    const m=Math.min(1, Math.hypot(stickVec.x, stickVec.y));
+    mag = 0.35 + 0.65*m;      // 轻推慢走，推到底全速
+  }
   const len=Math.hypot(f,r)||1;
   f/=len; r/=len;
-  const speed=(keys.ShiftLeft||keys.ShiftRight)?2.6:1.55;
+  const speed=((keys.ShiftLeft||keys.ShiftRight)?2.6:1.55)*mag;
   const fx=-Math.sin(yaw), fz=-Math.cos(yaw);
   const rx=Math.cos(yaw), rz=-Math.sin(yaw);
   const tvx=(fx*f+rx*r)*speed, tvz=(fz*f+rz*r)*speed;
@@ -585,8 +603,8 @@ document.addEventListener('pointerlockchange', ()=>{
 /* 触控 */
 let stickId=null,lookId=null,lastLook=null,stickVec={x:0,y:0};
 const stick=document.getElementById('stick'),knob=document.getElementById('stickKnob');
-stick.addEventListener('pointerdown',e=>{ stickId=e.pointerId; stick.setPointerCapture(e.pointerId); e.preventDefault(); });
-stick.addEventListener('pointermove',e=>{
+
+function stickMove(e){
   if(e.pointerId!==stickId) return;
   const r=stick.getBoundingClientRect();
   let dx=e.clientX-(r.left+r.width/2), dy=e.clientY-(r.top+r.height/2);
@@ -594,18 +612,65 @@ stick.addEventListener('pointermove',e=>{
   if(len>lim){ dx*=lim/len; dy*=lim/len; }
   knob.style.transform=`translate(calc(-50% + ${dx}px), calc(-50% + ${dy}px))`;
   stickVec.x=dx/lim; stickVec.y=dy/lim;
+  e.preventDefault();
+}
+stick.addEventListener('pointerdown',e=>{
+  stickId=e.pointerId;
+  try{ stick.setPointerCapture(e.pointerId); }catch(_){}
+  stickMove(e);
+  e.preventDefault(); e.stopPropagation();
 });
-function endStick(e){ if(e.pointerId!==stickId) return; stickId=null; stickVec={x:0,y:0}; knob.style.transform='translate(-50%,-50%)'; }
-stick.addEventListener('pointerup',endStick); stick.addEventListener('pointercancel',endStick);
-viewport.addEventListener('pointerdown',e=>{ if(!isMobile||!running) return; lookId=e.pointerId; lastLook={x:e.clientX,y:e.clientY}; });
+stick.addEventListener('pointermove',stickMove);
+function endStick(e){
+  if(e.pointerId!==stickId) return;
+  stickId=null; stickVec.x=0; stickVec.y=0;
+  knob.style.transform='translate(-50%,-50%)';
+}
+stick.addEventListener('pointerup',endStick);
+stick.addEventListener('pointercancel',endStick);
+stick.addEventListener('lostpointercapture',endStick);
+
+/* 转头：整块画面都能拖，第二根手指不会打断摇杆 */
+viewport.addEventListener('pointerdown',e=>{
+  if(!isMobile||!running) return;
+  if(lookId!==null) return;                 // 已经有指头在转了
+  lookId=e.pointerId; lastLook={x:e.clientX,y:e.clientY};
+  try{ viewport.setPointerCapture(e.pointerId); }catch(_){}
+});
 viewport.addEventListener('pointermove',e=>{
   if(e.pointerId!==lookId||!lastLook) return;
-  yaw-=(e.clientX-lastLook.x)*0.005; pitch-=(e.clientY-lastLook.y)*0.005;
+  yaw-=(e.clientX-lastLook.x)*0.0055; pitch-=(e.clientY-lastLook.y)*0.0055;
   pitch=Math.max(-1.35,Math.min(1.15,pitch));
   lastLook={x:e.clientX,y:e.clientY};
-});
+  e.preventDefault();
+},{passive:false});
 function endLook(e){ if(e.pointerId===lookId){ lookId=null; lastLook=null; } }
-viewport.addEventListener('pointerup',endLook); viewport.addEventListener('pointercancel',endLook);
+viewport.addEventListener('pointerup',endLook);
+viewport.addEventListener('pointercancel',endLook);
+viewport.addEventListener('lostpointercapture',endLook);
+/* 兜底：任何地方松手都停住摇杆，避免「手指抬起来了人还在走」 */
+addEventListener('touchend',()=>{ if(stickId!==null){ stickId=null; stickVec.x=0; stickVec.y=0; knob.style.transform='translate(-50%,-50%)'; } },{passive:true});
+
+/* 极老的安卓 WebView 没有 Pointer Event，退回 touch 事件，别让摇杆变摆设 */
+if(!window.PointerEvent){
+  const fake=(t)=>({pointerId:1, clientX:t.clientX, clientY:t.clientY, preventDefault(){}});
+  stick.addEventListener('touchstart',e=>{ stickId=1; stickMove(fake(e.changedTouches[0])); e.preventDefault(); },{passive:false});
+  stick.addEventListener('touchmove',e=>{ stickMove(fake(e.changedTouches[0])); e.preventDefault(); },{passive:false});
+  stick.addEventListener('touchend',()=>{ stickId=null; stickVec.x=0; stickVec.y=0; knob.style.transform='translate(-50%,-50%)'; });
+  viewport.addEventListener('touchstart',e=>{
+    if(!running) return;
+    const t=e.changedTouches[0]; lookId='t'; lastLook={x:t.clientX,y:t.clientY};
+  },{passive:true});
+  viewport.addEventListener('touchmove',e=>{
+    if(lookId!=='t'||!lastLook) return;
+    const t=e.changedTouches[0];
+    yaw-=(t.clientX-lastLook.x)*0.0055; pitch-=(t.clientY-lastLook.y)*0.0055;
+    pitch=Math.max(-1.35,Math.min(1.15,pitch));
+    lastLook={x:t.clientX,y:t.clientY};
+    e.preventDefault();
+  },{passive:false});
+  viewport.addEventListener('touchend',()=>{ lookId=null; lastLook=null; },{passive:true});
+}
 document.getElementById('tE').addEventListener('pointerdown',e=>{ e.preventDefault(); doInteract(); });
 document.getElementById('tJump').addEventListener('pointerdown',e=>{ e.preventDefault(); toggleLight(); });
 
@@ -627,11 +692,27 @@ stage.addEventListener('dblclick',()=>{ if(!document.pointerLockElement) toggleF
 function resize(){
   const w=viewport.clientWidth,h=viewport.clientHeight;
   if(!w||!h) return;
+  const cap=fitDpr();
+  if(dpr>cap+0.01){ dpr=cap; renderer.setPixelRatio(dpr); }   // 转屏 / 全屏后重新收进预算
   renderer.setSize(w,h,false);
   camera.aspect=w/h; camera.updateProjectionMatrix();
 }
 new ResizeObserver(resize).observe(viewport);
 addEventListener('resize',resize);
+addEventListener('orientationchange',()=>setTimeout(resize,180));
+
+/* 帧率兜底：连续掉帧就降一档分辨率，只降不升，避免来回抖 */
+let lowStreak=0;
+function autoQuality(fps){
+  if(fps<38 && dpr>1.02){
+    lowStreak++;
+    if(lowStreak>=3){
+      dpr=Math.max(1, +(dpr*0.78).toFixed(2));
+      renderer.setPixelRatio(dpr); renderer.setSize(viewport.clientWidth,viewport.clientHeight,false);
+      lowStreak=0;
+    }
+  }else lowStreak=0;
+}
 
 /* ============ 载入点云 ============ */
 let shownPts=0;
@@ -759,9 +840,11 @@ renderer.setAnimationLoop(now=>{
   renderer.render(scene,camera);
   frames++;
   if(now-fpsT>700){
-    rdFps.textContent=Math.round(frames*1000/(now-fpsT));
+    const fps=frames*1000/(now-fpsT);
+    rdFps.textContent=Math.round(fps);
     frames=0; fpsT=now;
     rdCam.textContent=[camera.position.x,camera.position.y,camera.position.z].map(v=>v.toFixed(2)).join(', ');
+    if(running) autoQuality(fps);
   }
 });
 
