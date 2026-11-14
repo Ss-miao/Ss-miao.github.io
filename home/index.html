@@ -174,7 +174,7 @@ kbd{font-family:var(--mono);font-size:9.5px;font-weight:700;color:var(--ink-2);b
 
 /* 加载层 */
 .load{position:absolute;inset:0;z-index:6;
-  background:linear-gradient(rgba(6,8,16,.74),rgba(6,8,16,.84)),url(./assets/preview.jpg) center/cover no-repeat;
+  background:linear-gradient(rgba(6,8,16,.58),rgba(6,8,16,.72)),url(./assets/preview.jpg) center/cover no-repeat;
   display:flex;
   flex-direction:column;align-items:center;justify-content:center;gap:0;
   transition:opacity .6s ease,visibility .6s}
@@ -206,7 +206,7 @@ kbd{font-family:var(--mono);font-size:9.5px;font-weight:700;color:var(--ink-2);b
 
 /* 错误 */
 .err{position:absolute;inset:0;z-index:7;display:none;align-items:center;justify-content:center;
-  background:linear-gradient(rgba(6,8,16,.78),rgba(6,8,16,.9)),url(./assets/preview.jpg) center/cover no-repeat;
+  background:linear-gradient(rgba(6,8,16,.68),rgba(6,8,16,.84)),url(./assets/preview.jpg) center/cover no-repeat;
   padding:24px;text-align:center}
 .err.on{display:flex}
 .err div{max-width:380px}
@@ -268,6 +268,7 @@ kbd{font-family:var(--mono);font-size:9.5px;font-weight:700;color:var(--ink-2);b
           <div class="r"><span>文件体积</span><b>29.9 MB</b></div>
           <div class="r"><span>坐标精度</span><b>24-bit / 12 frac</b></div>
           <div class="r"><span>来源</span><b>Chisel Scan</b></div>
+          <div class="r"><span>坐标系</span><b>RUB / Y-up</b></div>
         </div>
       </section>
 
@@ -297,6 +298,7 @@ kbd{font-family:var(--mono);font-size:9.5px;font-weight:700;color:var(--ink-2);b
           <div class="key"><span class="cap">前后左右移动</span><kbd>W A S D</kbd></div>
           <div class="key"><span class="cap">回到初始视角</span><kbd>R</kbd></div>
           <div class="key"><span class="cap">全屏查看</span><kbd>F</kbd></div>
+          <div class="key"><span class="cap">上下翻转（备用）</span><kbd>V</kbd></div>
         </div>
       </section>
 
@@ -337,6 +339,8 @@ kbd{font-family:var(--mono);font-size:9.5px;font-weight:700;color:var(--ink-2);b
           <label class="tog"><input type="checkbox" id="spin" checked>自转</label>
           <span class="div"></span>
           <label class="tog"><input type="checkbox" id="grid">网格</label>
+          <span class="div"></span>
+          <label class="tog"><input type="checkbox" id="flip">上下翻转</label>
           <span class="div"></span>
           <span class="spd">速度 <input type="range" id="speed" min="0.1" max="2" step="0.1" value="0.4"></span>
         </div>
@@ -427,11 +431,13 @@ controls.autoRotate = true;
 controls.autoRotateSpeed = 0.4;
 controls.target.set(0, 0, 0);
 
-/* 依据 spz 包围盒中心把场景摆到原点 */
+/* SPZ v2 默认坐标系是 RUB (Right-Up-Back)，也就是 Three.js 坐标系，Y 已经是上方向。
+   这份 Chisel 导出的文件没有 coordinate-system 扩展，因此不做任何旋转，
+   只把包围盒中心平移到原点。 */
 const BBOX_CENTER = new THREE.Vector3(1.1354, 1.6389, 0.9126);
-const R180X = new THREE.Quaternion(1, 0, 0, 0);       // SPZ 通常是 Y-down
-const rotatedCenter = BBOX_CENTER.clone().applyQuaternion(R180X);
-const meshOffset = rotatedCenter.clone().negate();
+const meshOffset = BBOX_CENTER.clone().negate();
+const FLIP_X = new THREE.Quaternion(1, 0, 0, 0);   // 仅供「上下翻转」开关使用
+let splatMesh = null, flipped = false;
 
 /* 坐标网格（默认关闭） */
 const grid = new THREE.GridHelper(20, 20, 0x4b63f0, 0x252b44);
@@ -482,6 +488,7 @@ addEventListener('keydown', e => {
   if(MOVE_KEYS.includes(e.code)){ keys[e.code] = true; if(!isMobile) e.preventDefault(); }
   if(e.code === 'KeyR'){ flyTo('orbit'); }
   if(e.code === 'KeyF'){ toggleFull(); }
+  if(e.code === 'KeyV'){ setFlip(!flipped); document.getElementById('flip').checked = flipped; }
 });
 addEventListener('keyup', e => { keys[e.code] = false; });
 addEventListener('blur', () => MOVE_KEYS.forEach(k => keys[k] = false));
@@ -517,6 +524,18 @@ document.getElementById('grid').addEventListener('change', e => { grid.visible =
 document.getElementById('speed').addEventListener('input', e => {
   controls.autoRotateSpeed = parseFloat(e.target.value);
 });
+/* 默认就是数据本身的朝向；这个开关只用于极少数导出方向相反的扫描件 */
+function setFlip(on){
+  flipped = on;
+  if(!splatMesh) return;
+  splatMesh.quaternion.copy(on ? FLIP_X : new THREE.Quaternion());
+  splatMesh.position.copy(on
+    ? BBOX_CENTER.clone().applyQuaternion(FLIP_X).negate()
+    : meshOffset);
+  splatMesh.updateMatrixWorld(true);
+  grid.position.y = on ? 2.45 : -2.45;
+}
+document.getElementById('flip').addEventListener('change', e => setFlip(e.target.checked));
 function toggleFull(){
   if(document.fullscreenElement) document.exitFullscreen();
   else stage.requestFullscreen && stage.requestFullscreen();
@@ -580,9 +599,10 @@ async function loadScene(){
       loadEl.classList.add('done');
     }
   });
-  mesh.quaternion.copy(R180X);
-  mesh.position.copy(meshOffset);
+  splatMesh = mesh;
+  mesh.position.copy(meshOffset);   /* 不旋转：SPZ v2 已是 Three.js Y-up */
   scene.add(mesh);
+  if(flipped) setFlip(true);
   if(mesh.initialized && mesh.initialized.catch){
     mesh.initialized.catch(e => fail('点云解码失败：' + (e && e.message ? e.message : '未知错误') + '。请刷新重试。'));
   }
