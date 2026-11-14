@@ -26,6 +26,7 @@ window.PROJECTS = {
 
     /* ---- 场景 ---- */
     src: 'assets/r1/room.spz',
+    srcMobile: 'assets/r1/room-m.spz',   // 1.8cm 体素降采样，体积小一半，小屏几乎看不出差别
     off: [1.1354, 1.6389, 0.9126],
 
     /* 实测尺寸（世界坐标 = 原始坐标 − off） */
@@ -115,6 +116,7 @@ window.PROJECTS = {
     },
 
     src: 'assets/r2/room.spz',
+    srcMobile: 'assets/r2/room-m.spz',
     off: [0, 0, 0],
 
     R: {

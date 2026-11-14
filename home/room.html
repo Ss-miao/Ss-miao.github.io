@@ -642,8 +642,12 @@ function showCount(n){
 function loadScene(){
   return new Promise((resolve,reject)=>{
     let doneFlag=false;
+    // 手机 / 强制精简时读降采样版：体积小一半，小屏上几乎看不出差别
+    const LITE = isMobile || /[?&]lite=1/.test(location.search);
+    const SRC = (LITE && P.srcMobile) ? P.srcMobile : P.src;
+    if(LITE) console.log('[room] lite mode →', SRC);
     const mesh=new SplatMesh({
-      url:P.src,
+      url:SRC,
       editable:true,
       onProgress:(e)=>{
         if(e&&e.lengthComputable&&e.total){
