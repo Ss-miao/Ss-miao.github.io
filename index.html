@@ -8,7 +8,7 @@
 <meta name="theme-color" content="#07070b">
 <link rel="icon" href="/favicon-32.png" sizes="32x32" type="image/png">
 <link rel="apple-touch-icon" href="/favicon-180.png">
-<link rel="stylesheet" href="os/os.css?v=20261121">
+<link rel="stylesheet" href="os/os.css?v=20261122">
 </head>
 <body>
 
@@ -110,7 +110,8 @@
 
 <!-- ============ 菜单栏 ============ -->
 <header class="menubar" id="menubar">
-  <button class="mb-brand" id="mbBrand" type="button"><span class="mb-mk"></span>黄淼 OS</button>
+  <button class="mb-brand" id="mbBrand" type="button" title="关于这台机器"><span class="mb-mk">水</span><span class="mb-nm">黄淼 OS</span></button>
+  <span class="mb-div"></span>
   <button class="mb-menu" data-open="rooms" type="button">房间</button>
   <button class="mb-menu" data-open="works" type="button">作品</button>
   <button class="mb-menu" data-open="about" type="button">关于</button>
@@ -230,6 +231,20 @@
     if(d){ unlock(); window.OS_APPS.open(d.dataset.app); }
   });
   $('#mbBrand').addEventListener('click',function(){ window.OS_APPS.open('about'); });
+
+  /* ---- 菜单栏跟着窗口亮：开着哪个程序，上面哪一项就亮 ---- */
+  var dk=$('#desktop');
+  function syncMb(){
+    var open={};
+    [].forEach.call(document.querySelectorAll('.window'),function(w){ open[w.dataset.app]=1; });
+    [].forEach.call(document.querySelectorAll('.mb-menu[data-open]'),function(b){
+      b.classList.toggle('on',!!open[b.dataset.open]);
+    });
+  }
+  if(dk){
+    new MutationObserver(syncMb).observe(dk,{childList:true,subtree:true,attributes:true,attributeFilter:['class']});
+    syncMb();
+  }
 
   /* ---- Esc 关掉最上面那个窗口 ---- */
   document.addEventListener('keydown',function(e){
