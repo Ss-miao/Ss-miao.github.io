@@ -8,7 +8,7 @@
 <meta name="theme-color" content="#07070b">
 <link rel="icon" href="/favicon-32.png" sizes="32x32" type="image/png">
 <link rel="apple-touch-icon" href="/favicon-180.png">
-<link rel="stylesheet" href="os/os.css?v=20261123">
+<link rel="stylesheet" href="os/os.css?v=20261124">
 </head>
 <body>
 
@@ -110,12 +110,15 @@
 
 <!-- ============ 菜单栏 ============ -->
 <header class="menubar" id="menubar">
-  <button class="mb-brand" id="mbBrand" type="button" title="关于这台机器"><span class="mb-mk">水</span><span class="mb-nm">黄淼 OS</span></button>
-  <span class="mb-div"></span>
-  <button class="mb-menu" data-open="rooms" type="button">房间</button>
-  <button class="mb-menu" data-open="works" type="button">作品</button>
-  <button class="mb-menu" data-open="about" type="button">关于</button>
-  <button class="mb-menu" data-open="contact" type="button">联系</button>
+  <button class="mb-brand" id="mbBrand" type="button" title="关于这台机器">
+    <svg class="mb-mk" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.2c0 0-6.5 7.3-6.5 11.6a6.5 6.5 0 1 0 13 0C18.5 9.5 12 2.2 12 2.2z"/></svg>
+    <span class="mb-nm">黄淼 OS</span>
+  </button>
+  <button class="mb-item" data-menu="file" type="button">文件</button>
+  <button class="mb-item" data-menu="edit" type="button">编辑</button>
+  <button class="mb-item" data-menu="view" type="button">显示</button>
+  <button class="mb-item" data-menu="go" type="button">前往</button>
+  <button class="mb-item" data-menu="help" type="button">帮助</button>
   <span class="mb-sp"></span>
   <span class="mb-st">
     <svg viewBox="0 0 24 24" style="width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round"><use href="#ic-wifi"/></svg>
@@ -184,9 +187,9 @@
   </a>
 </nav>
 
-<script src="os/data.js?v=20261123"></script>
-<script src="os/wm.js?v=20261123"></script>
-<script src="os/apps.js?v=20261123"></script>
+<script src="os/data.js?v=20261124"></script>
+<script src="os/wm.js?v=20261124"></script>
+<script src="os/apps.js?v=20261124"></script>
 <script>
 (function(){
   var $=function(s){return document.querySelector(s)};
@@ -225,26 +228,145 @@
 
   /* ---- 打开程序 ---- */
   document.addEventListener('click',function(e){
-    var t=e.target.closest('.desk-ic[data-open],.mb-menu[data-open]');
+    var t=e.target.closest('.desk-ic[data-open]');
     if(t){ unlock(); window.OS_APPS.open(t.dataset.open); return; }
     var d=e.target.closest('.dock-item[data-app]');
     if(d){ unlock(); window.OS_APPS.open(d.dataset.app); }
   });
-  $('#mbBrand').addEventListener('click',function(){ window.OS_APPS.open('about'); });
+  $('#mbBrand').addEventListener('click',function(){ unlock(); window.OS_APPS.open('about'); });
 
-  /* ---- 菜单栏跟着窗口亮：开着哪个程序，上面哪一项就亮 ---- */
-  var dk=$('#desktop');
-  function syncMb(){
-    var open={};
-    [].forEach.call(document.querySelectorAll('.window'),function(w){ open[w.dataset.app]=1; });
-    [].forEach.call(document.querySelectorAll('.mb-menu[data-open]'),function(b){
-      b.classList.toggle('on',!!open[b.dataset.open]);
+  /* ---- 菜单栏：文件 / 编辑 / 显示 / 前往 / 帮助 ---- */
+  var bar=$('#menubar'), openKey=null, pops={};
+
+  function topWin(){
+    var w=[].slice.call(document.querySelectorAll('.window'));
+    if(!w.length) return null;
+    w.sort(function(a,b){ return (+b.style.zIndex||0)-(+a.style.zIndex||0); });
+    return w[0];
+  }
+  function closeTop(){ var w=topWin(); if(w) window.OS_WM.close(w.dataset.app); }
+  function closeAll(){ [].forEach.call(document.querySelectorAll('.window'),function(w){ window.OS_WM.close(w.dataset.app); }); }
+  function copyTxt(s){
+    if(navigator.clipboard && navigator.clipboard.writeText){ navigator.clipboard.writeText(s).catch(function(){}); return; }
+    var ta=document.createElement('textarea'); ta.value=s; ta.style.position='fixed'; ta.style.opacity='0';
+    document.body.appendChild(ta); ta.select(); try{ document.execCommand('copy'); }catch(_){}
+    document.body.removeChild(ta);
+  }
+  function toggleFull(){
+    var d=document.documentElement;
+    if(!document.fullscreenElement){ if(d.requestFullscreen) d.requestFullscreen().catch(function(){}); }
+    else if(document.exitFullscreen) document.exitFullscreen();
+  }
+
+  var ACT={
+    rooms:function(){ window.OS_APPS.open('rooms'); },
+    works:function(){ window.OS_APPS.open('works'); },
+    readme:function(){ window.OS_APPS.open('readme'); },
+    about:function(){ window.OS_APPS.open('about'); },
+    contact:function(){ window.OS_APPS.open('contact'); },
+    closeTop:closeTop,
+    desk:closeAll,
+    full:toggleFull,
+    mail:function(){ copyTxt('hm3227513340@qq.com'); },
+    phone:function(){ copyTxt('13216765200'); },
+    url:function(){ copyTxt('https://ss-miao.github.io'); }
+  };
+
+  var MENU={
+    file:[
+      {t:'打开我的房间',k:'⌘ 1',act:'rooms'},
+      {t:'打开我的作品',k:'⌘ 2',act:'works'},
+      {sep:1},
+      {t:'说明.txt',act:'readme'},
+      {sep:1},
+      {t:'关闭窗口',k:'⌘ W',act:'closeTop'}
+    ],
+    edit:[
+      {t:'复制邮箱',act:'mail'},
+      {t:'复制电话',act:'phone'},
+      {t:'复制本站地址',act:'url'},
+      {sep:1},
+      {t:'拷贝选中文字',k:'⌘ C',dis:1}
+    ],
+    view:[
+      {t:'回到桌面',k:'⌘ D',act:'desk'},
+      {t:'全屏',k:'⌃ ⌘ F',act:'full'},
+      {sep:1},
+      {t:'按窗口排列',dis:1}
+    ],
+    go:[
+      {t:'我的房间',act:'rooms'},
+      {t:'我的作品',act:'works'},
+      {t:'联系',act:'contact'},
+      {sep:1},
+      {t:'提示词库',href:'prompts/'},
+      {t:'upmiao.com',href:'https://upmiao.com'},
+      {t:'GitHub',href:'https://github.com/Ss-miao'}
+    ],
+    help:[
+      {t:'说明.txt',act:'readme'},
+      {t:'关于这台机器',act:'about'},
+      {sep:1},
+      {t:'长页版简历',href:'index.long.html'}
+    ]
+  };
+
+  Object.keys(MENU).forEach(function(key){
+    var pop=document.createElement('div');
+    pop.className='mb-pop'; pop.setAttribute('data-pop',key);
+    pop.innerHTML=MENU[key].map(function(it){
+      if(it.sep) return '<i></i>';
+      if(it.href) return '<a href="'+it.href+'"'+(it.href.indexOf('http')===0?' target="_blank" rel="noopener"':'')+'>'+
+        '<b>'+it.t+'</b><em>↗</em></a>';
+      return '<button type="button"'+(it.dis?' class="dis"':'')+' data-act="'+it.act+'">'+
+        '<b>'+it.t+'</b>'+(it.k?'<kbd>'+it.k+'</kbd>':'')+'</button>';
+    }).join('');
+    document.body.appendChild(pop);
+    pops[key]=pop;
+    pop.addEventListener('click',function(e){
+      var b=e.target.closest('[data-act]');
+      if(!b) return;
+      closeMenu();
+      if(ACT[b.dataset.act]) ACT[b.dataset.act]();
     });
+  });
+
+  function openMenu(key){
+    openKey=key;
+    var btn=document.querySelector('.mb-item[data-menu="'+key+'"]');
+    if(!btn) return;
+    Object.keys(pops).forEach(function(k){ pops[k].classList.toggle('open',k===key); });
+    [].forEach.call(document.querySelectorAll('.mb-item'),function(b){ b.classList.toggle('on',b.dataset.menu===key); });
+    var p=pops[key], r=btn.getBoundingClientRect();
+    p.style.left=Math.max(8,Math.min(r.left-5, innerWidth-p.offsetWidth-8))+'px';
+    p.style.top=(bar.offsetHeight+2)+'px';
   }
-  if(dk){
-    new MutationObserver(syncMb).observe(dk,{childList:true,subtree:true,attributes:true,attributeFilter:['class']});
-    syncMb();
+  function closeMenu(){
+    openKey=null;
+    Object.keys(pops).forEach(function(k){ pops[k].classList.remove('open'); });
+    [].forEach.call(document.querySelectorAll('.mb-item'),function(b){ b.classList.remove('on'); });
   }
+
+  [].forEach.call(document.querySelectorAll('.mb-item'),function(b){
+    b.addEventListener('click',function(e){
+      e.stopPropagation();
+      if(openKey===b.dataset.menu) closeMenu(); else openMenu(b.dataset.menu);
+    });
+    b.addEventListener('mouseenter',function(){
+      if(openKey && openKey!==b.dataset.menu) openMenu(b.dataset.menu);
+    });
+  });
+  document.addEventListener('click',function(e){ if(openKey && !e.target.closest('.mb-pop,.mb-item')) closeMenu(); });
+
+  /* ---- 快捷键 ---- */
+  document.addEventListener('keydown',function(e){
+    var mod=e.metaKey||e.ctrlKey;
+    if(e.key==='Escape' && openKey){ closeMenu(); return; }
+    if(mod && (e.key==='w'||e.key==='W')){ e.preventDefault(); closeTop(); return; }
+    if(mod && (e.key==='d'||e.key==='D')){ e.preventDefault(); closeAll(); return; }
+    if(mod && e.key==='1'){ e.preventDefault(); window.OS_APPS.open('rooms'); return; }
+    if(mod && e.key==='2'){ e.preventDefault(); window.OS_APPS.open('works'); }
+  });
 
   /* ---- Esc 关掉最上面那个窗口 ---- */
   document.addEventListener('keydown',function(e){
