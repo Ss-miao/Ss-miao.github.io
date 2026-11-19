@@ -515,7 +515,7 @@ function showPanel(kind){
       '</div>'+
       '<button class="p-btn" id="pStart"'+(ready?'':' disabled')+'>'+
         (ready?'推门进去 →':'正在恢复房间…')+'</button>'+
-      '<div class="p-alt">房间有点大，建议全屏看</div>';
+      '<div class="p-alt">'+(document.documentElement.classList.contains('embed')?'窗口里也能走，拖窗口边角可以拉大':'房间有点大，建议全屏看')+'</div>';
     document.getElementById('pStart').onclick=start;
   }else{
     pCard.innerHTML=
