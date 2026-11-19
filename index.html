@@ -8,12 +8,26 @@
 <meta name="theme-color" content="#07070b">
 <link rel="icon" href="/favicon-32.png" sizes="32x32" type="image/png">
 <link rel="apple-touch-icon" href="/favicon-180.png">
-<link rel="stylesheet" href="os/os.css?v=20261119">
+<link rel="stylesheet" href="os/os.css?v=20261120">
 </head>
 <body>
 
 <!-- ============ 图标 ============ -->
 <svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+  <linearGradient id="apGloss" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#fff" stop-opacity=".46"/>
+    <stop offset=".52" stop-color="#fff" stop-opacity=".07"/>
+    <stop offset="1" stop-color="#fff" stop-opacity="0"/>
+  </linearGradient>
+  <radialGradient id="apGlow" cx=".5" cy="0" r=".85">
+    <stop offset="0" stop-color="#fff" stop-opacity=".52"/>
+    <stop offset=".5" stop-color="#fff" stop-opacity=".14"/>
+    <stop offset="1" stop-color="#fff" stop-opacity="0"/>
+  </radialGradient>
+  <linearGradient id="apShade" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#000" stop-opacity="0"/>
+    <stop offset="1" stop-color="#000" stop-opacity=".16"/>
+  </linearGradient>
   <symbol id="ic-door" viewBox="0 0 24 24"><path d="M5 21V4a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v17"/><path d="M3 21h18"/><path d="M14.5 12v.01"/><path d="M8.5 3v18"/></symbol>
   <symbol id="ic-film" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7 4v16M17 4v16"/><path d="M3 9h4M3 15h4M17 9h4M17 15h4"/></symbol>
   <symbol id="ic-user" viewBox="0 0 24 24"><circle cx="12" cy="8.5" r="3.6"/><path d="M4.6 20.2a7.6 7.6 0 0 1 14.8 0"/></symbol>
@@ -27,6 +41,108 @@
   <symbol id="ic-github" viewBox="0 0 24 24"><path d="M9 19.5c-4 1.2-4-2-5.5-2.5M15 21v-3.4a3 3 0 0 0-.8-2.3c2.6-.3 5.3-1.3 5.3-5.8a4.5 4.5 0 0 0-1.2-3.1 4.2 4.2 0 0 0-.1-3.1s-1-.3-3.3 1.2a11.4 11.4 0 0 0-6 0C6.6 3 5.6 3.3 5.6 3.3a4.2 4.2 0 0 0-.1 3.1A4.5 4.5 0 0 0 4.3 9.5c0 4.5 2.7 5.5 5.3 5.8a3 3 0 0 0-.8 2.3V21"/></symbol>
   <symbol id="ic-wifi" viewBox="0 0 24 24"><path d="M2.5 8.5a15 15 0 0 1 19 0"/><path d="M6 12.5a10 10 0 0 1 12 0"/><path d="M9.4 16.3a5 5 0 0 1 5.2 0"/><path d="M12 20h.01"/></symbol>
   <symbol id="ic-batt" viewBox="0 0 26 13"><rect x=".8" y=".8" width="20" height="11.4" rx="3"/><rect x="2.6" y="2.6" width="14" height="7.8" rx="1.6" fill="currentColor" stroke="none"/><path d="M23 4.4v4.2" stroke-width="2.4"/></symbol>
+
+  <!-- ===== App 图标：彩色底 + 顶部高光 + 细白描边（不用位图，缩放不糊） ===== -->
+  <symbol id="ap-room" viewBox="0 0 96 96">
+    <defs>
+      <linearGradient id="apRoomBg" x1="0" y1="0" x2=".38" y2="1">
+        <stop offset="0" stop-color="#86A6FF"/><stop offset=".48" stop-color="#4A5BEA"/><stop offset="1" stop-color="#2730A2"/>
+      </linearGradient>
+      <linearGradient id="apRoomDoor" x1="0" y1="0" x2=".2" y2="1">
+        <stop offset="0" stop-color="#FFEBC6"/><stop offset="1" stop-color="#FFAE52"/>
+      </linearGradient>
+      <clipPath id="apRoomClip"><rect width="96" height="96" rx="22"/></clipPath>
+    </defs>
+    <g clip-path="url(#apRoomClip)">
+      <rect width="96" height="96" fill="url(#apRoomBg)"/>
+      <rect width="96" height="62" fill="url(#apGloss)"/>
+      <ellipse cx="48" cy="0" rx="45" ry="27" fill="url(#apGlow)"/>
+      <rect y="50" width="96" height="46" fill="url(#apShade)"/>
+    </g>
+    <path d="M48 16.5 76 37.2v33.3a6 6 0 0 1-6 6H26a6 6 0 0 1-6-6V37.2z" fill="#fff" opacity=".96"/>
+    <path d="M41 76.5V57.8a7 7 0 0 1 14 0v18.7z" fill="url(#apRoomDoor)"/>
+    <path d="M48 16.5 76 37.2H20z" fill="#fff" opacity=".55"/>
+    <rect x=".9" y=".9" width="94.2" height="94.2" rx="21.4" fill="none" stroke="#fff" stroke-opacity=".32" stroke-width="1.4"/>
+  </symbol>
+
+  <symbol id="ap-works" viewBox="0 0 96 96">
+    <defs>
+      <linearGradient id="apWorksBg" x1="0" y1="0" x2=".4" y2="1">
+        <stop offset="0" stop-color="#FFA0B6"/><stop offset=".45" stop-color="#F4486B"/><stop offset="1" stop-color="#AC143E"/>
+      </linearGradient>
+      <clipPath id="apWorksClip"><rect width="96" height="96" rx="22"/></clipPath>
+    </defs>
+    <g clip-path="url(#apWorksClip)">
+      <rect width="96" height="96" fill="url(#apWorksBg)"/>
+      <rect width="96" height="62" fill="url(#apGloss)"/>
+      <ellipse cx="48" cy="0" rx="45" ry="27" fill="url(#apGlow)"/>
+      <rect y="50" width="96" height="46" fill="url(#apShade)"/>
+    </g>
+    <rect x="22" y="25" width="52" height="46" rx="6" fill="#fff" opacity=".97"/>
+    <g fill="#E33A5C">
+      <rect x="26" y="29.5" width="6.4" height="6.4" rx="1.8"/><rect x="26" y="39.3" width="6.4" height="6.4" rx="1.8"/>
+      <rect x="26" y="49.1" width="6.4" height="6.4" rx="1.8"/><rect x="26" y="58.9" width="6.4" height="6.4" rx="1.8"/>
+      <rect x="63.6" y="29.5" width="6.4" height="6.4" rx="1.8"/><rect x="63.6" y="39.3" width="6.4" height="6.4" rx="1.8"/>
+      <rect x="63.6" y="49.1" width="6.4" height="6.4" rx="1.8"/><rect x="63.6" y="58.9" width="6.4" height="6.4" rx="1.8"/>
+    </g>
+    <path d="M41.8 37.8 L57 48 L41.8 58.2 Z" fill="#E33A5C"/>
+    <rect x=".9" y=".9" width="94.2" height="94.2" rx="21.4" fill="none" stroke="#fff" stroke-opacity=".32" stroke-width="1.4"/>
+  </symbol>
+
+  <symbol id="ap-about" viewBox="0 0 96 96">
+    <defs>
+      <linearGradient id="apAboutBg" x1="0" y1="0" x2=".45" y2="1">
+        <stop offset="0" stop-color="#79E7D4"/><stop offset=".5" stop-color="#25AC93"/><stop offset="1" stop-color="#0E6357"/>
+      </linearGradient>
+      <clipPath id="apAboutClip"><rect width="96" height="96" rx="22"/></clipPath>
+    </defs>
+    <g clip-path="url(#apAboutClip)">
+      <rect width="96" height="96" fill="url(#apAboutBg)"/>
+      <rect width="96" height="62" fill="url(#apGloss)"/>
+      <ellipse cx="48" cy="0" rx="45" ry="27" fill="url(#apGlow)"/>
+      <rect y="50" width="96" height="46" fill="url(#apShade)"/>
+    </g>
+    <circle cx="48" cy="38.5" r="11.6" fill="#fff" opacity=".97"/>
+    <path d="M25.5 71.5c0-12.8 10-19.6 22.5-19.6s22.5 6.8 22.5 19.6z" fill="#fff" opacity=".97"/>
+    <rect x=".9" y=".9" width="94.2" height="94.2" rx="21.4" fill="none" stroke="#fff" stroke-opacity=".32" stroke-width="1.4"/>
+  </symbol>
+
+  <symbol id="ap-contact" viewBox="0 0 96 96">
+    <defs>
+      <linearGradient id="apCtBg" x1="0" y1="0" x2=".4" y2="1">
+        <stop offset="0" stop-color="#FFD77E"/><stop offset=".5" stop-color="#F59B2E"/><stop offset="1" stop-color="#C26409"/>
+      </linearGradient>
+      <clipPath id="apCtClip"><rect width="96" height="96" rx="22"/></clipPath>
+    </defs>
+    <g clip-path="url(#apCtClip)">
+      <rect width="96" height="96" fill="url(#apCtBg)"/>
+      <rect width="96" height="62" fill="url(#apGloss)"/>
+      <ellipse cx="48" cy="0" rx="45" ry="27" fill="url(#apGlow)"/>
+      <rect y="50" width="96" height="46" fill="url(#apShade)"/>
+    </g>
+    <rect x="19" y="29" width="58" height="38" rx="6.5" fill="#FFFAF0" opacity=".98"/>
+    <path d="M22.5 34 L48 51.5 L73.5 34" fill="none" stroke="#DD8A1B" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round"/>
+    <rect x=".9" y=".9" width="94.2" height="94.2" rx="21.4" fill="none" stroke="#fff" stroke-opacity=".32" stroke-width="1.4"/>
+  </symbol>
+
+  <symbol id="ap-readme" viewBox="0 0 96 96">
+    <defs>
+      <linearGradient id="apRdBg" x1="0" y1="0" x2=".4" y2="1">
+        <stop offset="0" stop-color="#B3AED2"/><stop offset=".5" stop-color="#736E94"/><stop offset="1" stop-color="#453F60"/>
+      </linearGradient>
+      <clipPath id="apRdClip"><rect width="96" height="96" rx="22"/></clipPath>
+    </defs>
+    <g clip-path="url(#apRdClip)">
+      <rect width="96" height="96" fill="url(#apRdBg)"/>
+      <rect width="96" height="62" fill="url(#apGloss)"/>
+      <ellipse cx="48" cy="0" rx="45" ry="27" fill="url(#apGlow)"/>
+      <rect y="50" width="96" height="46" fill="url(#apShade)"/>
+    </g>
+    <path d="M33 19.5h18L66 32.5v43a4.5 4.5 0 0 1-4.5 4.5h-28.5A4.5 4.5 0 0 1 28.5 75.5v-51a5 5 0 0 1 4.5-5z" fill="#fff" opacity=".97"/>
+    <path d="M51 19.5v13h15" fill="none" stroke="#7A7499" stroke-width="3" stroke-linejoin="round"/>
+    <g stroke="#7A7499" stroke-width="3" stroke-linecap="round"><path d="M39 48h18M39 57h18M39 66h11"/></g>
+    <rect x=".9" y=".9" width="94.2" height="94.2" rx="21.4" fill="none" stroke="#fff" stroke-opacity=".32" stroke-width="1.4"/>
+  </symbol>
 </defs></svg>
 
 <div class="wall"><div class="wall-img"></div><div class="wall-tint"></div><div class="wall-grain"></div></div>
@@ -61,19 +177,19 @@
 <main class="desktop" id="desktop">
   <div class="desk-icons">
     <button class="desk-ic" data-open="rooms" type="button">
-      <span class="art"><img src="home/assets/r1/preview.jpg" alt=""></span>
+      <span class="art"><svg viewBox="0 0 96 96"><use href="#ap-room"/></svg></span>
       <span class="lb">我的房间</span>
     </button>
     <button class="desk-ic" data-open="works" type="button">
-      <span class="art"><img src="portfolio/thumbnails/东方天宫.jpg" alt=""></span>
+      <span class="art"><svg viewBox="0 0 96 96"><use href="#ap-works"/></svg></span>
       <span class="lb">我的作品</span>
     </button>
     <button class="desk-ic" data-open="readme" type="button">
-      <span class="art tile"><svg viewBox="0 0 24 24"><use href="#ic-doc"/></svg></span>
+      <span class="art"><svg viewBox="0 0 96 96"><use href="#ap-readme"/></svg></span>
       <span class="lb">说明.txt</span>
     </button>
     <button class="desk-ic" data-open="contact" type="button">
-      <span class="art tile"><svg viewBox="0 0 24 24"><use href="#ic-mail"/></svg></span>
+      <span class="art"><svg viewBox="0 0 96 96"><use href="#ap-contact"/></svg></span>
       <span class="lb">联系我</span>
     </button>
   </div>
@@ -84,42 +200,42 @@
 <nav class="dock" id="dock">
   <button class="dock-item" data-app="rooms" type="button">
     <span class="tip">我的房间</span>
-    <span class="di rooms"><svg viewBox="0 0 24 24"><use href="#ic-door"/></svg></span>
+    <span class="di rooms"><svg viewBox="0 0 96 96"><use href="#ap-room"/></svg></span>
     <span class="dot"></span>
   </button>
   <button class="dock-item" data-app="works" type="button">
     <span class="tip">我的作品</span>
-    <span class="di works"><svg viewBox="0 0 24 24"><use href="#ic-film"/></svg></span>
+    <span class="di works"><svg viewBox="0 0 96 96"><use href="#ap-works"/></svg></span>
     <span class="dot"></span>
   </button>
   <button class="dock-item" data-app="about" type="button">
     <span class="tip">关于我</span>
-    <span class="di about"><svg viewBox="0 0 24 24"><use href="#ic-user"/></svg></span>
+    <span class="di about"><svg viewBox="0 0 96 96"><use href="#ap-about"/></svg></span>
     <span class="dot"></span>
   </button>
   <button class="dock-item" data-app="contact" type="button">
     <span class="tip">联系</span>
-    <span class="di contact"><svg viewBox="0 0 24 24"><use href="#ic-mail"/></svg></span>
+    <span class="di contact"><svg viewBox="0 0 96 96"><use href="#ap-contact"/></svg></span>
     <span class="dot"></span>
   </button>
   <span class="dock-sep"></span>
   <a class="dock-item" href="prompts/" target="_blank" rel="noopener">
     <span class="tip">提示词库</span>
-    <span class="di ext"><svg viewBox="0 0 24 24"><use href="#ic-spark"/></svg></span>
+    <span class="di ext p1"><svg viewBox="0 0 24 24"><use href="#ic-spark"/></svg></span>
   </a>
   <a class="dock-item" href="https://upmiao.com" target="_blank" rel="noopener">
     <span class="tip">upmiao.com</span>
-    <span class="di ext"><svg viewBox="0 0 24 24"><use href="#ic-out"/></svg></span>
+    <span class="di ext p2"><svg viewBox="0 0 24 24"><use href="#ic-out"/></svg></span>
   </a>
   <a class="dock-item" href="https://github.com/Ss-miao" target="_blank" rel="noopener">
     <span class="tip">GitHub</span>
-    <span class="di ext"><svg viewBox="0 0 24 24"><use href="#ic-github"/></svg></span>
+    <span class="di ext p3"><svg viewBox="0 0 24 24"><use href="#ic-github"/></svg></span>
   </a>
 </nav>
 
-<script src="os/data.js?v=20261119"></script>
-<script src="os/wm.js?v=20261119"></script>
-<script src="os/apps.js?v=20261119"></script>
+<script src="os/data.js?v=20261120"></script>
+<script src="os/wm.js?v=20261120"></script>
+<script src="os/apps.js?v=20261120"></script>
 <script>
 (function(){
   var $=function(s){return document.querySelector(s)};
@@ -172,6 +288,15 @@
     if(!wins.length) return;
     wins.sort(function(a,b){ return (+b.style.zIndex||0)-(+a.style.zIndex||0); });
     window.OS_WM.close(wins[0].dataset.app);
+  });
+
+  /* ---- Dock 倒影：把图标镜像一份压在下面，靠遮罩渐隐 ---- */
+  document.querySelectorAll('.dock-item .di').forEach(function(di){
+    var svg=di.querySelector('svg'); if(!svg) return;
+    var rx=document.createElement('span');
+    rx.className='rx'+(di.classList.contains('ext')?' sm':'');
+    rx.appendChild(svg.cloneNode(true));
+    di.parentNode.appendChild(rx);
   });
 
   /* ---- 手机上别让长按弹菜单 ---- */

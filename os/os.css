@@ -79,15 +79,14 @@ svg{display:block}
 .desktop{position:absolute;left:0;right:0;top:34px;bottom:84px;z-index:10;overflow:hidden;
   transition:opacity .5s ease}
 .desk-icons{position:absolute;right:14px;top:14px;display:flex;flex-direction:column;gap:14px;z-index:2}
-.desk-ic{width:88px;padding:7px 4px 6px;display:flex;flex-direction:column;align-items:center;gap:6px;
-  border-radius:9px;transition:.14s;color:#fff}
-.desk-ic:hover{background:rgba(255,255,255,.12)}
+.desk-ic{width:98px;padding:9px 4px 8px;display:flex;flex-direction:column;align-items:center;gap:7px;
+  border-radius:11px;transition:.14s;color:#fff}
+.desk-ic:hover{background:rgba(255,255,255,.1)}
 .desk-ic:active{transform:scale(.97)}
-.desk-ic .art{width:54px;height:54px;border-radius:13px;overflow:hidden;position:relative;
-  box-shadow:0 8px 22px rgba(0,0,0,.42),0 0 0 .5px rgba(255,255,255,.28);background:#1a1a22}
-.desk-ic .art img{width:100%;height:100%;object-fit:cover;display:block}
-.desk-ic .art.tile{display:grid;place-items:center;background:linear-gradient(150deg,#3a3550,#1d1b28)}
-.desk-ic .art.tile svg{width:27px;height:27px;fill:none;stroke:#fff;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;opacity:.94}
+.desk-ic .art{width:68px;height:68px;border-radius:16px;position:relative;
+  filter:drop-shadow(0 11px 20px rgba(0,0,0,.55))}
+.desk-ic .art svg{width:100%;height:100%;display:block}
+.desk-ic:hover .art{filter:drop-shadow(0 13px 24px rgba(0,0,0,.62)) brightness(1.06)}
 .desk-ic .lb{font-size:11px;line-height:1.3;text-align:center;text-shadow:0 1px 6px rgba(0,0,0,.8);
   max-width:86px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .desk-hint{position:absolute;left:50%;bottom:58px;transform:translateX(-50%);
@@ -144,33 +143,42 @@ body:not(.in) .dock{transform:translateX(-50%) translateY(20px)}
 
 /* ---------- Dock ---------- */
 .dock{position:fixed;left:50%;bottom:12px;transform:translateX(-50%);z-index:800;
-  display:flex;align-items:flex-end;gap:6px;padding:7px 9px;border-radius:20px;
-  background:rgba(22,22,30,.42);backdrop-filter:blur(28px) saturate(170%);-webkit-backdrop-filter:blur(28px) saturate(170%);
-  border:1px solid rgba(255,255,255,.14);box-shadow:0 22px 50px -18px rgba(0,0,0,.7)}
+  display:flex;align-items:flex-start;gap:6px;padding:7px 9px 16px;border-radius:20px;
+  background:rgba(255,255,255,.13);backdrop-filter:blur(30px) saturate(180%);-webkit-backdrop-filter:blur(30px) saturate(180%);
+  border:1px solid rgba(255,255,255,.24);
+  box-shadow:0 22px 50px -18px rgba(0,0,0,.72),inset 0 1px 0 rgba(255,255,255,.38)}
 .dock-item{position:relative;display:grid;place-items:center;transition:transform .18s cubic-bezier(.2,.8,.2,1)}
-.dock-item .di{width:50px;height:50px;border-radius:13px;display:grid;place-items:center;position:relative;
-  box-shadow:0 8px 18px rgba(0,0,0,.34),inset 0 0 0 .5px rgba(255,255,255,.22);overflow:hidden;
-  background:linear-gradient(155deg,#413c55,#22202e)}
-.dock-item .di svg{width:26px;height:26px;fill:none;stroke:#fff;stroke-width:1.55;stroke-linecap:round;stroke-linejoin:round}
-.dock-item .di.img img{width:100%;height:100%;object-fit:cover}
+.dock-item .di{width:52px;height:52px;display:grid;place-items:center;position:relative;z-index:1;
+  overflow:visible;background:none;filter:drop-shadow(0 7px 14px rgba(0,0,0,.42))}
+.dock-item .di > svg{width:52px;height:52px;display:block}
+.dock-item .di.img img{width:52px;height:52px;border-radius:13px;object-fit:cover}
 .dock-item:hover{transform:translateY(-8px) scale(1.08)}
 .dock-item:active{transform:translateY(-2px) scale(1.02)}
 .dock-item .tip{position:absolute;bottom:calc(100% + 9px);left:50%;transform:translateX(-50%) translateY(4px);
   padding:4px 9px;border-radius:7px;background:rgba(16,16,22,.86);color:#fff;font-size:11px;white-space:nowrap;
   opacity:0;pointer-events:none;transition:.16s;border:1px solid rgba(255,255,255,.1)}
 .dock-item:hover .tip{opacity:1;transform:translateX(-50%)}
+.dock-item .rx{position:absolute;left:50%;top:53px;width:52px;height:22px;overflow:hidden;
+  transform:translateX(-50%);opacity:.45;pointer-events:none;z-index:2;
+  -webkit-mask-image:linear-gradient(to bottom,rgba(0,0,0,.95),rgba(0,0,0,0) 85%);
+  mask-image:linear-gradient(to bottom,rgba(0,0,0,.95),rgba(0,0,0,0) 85%);
+  filter:blur(.8px)}
+.dock-item .rx svg{position:absolute;left:0;top:0;width:52px;height:52px;display:block;
+  transform:translateY(52px) scaleY(-1);transform-origin:top left}
+.dock-item .rx.sm{width:26px;height:16px;top:53px}
+.dock-item .rx.sm svg{left:0;top:12px;width:26px;height:26px;transform:translateY(26px) scaleY(-1);transform-origin:top left}
 .dock-item .dot{position:absolute;bottom:-4px;left:50%;transform:translateX(-50%);width:4px;height:4px;
   border-radius:50%;background:rgba(255,255,255,.9);opacity:0;transition:.2s}
 .dock-item.running .dot{opacity:1}
 .dock-sep{width:1px;height:38px;background:rgba(255,255,255,.16);margin:0 4px;align-self:center}
 
-/* 图标底色 */
-.di.rooms{background:linear-gradient(155deg,#3d4a72,#1e2337)}
-.di.works{background:linear-gradient(155deg,#6b3550,#2a1524)}
-.di.about{background:linear-gradient(155deg,#2f4a45,#18272a)}
-.di.contact{background:linear-gradient(155deg,#5a4630,#2a2018)}
-.di.readme{background:linear-gradient(155deg,#4a4a52,#232329)}
-.di.ext{background:linear-gradient(155deg,#2a2a34,#17171e)}
+/* 外链图标：半透明玻璃底，跟彩色 App 图标拉开层次 */
+.di.ext{width:52px;height:52px;border-radius:14px;position:relative;
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.26),inset 0 1px 0 rgba(255,255,255,.4)}
+.di.ext > svg{width:26px;height:26px;fill:none;stroke:#fff;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+.di.p1{background:linear-gradient(150deg,#9E8CFF,#6244E6 60%,#4326B8)}
+.di.p2{background:linear-gradient(150deg,#5ED6F5,#2A7EE8 60%,#1552AE)}
+.di.p3{background:linear-gradient(150deg,#55555F,#2A2A34 60%,#15151C)}
 
 /* ===================================================================
    程序：我的房间
@@ -323,8 +331,8 @@ body:not(.in) .dock{transform:translateX(-50%) translateY(20px)}
   .mb-clock{font-size:10.5px}
   .desktop{top:32px;bottom:74px}
   .desk-icons{right:8px;top:10px;gap:2px}
-  .desk-ic{width:76px}
-  .desk-ic .art{width:48px;height:48px;border-radius:12px}
+  .desk-ic{width:84px}
+  .desk-ic .art{width:58px;height:58px;border-radius:14px}
   .desk-ic .lb{font-size:10px;max-width:74px}
   .desk-hint{display:block;bottom:8px;font-size:9.5px;padding:5px 11px;
     color:rgba(255,255,255,.7)}
@@ -337,7 +345,8 @@ body:not(.in) .dock{transform:translateX(-50%) translateY(20px)}
   .window.sheet .bar-slot .win-title{display:block;font-size:13px;font-weight:600}
   .window.sheet .win-back{display:inline-flex;align-items:center;height:26px;padding:0 10px;margin-left:10px;
     border-radius:7px;border:1px solid var(--line);font-size:11.5px;color:var(--ink-2);background:rgba(255,255,255,.6)}
-  .dock{bottom:8px;gap:2px;padding:6px;border-radius:17px;max-width:calc(100vw - 16px)}
+  .dock{bottom:8px;gap:2px;padding:6px;border-radius:17px;max-width:calc(100vw - 16px);align-items:flex-end}
+  .dock-item .rx{display:none}
   .dock-item .di{width:44px;height:44px;border-radius:12px}
   .dock-item .di svg{width:23px;height:23px}
   .dock-item:hover{transform:none}
