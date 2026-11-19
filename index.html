@@ -137,6 +137,12 @@
   }
   tick(); setInterval(tick,10000);
 
+  /* 手机上「拖、拉大」不成立，换成铺满的说明；顺手把小字提示露出来当引导 */
+  if(MOB){
+    var dh=$('#deskHint');
+    if(dh) dh.textContent='点一下图标，窗口会铺满整块屏幕';
+  }
+
   /* ---- 解锁 ---- */
   var lock=$('#lock'), unlocked=false;
   function unlock(){
