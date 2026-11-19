@@ -18,6 +18,20 @@
 }
 </script>
 <link rel="stylesheet" href="./css/room.css">
+<style>
+  /* 被桌面程序以 iframe 嵌进来时（?embed=1），去掉自己的顶栏和侧边栏，只留画面 */
+  html.embed .top{display:none}
+  html.embed .keys{display:none}
+  html.embed .app{grid-template-rows:minmax(0,1fr)}
+  html.embed .ws{grid-template-columns:minmax(0,1fr);grid-template-rows:minmax(0,1fr);padding:0;gap:0}
+  html.embed .side{display:none}
+  html.embed .stage{border:0;border-radius:0}
+  html.embed .p-card{width:min(380px,100%)}
+  /* 窗口里不显示坐标/帧率这种调试读数 */
+  html.embed .readout{display:none}
+  @media(max-width:980px){ html.embed .desk-hint{display:none} }
+</style>
+<script>try{if(/[?&]embed=1/.test(location.search))document.documentElement.classList.add('embed');}catch(e){}</script>
 <script src="./data/projects.js"></script>
 </head>
 <body>
@@ -187,6 +201,8 @@ viewport.appendChild(renderer.domElement);
 
 const scene=new THREE.Scene();
 const camera=new THREE.PerspectiveCamera(72, viewport.clientWidth/viewport.clientHeight, 0.06, 200);
+/* 首帧按当前长宽比算一次视野，避免加载完的第一眼是「一面墙」 */
+(function(){ const a=camera.aspect; if(a<1){ const v=2*Math.atan(Math.tan(74*Math.PI/360)/a)*180/Math.PI; camera.fov=Math.min(104,Math.max(70,v)); camera.updateProjectionMatrix(); } })();
 /* maxPixelRadius 太大时，近处一颗点会被拉成半屏大的白团（天花板上那团光就是这么来的） */
 const spark=new SparkRenderer({renderer, maxPixelRadius: isMobile?72:96});
 scene.add(spark);
@@ -377,7 +393,7 @@ function placeCamera(dt, snap){
   const p=player.position;
   if(camFree){
     camera.position.copy(camFree.p);
-    camera.rotation.set(camFree.pitch, camFree.yaw, 0, 'YXZ');
+    camera.rotation.set(camFree.pitch+tiltX, camFree.yaw, 0, 'YXZ');
     return;
   }
   if(seated){
@@ -391,7 +407,7 @@ function placeCamera(dt, snap){
   const eyeY=playerFeetY()+EYE-(crouch?0.32:0);
   camY = (camY===null||snap) ? eyeY : camY + (eyeY-camY)*Math.min(1,dt*14);
   camera.position.set(p.x, Math.min(camY, R.ceil-0.12), p.z);
-  camera.rotation.set(pitch, yaw, 0, 'YXZ');
+  camera.rotation.set(pitch+tiltX, yaw, 0, 'YXZ');
 }
 
 /* ============ 交互提示 ============ */
@@ -689,13 +705,25 @@ function toggleFull(){
 stage.addEventListener('dblclick',()=>{ if(!document.pointerLockElement) toggleFull(); });
 
 /* ============ 尺寸 ============ */
+/* 竖屏视野：相机 fov 是「垂直」角度，手机竖着拿时若沿用 72，水平只剩 37 度 ——
+   站在屋子中间只看得到一面墙，什么也认不出来。这里按「水平视野保底」反推垂直 fov。 */
+const HFOV_MIN = 74;          // 想要的水平视野（度）
+/* 竖屏把 fov 撑大以后，多出来的角度一半给了天花板 —— 视轴往下压一点，地面才进得来 */
+let tiltX = 0;
+function fitFov(){
+  const a = camera.aspect;
+  if(a >= 1){ camera.fov = 72; tiltX = 0; return; }
+  const v = 2*Math.atan(Math.tan(HFOV_MIN*Math.PI/360)/a)*180/Math.PI;
+  camera.fov = Math.min(104, Math.max(70, v));
+  tiltX = a < 0.62 ? -0.13 : (a < 0.9 ? -0.07 : 0);
+}
 function resize(){
   const w=viewport.clientWidth,h=viewport.clientHeight;
   if(!w||!h) return;
   const cap=fitDpr();
   if(dpr>cap+0.01){ dpr=cap; renderer.setPixelRatio(dpr); }   // 转屏 / 全屏后重新收进预算
   renderer.setSize(w,h,false);
-  camera.aspect=w/h; camera.updateProjectionMatrix();
+  camera.aspect=w/h; fitFov(); camera.updateProjectionMatrix();
 }
 new ResizeObserver(resize).observe(viewport);
 addEventListener('resize',resize);
