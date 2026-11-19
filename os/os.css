@@ -173,12 +173,9 @@ body:not(.in) .dock{transform:translateX(-50%) translateY(20px)}
 .dock-sep{width:1px;height:38px;background:rgba(255,255,255,.16);margin:0 4px;align-self:center}
 
 /* 外链图标：半透明玻璃底，跟彩色 App 图标拉开层次 */
-.di.ext{width:52px;height:52px;border-radius:14px;position:relative;
-  box-shadow:inset 0 0 0 1px rgba(255,255,255,.26),inset 0 1px 0 rgba(255,255,255,.4)}
-.di.ext > svg{width:26px;height:26px;fill:none;stroke:#fff;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
-.di.p1{background:linear-gradient(150deg,#9E8CFF,#6244E6 60%,#4326B8)}
-.di.p2{background:linear-gradient(150deg,#5ED6F5,#2A7EE8 60%,#1552AE)}
-.di.p3{background:linear-gradient(150deg,#55555F,#2A2A34 60%,#15151C)}
+/* 外链图标：跟 App 图标同一套 squircle，只是底色不同 */
+.di.ext{background:none;box-shadow:none;border-radius:0}
+.di.ext > svg{width:52px;height:52px;display:block;fill:none;stroke:none}
 
 /* ===================================================================
    程序：我的房间
@@ -347,8 +344,8 @@ body:not(.in) .dock{transform:translateX(-50%) translateY(20px)}
     border-radius:7px;border:1px solid var(--line);font-size:11.5px;color:var(--ink-2);background:rgba(255,255,255,.6)}
   .dock{bottom:8px;gap:2px;padding:6px;border-radius:17px;max-width:calc(100vw - 16px);align-items:flex-end}
   .dock-item .rx{display:none}
-  .dock-item .di{width:44px;height:44px;border-radius:12px}
-  .dock-item .di svg{width:23px;height:23px}
+  .dock-item .di{width:44px;height:44px}
+  .dock-item .di svg,.dock-item .di > svg{width:44px;height:44px}
   .dock-item:hover{transform:none}
   .dock-item .tip{display:none}
   .dock-sep{display:none}

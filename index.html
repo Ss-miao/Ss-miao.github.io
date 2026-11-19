@@ -13,22 +13,44 @@
 <body>
 
 <!-- ============ 图标 ============ -->
-<!-- build: icons-v2 -->
+<!-- build: icons-v9 -->
 <svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
-  <linearGradient id="apGloss" x1="0" y1="0" x2="0" y2="1">
-    <stop offset="0" stop-color="#fff" stop-opacity=".46"/>
-    <stop offset=".52" stop-color="#fff" stop-opacity=".07"/>
-    <stop offset="1" stop-color="#fff" stop-opacity="0"/>
+  <!-- ===== 全局：iOS squircle 形状 / 边缘光 / 玻璃 ===== -->
+  <path id="sqPath" d="M94.50 48.00 L94.50 57.21 L94.49 60.15 L94.47 62.29 L94.45 64.03 L94.43 65.52 L94.40 66.84 L94.36 68.04 L94.32 69.13 L94.27 70.14 L94.22 71.08 L94.16 71.97 L94.09 72.81 L94.02 73.60 L93.94 74.36 L93.86 75.08 L93.77 75.77 L93.68 76.43 L93.58 77.07 L93.47 77.68 L93.36 78.27 L93.24 78.84 L93.11 79.40 L92.98 79.93 L92.85 80.45 L92.71 80.95 L92.56 81.43 L92.40 81.91 L92.24 82.36 L92.07 82.81 L91.90 83.24 L91.72 83.66 L91.53 84.07 L91.34 84.47 L91.14 84.85 L90.93 85.23 L90.72 85.60 L90.50 85.95 L90.27 86.30 L90.04 86.64 L89.80 86.97 L89.55 87.29 L89.29 87.60 L89.03 87.90 L88.76 88.19 L88.48 88.48 L88.19 88.76 L87.90 89.03 L87.60 89.29 L87.29 89.55 L86.97 89.80 L86.64 90.04 L86.30 90.27 L85.95 90.50 L85.60 90.72 L85.23 90.93 L84.85 91.14 L84.47 91.34 L84.07 91.53 L83.66 91.72 L83.24 91.90 L82.81 92.07 L82.36 92.24 L81.91 92.40 L81.43 92.56 L80.95 92.71 L80.45 92.85 L79.93 92.98 L79.40 93.11 L78.84 93.24 L78.27 93.36 L77.68 93.47 L77.07 93.58 L76.43 93.68 L75.77 93.77 L75.08 93.86 L74.36 93.94 L73.60 94.02 L72.81 94.09 L71.97 94.16 L71.08 94.22 L70.14 94.27 L69.13 94.32 L68.04 94.36 L66.84 94.40 L65.52 94.43 L64.03 94.45 L62.29 94.47 L60.15 94.49 L57.21 94.50 L48.00 94.50 L38.79 94.50 L35.85 94.49 L33.71 94.47 L31.97 94.45 L30.48 94.43 L29.16 94.40 L27.96 94.36 L26.87 94.32 L25.86 94.27 L24.92 94.22 L24.03 94.16 L23.19 94.09 L22.40 94.02 L21.64 93.94 L20.92 93.86 L20.23 93.77 L19.57 93.68 L18.93 93.58 L18.32 93.47 L17.73 93.36 L17.16 93.24 L16.60 93.11 L16.07 92.98 L15.55 92.85 L15.05 92.71 L14.57 92.56 L14.09 92.40 L13.64 92.24 L13.19 92.07 L12.76 91.90 L12.34 91.72 L11.93 91.53 L11.53 91.34 L11.15 91.14 L10.77 90.93 L10.40 90.72 L10.05 90.50 L9.70 90.27 L9.36 90.04 L9.03 89.80 L8.71 89.55 L8.40 89.29 L8.10 89.03 L7.81 88.76 L7.52 88.48 L7.24 88.19 L6.97 87.90 L6.71 87.60 L6.45 87.29 L6.20 86.97 L5.96 86.64 L5.73 86.30 L5.50 85.95 L5.28 85.60 L5.07 85.23 L4.86 84.85 L4.66 84.47 L4.47 84.07 L4.28 83.66 L4.10 83.24 L3.93 82.81 L3.76 82.36 L3.60 81.91 L3.44 81.43 L3.29 80.95 L3.15 80.45 L3.02 79.93 L2.89 79.40 L2.76 78.84 L2.64 78.27 L2.53 77.68 L2.42 77.07 L2.32 76.43 L2.23 75.77 L2.14 75.08 L2.06 74.36 L1.98 73.60 L1.91 72.81 L1.84 71.97 L1.78 71.08 L1.73 70.14 L1.68 69.13 L1.64 68.04 L1.60 66.84 L1.57 65.52 L1.55 64.03 L1.53 62.29 L1.51 60.15 L1.50 57.21 L1.50 48.00 L1.50 38.79 L1.51 35.85 L1.53 33.71 L1.55 31.97 L1.57 30.48 L1.60 29.16 L1.64 27.96 L1.68 26.87 L1.73 25.86 L1.78 24.92 L1.84 24.03 L1.91 23.19 L1.98 22.40 L2.06 21.64 L2.14 20.92 L2.23 20.23 L2.32 19.57 L2.42 18.93 L2.53 18.32 L2.64 17.73 L2.76 17.16 L2.89 16.60 L3.02 16.07 L3.15 15.55 L3.29 15.05 L3.44 14.57 L3.60 14.09 L3.76 13.64 L3.93 13.19 L4.10 12.76 L4.28 12.34 L4.47 11.93 L4.66 11.53 L4.86 11.15 L5.07 10.77 L5.28 10.40 L5.50 10.05 L5.73 9.70 L5.96 9.36 L6.20 9.03 L6.45 8.71 L6.71 8.40 L6.97 8.10 L7.24 7.81 L7.52 7.52 L7.81 7.24 L8.10 6.97 L8.40 6.71 L8.71 6.45 L9.03 6.20 L9.36 5.96 L9.70 5.73 L10.05 5.50 L10.40 5.28 L10.77 5.07 L11.15 4.86 L11.53 4.66 L11.93 4.47 L12.34 4.28 L12.76 4.10 L13.19 3.93 L13.64 3.76 L14.09 3.60 L14.57 3.44 L15.05 3.29 L15.55 3.15 L16.07 3.02 L16.60 2.89 L17.16 2.76 L17.73 2.64 L18.32 2.53 L18.93 2.42 L19.57 2.32 L20.23 2.23 L20.92 2.14 L21.64 2.06 L22.40 1.98 L23.19 1.91 L24.03 1.84 L24.92 1.78 L25.86 1.73 L26.87 1.68 L27.96 1.64 L29.16 1.60 L30.48 1.57 L31.97 1.55 L33.71 1.53 L35.85 1.51 L38.79 1.50 L48.00 1.50 L57.21 1.50 L60.15 1.51 L62.29 1.53 L64.03 1.55 L65.52 1.57 L66.84 1.60 L68.04 1.64 L69.13 1.68 L70.14 1.73 L71.08 1.78 L71.97 1.84 L72.81 1.91 L73.60 1.98 L74.36 2.06 L75.08 2.14 L75.77 2.23 L76.43 2.32 L77.07 2.42 L77.68 2.53 L78.27 2.64 L78.84 2.76 L79.40 2.89 L79.93 3.02 L80.45 3.15 L80.95 3.29 L81.43 3.44 L81.91 3.60 L82.36 3.76 L82.81 3.93 L83.24 4.10 L83.66 4.28 L84.07 4.47 L84.47 4.66 L84.85 4.86 L85.23 5.07 L85.60 5.28 L85.95 5.50 L86.30 5.73 L86.64 5.96 L86.97 6.20 L87.29 6.45 L87.60 6.71 L87.90 6.97 L88.19 7.24 L88.48 7.52 L88.76 7.81 L89.03 8.10 L89.29 8.40 L89.55 8.71 L89.80 9.03 L90.04 9.36 L90.27 9.70 L90.50 10.05 L90.72 10.40 L90.93 10.77 L91.14 11.15 L91.34 11.53 L91.53 11.93 L91.72 12.34 L91.90 12.76 L92.07 13.19 L92.24 13.64 L92.40 14.09 L92.56 14.57 L92.71 15.05 L92.85 15.55 L92.98 16.07 L93.11 16.60 L93.24 17.16 L93.36 17.73 L93.47 18.32 L93.58 18.93 L93.68 19.57 L93.77 20.23 L93.86 20.92 L93.94 21.64 L94.02 22.40 L94.09 23.19 L94.16 24.03 L94.22 24.92 L94.27 25.86 L94.32 26.87 L94.36 27.96 L94.40 29.16 L94.43 30.48 L94.45 31.97 L94.47 33.71 L94.49 35.85 L94.50 38.79 Z"/>
+  <clipPath id="sqClip"><use href="#sqPath"/></clipPath>
+  <linearGradient id="edgeLight" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#fff" stop-opacity=".78"/>
+    <stop offset=".28" stop-color="#fff" stop-opacity=".20"/>
+    <stop offset=".72" stop-color="#fff" stop-opacity=".12"/>
+    <stop offset="1" stop-color="#fff" stop-opacity=".34"/>
   </linearGradient>
-  <radialGradient id="apGlow" cx=".5" cy="0" r=".85">
-    <stop offset="0" stop-color="#fff" stop-opacity=".52"/>
-    <stop offset=".5" stop-color="#fff" stop-opacity=".14"/>
+  <linearGradient id="glassTop" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#fff" stop-opacity=".38"/>
+    <stop offset=".2" stop-color="#fff" stop-opacity=".07"/>
+    <stop offset=".42" stop-color="#fff" stop-opacity="0"/>
+  </linearGradient>
+  <linearGradient id="shadeB" x1="0" y1="0" x2="0" y2="1">
+    <stop offset=".38" stop-color="#000" stop-opacity="0"/>
+    <stop offset="1" stop-color="#000" stop-opacity=".30"/>
+  </linearGradient>
+  <filter id="lift" x="-25%" y="-25%" width="150%" height="150%">
+    <feDropShadow dx="0" dy="2.2" stdDeviation="1.9" flood-color="#000" flood-opacity=".38"/>
+  </filter>
+  <linearGradient id="bevel" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#000" stop-opacity="0"/>
+    <stop offset=".55" stop-color="#000" stop-opacity="0"/>
+    <stop offset="1" stop-color="#000" stop-opacity=".26"/>
+  </linearGradient>
+  <radialGradient id="sheen" cx=".5" cy=".1" r=".62">
+    <stop offset="0" stop-color="#fff" stop-opacity=".5"/>
+    <stop offset=".55" stop-color="#fff" stop-opacity=".12"/>
     <stop offset="1" stop-color="#fff" stop-opacity="0"/>
   </radialGradient>
-  <linearGradient id="apShade" x1="0" y1="0" x2="0" y2="1">
-    <stop offset="0" stop-color="#000" stop-opacity="0"/>
-    <stop offset="1" stop-color="#000" stop-opacity=".16"/>
-  </linearGradient>
+  <radialGradient id="topGlow" cx=".5" cy="-.1" r=".95">
+    <stop offset="0" stop-color="#fff" stop-opacity=".46"/>
+    <stop offset=".5" stop-color="#fff" stop-opacity=".08"/>
+    <stop offset="1" stop-color="#fff" stop-opacity="0"/>
+  </radialGradient>
   <symbol id="ic-door" viewBox="0 0 24 24"><path d="M5 21V4a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v17"/><path d="M3 21h18"/><path d="M14.5 12v.01"/><path d="M8.5 3v18"/></symbol>
   <symbol id="ic-film" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7 4v16M17 4v16"/><path d="M3 9h4M3 15h4M17 9h4M17 15h4"/></symbol>
   <symbol id="ic-user" viewBox="0 0 24 24"><circle cx="12" cy="8.5" r="3.6"/><path d="M4.6 20.2a7.6 7.6 0 0 1 14.8 0"/></symbol>
@@ -43,106 +65,259 @@
   <symbol id="ic-wifi" viewBox="0 0 24 24"><path d="M2.5 8.5a15 15 0 0 1 19 0"/><path d="M6 12.5a10 10 0 0 1 12 0"/><path d="M9.4 16.3a5 5 0 0 1 5.2 0"/><path d="M12 20h.01"/></symbol>
   <symbol id="ic-batt" viewBox="0 0 26 13"><rect x=".8" y=".8" width="20" height="11.4" rx="3"/><rect x="2.6" y="2.6" width="14" height="7.8" rx="1.6" fill="currentColor" stroke="none"/><path d="M23 4.4v4.2" stroke-width="2.4"/></symbol>
 
-  <!-- ===== App 图标：彩色底 + 顶部高光 + 细白描边（不用位图，缩放不糊） ===== -->
+
+  <!-- ===== App 图标：squircle + 分层插画 ===== -->
   <symbol id="ap-room" viewBox="0 0 96 96">
     <defs>
-      <linearGradient id="apRoomBg" x1="0" y1="0" x2=".38" y2="1">
-        <stop offset="0" stop-color="#86A6FF"/><stop offset=".48" stop-color="#4A5BEA"/><stop offset="1" stop-color="#2730A2"/>
+      <linearGradient id="rmBg" x1=".08" y1="0" x2=".88" y2="1">
+        <stop offset="0" stop-color="#8E9EFF"/><stop offset=".4" stop-color="#3D49D8"/><stop offset="1" stop-color="#12144F"/>
       </linearGradient>
-      <linearGradient id="apRoomDoor" x1="0" y1="0" x2=".2" y2="1">
-        <stop offset="0" stop-color="#FFEBC6"/><stop offset="1" stop-color="#FFAE52"/>
+      <linearGradient id="rmRoof" x1=".15" y1="0" x2=".85" y2="1">
+        <stop offset="0" stop-color="#FFFFFF"/><stop offset="1" stop-color="#DCE3FF"/>
       </linearGradient>
-      <clipPath id="apRoomClip"><rect width="96" height="96" rx="22"/></clipPath>
+      <linearGradient id="rmWall" x1="0" y1="0" x2=".3" y2="1">
+        <stop offset="0" stop-color="#FFFFFF"/><stop offset="1" stop-color="#E7ECFF"/>
+      </linearGradient>
+      <linearGradient id="rmDoor" x1=".2" y1="0" x2=".8" y2="1">
+        <stop offset="0" stop-color="#FFF0D2"/><stop offset=".5" stop-color="#FFC46B"/><stop offset="1" stop-color="#EE8C1F"/>
+      </linearGradient>
+      <linearGradient id="rmWin" x1="0" y1="0" x2=".4" y2="1">
+        <stop offset="0" stop-color="#FFE9B8"/><stop offset="1" stop-color="#FFB457"/>
+      </linearGradient>
+      <radialGradient id="rmGlow" cx=".5" cy=".5" r=".5">
+        <stop offset="0" stop-color="#FFC978" stop-opacity=".6"/>
+        <stop offset=".55" stop-color="#FFAE52" stop-opacity=".2"/>
+        <stop offset="1" stop-color="#FF9E3D" stop-opacity="0"/>
+      </radialGradient>
     </defs>
-    <g clip-path="url(#apRoomClip)">
-      <rect width="96" height="96" fill="url(#apRoomBg)"/>
-      <rect width="96" height="62" fill="url(#apGloss)"/>
-      <ellipse cx="48" cy="0" rx="45" ry="27" fill="url(#apGlow)"/>
-      <rect y="50" width="96" height="46" fill="url(#apShade)"/>
+    <g clip-path="url(#sqClip)">
+      <rect width="96" height="96" fill="url(#rmBg)"/>
+      <ellipse cx="48" cy="8" rx="60" ry="42" fill="url(#topGlow)"/>
+      <g filter="url(#lift)">
+        <ellipse cx="47" cy="70" rx="26" ry="20" fill="url(#rmGlow)"/>
+        <ellipse cx="48" cy="77.5" rx="24" ry="3.4" fill="#080B33" opacity=".3"/>
+        <rect x="61" y="20.5" width="7.5" height="14" rx="1.8" fill="#FFFFFF" opacity=".78"/>
+        <path d="M48 15.5 80 43.5H16z" fill="url(#rmRoof)"/>
+        <rect x="16" y="43" width="64" height="5.4" rx="2.2" fill="#D8DFFA"/>
+        <rect x="24" y="46.5" width="48" height="29.5" rx="2" fill="url(#rmWall)"/>
+        <rect x="29.5" y="52" width="9" height="8.4" rx="1.6" fill="url(#rmWin)"/>
+        <path d="M34 52v8.4M29.5 56.2h9" stroke="#FFFFFF" stroke-opacity=".92" stroke-width="1.3"/>
+        <path d="M41.5 76V57.6a6.5 6.5 0 0 1 13 0V76z" fill="url(#rmDoor)"/>
+        <circle cx="51.4" cy="65.5" r="1.4" fill="#7E4B0C" opacity=".72"/>
+        <path d="M24 46.5h48" stroke="#0B1030" stroke-opacity=".14" stroke-width="1.4"/>
+      </g>
+      <ellipse cx="44" cy="8" rx="38" ry="22" fill="url(#sheen)" opacity=".7"/>
+      <rect width="96" height="96" fill="url(#glassTop)"/>
+      <rect y="52" width="96" height="44" fill="url(#shadeB)"/>
+      <use href="#sqPath" fill="none" stroke="url(#bevel)" stroke-width="3.4"/>
     </g>
-    <path d="M48 16.5 76 37.2v33.3a6 6 0 0 1-6 6H26a6 6 0 0 1-6-6V37.2z" fill="#fff" opacity=".96"/>
-    <path d="M41 76.5V57.8a7 7 0 0 1 14 0v18.7z" fill="url(#apRoomDoor)"/>
-    <path d="M48 16.5 76 37.2H20z" fill="#fff" opacity=".55"/>
-    <rect x=".9" y=".9" width="94.2" height="94.2" rx="21.4" fill="none" stroke="#fff" stroke-opacity=".32" stroke-width="1.4"/>
+    <use href="#sqPath" fill="none" stroke="url(#edgeLight)" stroke-width="1.7"/>
   </symbol>
 
   <symbol id="ap-works" viewBox="0 0 96 96">
     <defs>
-      <linearGradient id="apWorksBg" x1="0" y1="0" x2=".4" y2="1">
-        <stop offset="0" stop-color="#FFA0B6"/><stop offset=".45" stop-color="#F4486B"/><stop offset="1" stop-color="#AC143E"/>
+      <linearGradient id="wkBg" x1=".05" y1="0" x2=".9" y2="1">
+        <stop offset="0" stop-color="#FF97AC"/><stop offset=".4" stop-color="#E82553"/><stop offset="1" stop-color="#79062B"/>
       </linearGradient>
-      <clipPath id="apWorksClip"><rect width="96" height="96" rx="22"/></clipPath>
+      <linearGradient id="wkBase" x1="0" y1="0" x2=".25" y2="1">
+        <stop offset="0" stop-color="#FFFFFF"/><stop offset="1" stop-color="#EFE3E7"/>
+      </linearGradient>
+      <linearGradient id="wkScr" x1="0" y1="0" x2=".55" y2="1">
+        <stop offset="0" stop-color="#400E24"/><stop offset="1" stop-color="#6C1533"/>
+      </linearGradient>
+      <clipPath id="wkBarClip"><rect x="19" y="27" width="58" height="13" rx="3"/></clipPath>
     </defs>
-    <g clip-path="url(#apWorksClip)">
-      <rect width="96" height="96" fill="url(#apWorksBg)"/>
-      <rect width="96" height="62" fill="url(#apGloss)"/>
-      <ellipse cx="48" cy="0" rx="45" ry="27" fill="url(#apGlow)"/>
-      <rect y="50" width="96" height="46" fill="url(#apShade)"/>
+    <g clip-path="url(#sqClip)">
+      <rect width="96" height="96" fill="url(#wkBg)"/>
+      <ellipse cx="48" cy="8" rx="60" ry="42" fill="url(#topGlow)"/>
+      <g filter="url(#lift)">
+        <rect x="19" y="26.5" width="58" height="13.4" rx="3.2" fill="#FFFFFF"/>
+        <g clip-path="url(#wkBarClip)">
+          <path d="M24 26 31 26 21 41 14 41z" fill="#E82553"/>
+          <path d="M45 26 52 26 42 41 35 41z" fill="#E82553"/>
+          <path d="M66 26 73 26 63 41 56 41z" fill="#E82553"/>
+        </g>
+        <rect x="19" y="40.2" width="58" height="1.8" fill="#5C0A21" opacity=".55"/>
+        <rect x="19.4" y="42" width="57.2" height="35" rx="6.4" fill="url(#wkBase)"/>
+        <rect x="25.5" y="47.5" width="45.6" height="23.6" rx="3.6" fill="url(#wkScr)"/>
+        <path d="M43.2 52.4 56.6 59.2 43.2 66z" fill="#FFFFFF" stroke="#FFFFFF" stroke-width="1.1" stroke-linejoin="round"/>
+      </g>
+      <ellipse cx="44" cy="8" rx="38" ry="22" fill="url(#sheen)" opacity=".7"/>
+      <rect width="96" height="96" fill="url(#glassTop)"/>
+      <rect y="52" width="96" height="44" fill="url(#shadeB)"/>
+      <use href="#sqPath" fill="none" stroke="url(#bevel)" stroke-width="3.4"/>
     </g>
-    <rect x="22" y="25" width="52" height="46" rx="6" fill="#fff" opacity=".97"/>
-    <g fill="#E33A5C">
-      <rect x="26" y="29.5" width="6.4" height="6.4" rx="1.8"/><rect x="26" y="39.3" width="6.4" height="6.4" rx="1.8"/>
-      <rect x="26" y="49.1" width="6.4" height="6.4" rx="1.8"/><rect x="26" y="58.9" width="6.4" height="6.4" rx="1.8"/>
-      <rect x="63.6" y="29.5" width="6.4" height="6.4" rx="1.8"/><rect x="63.6" y="39.3" width="6.4" height="6.4" rx="1.8"/>
-      <rect x="63.6" y="49.1" width="6.4" height="6.4" rx="1.8"/><rect x="63.6" y="58.9" width="6.4" height="6.4" rx="1.8"/>
-    </g>
-    <path d="M41.8 37.8 L57 48 L41.8 58.2 Z" fill="#E33A5C"/>
-    <rect x=".9" y=".9" width="94.2" height="94.2" rx="21.4" fill="none" stroke="#fff" stroke-opacity=".32" stroke-width="1.4"/>
+    <use href="#sqPath" fill="none" stroke="url(#edgeLight)" stroke-width="1.7"/>
   </symbol>
 
   <symbol id="ap-about" viewBox="0 0 96 96">
     <defs>
-      <linearGradient id="apAboutBg" x1="0" y1="0" x2=".45" y2="1">
-        <stop offset="0" stop-color="#79E7D4"/><stop offset=".5" stop-color="#25AC93"/><stop offset="1" stop-color="#0E6357"/>
+      <linearGradient id="abBg" x1=".05" y1="0" x2=".9" y2="1">
+        <stop offset="0" stop-color="#7DEDD6"/><stop offset=".45" stop-color="#14A88E"/><stop offset="1" stop-color="#06544A"/>
       </linearGradient>
-      <clipPath id="apAboutClip"><rect width="96" height="96" rx="22"/></clipPath>
+      <linearGradient id="abW1" x1="0" y1="0" x2=".4" y2="1">
+        <stop offset="0" stop-color="#FFFFFF"/><stop offset="1" stop-color="#DDF6F0"/>
+      </linearGradient>
+      <linearGradient id="abW2" x1="0" y1="0" x2=".2" y2="1">
+        <stop offset="0" stop-color="#FFFFFF"/><stop offset="1" stop-color="#D6F2EB"/>
+      </linearGradient>
+      <radialGradient id="abHalo" cx=".5" cy=".42" r=".55">
+        <stop offset="0" stop-color="#fff" stop-opacity=".22"/><stop offset="1" stop-color="#fff" stop-opacity="0"/>
+      </radialGradient>
     </defs>
-    <g clip-path="url(#apAboutClip)">
-      <rect width="96" height="96" fill="url(#apAboutBg)"/>
-      <rect width="96" height="62" fill="url(#apGloss)"/>
-      <ellipse cx="48" cy="0" rx="45" ry="27" fill="url(#apGlow)"/>
-      <rect y="50" width="96" height="46" fill="url(#apShade)"/>
+    <g clip-path="url(#sqClip)">
+      <rect width="96" height="96" fill="url(#abBg)"/>
+      <ellipse cx="48" cy="8" rx="60" ry="42" fill="url(#topGlow)"/>
+      <g filter="url(#lift)">
+      <circle cx="48" cy="46" r="30" fill="url(#abHalo)"/>
+      <path d="M23.5 78c0-12.8 11-20.4 24.5-20.4S72.5 65.2 72.5 78z" fill="url(#abW2)"/>
+      <circle cx="48" cy="36" r="12.4" fill="url(#abW1)"/>
+      <path d="M35.8 58.2c3.6 3 7.7 4.6 12.2 4.6s8.6-1.6 12.2-4.6" fill="none" stroke="#0A5D52" stroke-opacity=".14" stroke-width="1.5"/>
+      <ellipse cx="44" cy="8" rx="38" ry="22" fill="url(#sheen)" opacity=".7"/>
+      </g>
+      <rect width="96" height="96" fill="url(#glassTop)"/>
+      <rect y="52" width="96" height="44" fill="url(#shadeB)"/>
+      <use href="#sqPath" fill="none" stroke="url(#bevel)" stroke-width="3.4"/>
     </g>
-    <circle cx="48" cy="38.5" r="11.6" fill="#fff" opacity=".97"/>
-    <path d="M25.5 71.5c0-12.8 10-19.6 22.5-19.6s22.5 6.8 22.5 19.6z" fill="#fff" opacity=".97"/>
-    <rect x=".9" y=".9" width="94.2" height="94.2" rx="21.4" fill="none" stroke="#fff" stroke-opacity=".32" stroke-width="1.4"/>
+    <use href="#sqPath" fill="none" stroke="url(#edgeLight)" stroke-width="1.7"/>
   </symbol>
 
   <symbol id="ap-contact" viewBox="0 0 96 96">
     <defs>
-      <linearGradient id="apCtBg" x1="0" y1="0" x2=".4" y2="1">
-        <stop offset="0" stop-color="#FFD77E"/><stop offset=".5" stop-color="#F59B2E"/><stop offset="1" stop-color="#C26409"/>
+      <linearGradient id="ctBg" x1=".05" y1="0" x2=".9" y2="1">
+        <stop offset="0" stop-color="#FFDD8C"/><stop offset=".45" stop-color="#F79A22"/><stop offset="1" stop-color="#A24C00"/>
       </linearGradient>
-      <clipPath id="apCtClip"><rect width="96" height="96" rx="22"/></clipPath>
+      <linearGradient id="ctBack" x1="0" y1="0" x2=".3" y2="1">
+        <stop offset="0" stop-color="#FFFDF6"/><stop offset="1" stop-color="#F4E7CE"/>
+      </linearGradient>
+      <linearGradient id="ctFlap" x1="0" y1="0" x2=".2" y2="1">
+        <stop offset="0" stop-color="#FFF6DF"/><stop offset="1" stop-color="#EFD9B2"/>
+      </linearGradient>
     </defs>
-    <g clip-path="url(#apCtClip)">
-      <rect width="96" height="96" fill="url(#apCtBg)"/>
-      <rect width="96" height="62" fill="url(#apGloss)"/>
-      <ellipse cx="48" cy="0" rx="45" ry="27" fill="url(#apGlow)"/>
-      <rect y="50" width="96" height="46" fill="url(#apShade)"/>
+    <g clip-path="url(#sqClip)">
+      <rect width="96" height="96" fill="url(#ctBg)"/>
+      <ellipse cx="48" cy="8" rx="60" ry="42" fill="url(#topGlow)"/>
+      <g filter="url(#lift)">
+      <ellipse cx="48" cy="72.5" rx="25" ry="4" fill="#5A2B00" opacity=".24"/>
+      <rect x="18" y="28" width="60" height="41" rx="5.5" fill="url(#ctBack)"/>
+      <path d="M18 64.5 48 44.5 78 64.5v-.5a5 5 0 0 1-5 5H23a5 5 0 0 1-5-5z" fill="#FFFDF8" opacity=".9"/>
+      <path d="M19.5 29.5 48 51.5 76.5 29.5z" fill="#F0DCB6"/>
+      <path d="M19.5 29.5 48 51.5 76.5 29.5" fill="none" stroke="#C99B52" stroke-opacity=".75" stroke-width="1.6" stroke-linejoin="round"/>
+      <path d="M19.5 29.5 48 51.5 76.5 29.5" fill="none" stroke="#D9B77E" stroke-opacity=".55" stroke-width="1.3" stroke-linejoin="round"/>
+      <ellipse cx="44" cy="8" rx="38" ry="22" fill="url(#sheen)" opacity=".7"/>
+      </g>
+      <rect width="96" height="96" fill="url(#glassTop)"/>
+      <rect y="52" width="96" height="44" fill="url(#shadeB)"/>
+      <use href="#sqPath" fill="none" stroke="url(#bevel)" stroke-width="3.4"/>
     </g>
-    <rect x="19" y="29" width="58" height="38" rx="6.5" fill="#FFFAF0" opacity=".98"/>
-    <path d="M22.5 34 L48 51.5 L73.5 34" fill="none" stroke="#DD8A1B" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round"/>
-    <rect x=".9" y=".9" width="94.2" height="94.2" rx="21.4" fill="none" stroke="#fff" stroke-opacity=".32" stroke-width="1.4"/>
+    <use href="#sqPath" fill="none" stroke="url(#edgeLight)" stroke-width="1.7"/>
   </symbol>
 
   <symbol id="ap-readme" viewBox="0 0 96 96">
     <defs>
-      <linearGradient id="apRdBg" x1="0" y1="0" x2=".4" y2="1">
-        <stop offset="0" stop-color="#B3AED2"/><stop offset=".5" stop-color="#736E94"/><stop offset="1" stop-color="#453F60"/>
+      <linearGradient id="rdBg" x1=".05" y1="0" x2=".9" y2="1">
+        <stop offset="0" stop-color="#BDB8DC"/><stop offset=".45" stop-color="#77709B"/><stop offset="1" stop-color="#332D4D"/>
       </linearGradient>
-      <clipPath id="apRdClip"><rect width="96" height="96" rx="22"/></clipPath>
+      <linearGradient id="rdPaper" x1="0" y1="0" x2=".3" y2="1">
+        <stop offset="0" stop-color="#FFFFFF"/><stop offset="1" stop-color="#F3F0FA"/>
+      </linearGradient>
     </defs>
-    <g clip-path="url(#apRdClip)">
-      <rect width="96" height="96" fill="url(#apRdBg)"/>
-      <rect width="96" height="62" fill="url(#apGloss)"/>
-      <ellipse cx="48" cy="0" rx="45" ry="27" fill="url(#apGlow)"/>
-      <rect y="50" width="96" height="46" fill="url(#apShade)"/>
+    <g clip-path="url(#sqClip)">
+      <rect width="96" height="96" fill="url(#rdBg)"/>
+      <ellipse cx="48" cy="8" rx="60" ry="42" fill="url(#topGlow)"/>
+      <g filter="url(#lift)">
+      <ellipse cx="49" cy="77" rx="21" ry="3.4" fill="#120E22" opacity=".28"/>
+      <path d="M33 19h22l13.5 13.5V76a4.6 4.6 0 0 1-4.6 4.6H33A4.6 4.6 0 0 1 28.4 76V23.6A4.6 4.6 0 0 1 33 19z" fill="url(#rdPaper)"/>
+      <path d="M55 19v10.6a3 3 0 0 0 3 3h10.5z" fill="#D7D2E8"/>
+      <path d="M55 19v10.6a3 3 0 0 0 3 3h10.5" fill="none" stroke="#BEB7D6" stroke-width="1.2"/>
+      <g stroke-linecap="round" fill="none">
+        <path d="M36 47h24M36 55.5h24M36 64h15" stroke="#B3ACD0" stroke-width="2.8"/>
+        <path d="M36 72h9" stroke="#C9C3E0" stroke-width="2.8"/>
+      </g>
+      <ellipse cx="44" cy="8" rx="38" ry="22" fill="url(#sheen)" opacity=".7"/>
+      </g>
+      <rect width="96" height="96" fill="url(#glassTop)"/>
+      <rect y="52" width="96" height="44" fill="url(#shadeB)"/>
+      <use href="#sqPath" fill="none" stroke="url(#bevel)" stroke-width="3.4"/>
     </g>
-    <path d="M33 19.5h18L66 32.5v43a4.5 4.5 0 0 1-4.5 4.5h-28.5A4.5 4.5 0 0 1 28.5 75.5v-51a5 5 0 0 1 4.5-5z" fill="#fff" opacity=".97"/>
-    <path d="M51 19.5v13h15" fill="none" stroke="#7A7499" stroke-width="3" stroke-linejoin="round"/>
-    <g stroke="#7A7499" stroke-width="3" stroke-linecap="round"><path d="M39 48h18M39 57h18M39 66h11"/></g>
-    <rect x=".9" y=".9" width="94.2" height="94.2" rx="21.4" fill="none" stroke="#fff" stroke-opacity=".32" stroke-width="1.4"/>
+    <use href="#sqPath" fill="none" stroke="url(#edgeLight)" stroke-width="1.7"/>
+  </symbol>
+
+  <symbol id="ap-prompts" viewBox="0 0 96 96">
+    <defs>
+      <linearGradient id="pmBg" x1=".05" y1="0" x2=".9" y2="1">
+        <stop offset="0" stop-color="#C4A9FF"/><stop offset=".45" stop-color="#7C3AED"/><stop offset="1" stop-color="#3E1189"/>
+      </linearGradient>
+    </defs>
+    <g clip-path="url(#sqClip)">
+      <rect width="96" height="96" fill="url(#pmBg)"/>
+      <ellipse cx="48" cy="8" rx="60" ry="42" fill="url(#topGlow)"/>
+      <g filter="url(#lift)">
+      <g fill="#FFFFFF">
+        <path d="M40 22 46.4 41.6 66 48 46.4 54.4 40 74 33.6 54.4 14 48 33.6 41.6z" fill-opacity=".97"/>
+        <path d="M69 20 71.8 28.2 80 31 71.8 33.8 69 42 66.2 33.8 58 31 66.2 28.2z" fill-opacity=".85"/>
+        <path d="M69.5 56 71.5 62 77.5 64 71.5 66 69.5 72 67.5 66 61.5 64 67.5 62z" fill-opacity=".7"/>
+      </g>
+      <ellipse cx="44" cy="8" rx="38" ry="22" fill="url(#sheen)" opacity=".7"/>
+      </g>
+      <rect width="96" height="96" fill="url(#glassTop)"/>
+      <rect y="52" width="96" height="44" fill="url(#shadeB)"/>
+      <use href="#sqPath" fill="none" stroke="url(#bevel)" stroke-width="3.4"/>
+    </g>
+    <use href="#sqPath" fill="none" stroke="url(#edgeLight)" stroke-width="1.7"/>
+  </symbol>
+
+  <symbol id="ap-upmiao" viewBox="0 0 96 96">
+    <defs>
+      <linearGradient id="upBg" x1=".05" y1="0" x2=".9" y2="1">
+        <stop offset="0" stop-color="#8FD8FF"/><stop offset=".45" stop-color="#2F7BF0"/><stop offset="1" stop-color="#123A93"/>
+      </linearGradient>
+      <linearGradient id="upImg" x1="0" y1="0" x2=".7" y2="1">
+        <stop offset="0" stop-color="#FFB3D9"/><stop offset=".5" stop-color="#B67CFF"/><stop offset="1" stop-color="#5B5BF0"/>
+      </linearGradient>
+    </defs>
+    <g clip-path="url(#sqClip)">
+      <rect width="96" height="96" fill="url(#upBg)"/>
+      <ellipse cx="48" cy="8" rx="60" ry="42" fill="url(#topGlow)"/>
+      <g filter="url(#lift)">
+      <rect x="22" y="25" width="42" height="42" rx="9" fill="#FFFFFF" fill-opacity=".95"/>
+      <rect x="26.5" y="29.5" width="33" height="33" rx="6" fill="url(#upImg)"/>
+      <circle cx="36" cy="39.5" r="3.4" fill="#FFE28A"/>
+      <path d="M26.5 56 37 45.5 45 53.5 49.5 49 59.5 58.5v1a3 3 0 0 1-3 3H29.5a3 3 0 0 1-3-3z" fill="#FFFFFF" fill-opacity=".78"/>
+      <g fill="#FFFFFF">
+        <path d="M70 26 72.3 32.7 79 35 72.3 37.3 70 44 67.7 37.3 61 35 67.7 32.7z" fill-opacity=".95"/>
+        <path d="M74 52 75.4 56 79.4 57.4 75.4 58.8 74 62.8 72.6 58.8 68.6 57.4 72.6 56z" fill-opacity=".7"/>
+      </g>
+      <ellipse cx="44" cy="8" rx="38" ry="22" fill="url(#sheen)" opacity=".7"/>
+      </g>
+      <rect width="96" height="96" fill="url(#glassTop)"/>
+      <rect y="52" width="96" height="44" fill="url(#shadeB)"/>
+      <use href="#sqPath" fill="none" stroke="url(#bevel)" stroke-width="3.4"/>
+    </g>
+    <use href="#sqPath" fill="none" stroke="url(#edgeLight)" stroke-width="1.7"/>
+  </symbol>
+
+  <symbol id="ap-github" viewBox="0 0 96 96">
+    <defs>
+      <linearGradient id="ghBg" x1=".05" y1="0" x2=".9" y2="1">
+        <stop offset="0" stop-color="#5B5B66"/><stop offset=".45" stop-color="#2C2C36"/><stop offset="1" stop-color="#0D0D12"/>
+      </linearGradient>
+    </defs>
+    <g clip-path="url(#sqClip)">
+      <rect width="96" height="96" fill="url(#ghBg)"/>
+      <ellipse cx="48" cy="8" rx="60" ry="42" fill="url(#topGlow)" opacity=".7"/>
+      <g filter="url(#lift)">
+      <g transform="translate(24,24) scale(2)" fill="none" stroke="#FFFFFF" stroke-width="1.5"
+         stroke-linecap="round" stroke-linejoin="round">
+        <path d="M9 19.5c-4 1.2-4-2-5.5-2.5M15 21v-3.4a3 3 0 0 0-.8-2.3c2.6-.3 5.3-1.3 5.3-5.8a4.5 4.5 0 0 0-1.2-3.1 4.2 4.2 0 0 0-.1-3.1s-1-.3-3.3 1.2a11.4 11.4 0 0 0-6 0C6.6 3 5.6 3.3 5.6 3.3a4.2 4.2 0 0 0-.1 3.1A4.5 4.5 0 0 0 4.3 9.5c0 4.5 2.7 5.5 5.3 5.8a3 3 0 0 0-.8 2.3V21"/>
+      </g>
+      <ellipse cx="44" cy="8" rx="38" ry="22" fill="url(#sheen)" opacity=".7"/>
+      </g>
+      <rect width="96" height="96" fill="url(#glassTop)"/>
+      <rect y="52" width="96" height="44" fill="url(#shadeB)"/>
+      <use href="#sqPath" fill="none" stroke="url(#bevel)" stroke-width="3.4"/>
+    </g>
+    <use href="#sqPath" fill="none" stroke="url(#edgeLight)" stroke-width="1.7"/>
   </symbol>
 </defs></svg>
 
@@ -222,15 +397,15 @@
   <span class="dock-sep"></span>
   <a class="dock-item" href="prompts/" target="_blank" rel="noopener">
     <span class="tip">提示词库</span>
-    <span class="di ext p1"><svg viewBox="0 0 24 24"><use href="#ic-spark"/></svg></span>
+    <span class="di ext"><svg viewBox="0 0 96 96"><use href="#ap-prompts"/></svg></span>
   </a>
   <a class="dock-item" href="https://upmiao.com" target="_blank" rel="noopener">
     <span class="tip">upmiao.com</span>
-    <span class="di ext p2"><svg viewBox="0 0 24 24"><use href="#ic-out"/></svg></span>
+    <span class="di ext"><svg viewBox="0 0 96 96"><use href="#ap-upmiao"/></svg></span>
   </a>
   <a class="dock-item" href="https://github.com/Ss-miao" target="_blank" rel="noopener">
     <span class="tip">GitHub</span>
-    <span class="di ext p3"><svg viewBox="0 0 24 24"><use href="#ic-github"/></svg></span>
+    <span class="di ext"><svg viewBox="0 0 96 96"><use href="#ap-github"/></svg></span>
   </a>
 </nav>
 
@@ -295,7 +470,7 @@
   document.querySelectorAll('.dock-item .di').forEach(function(di){
     var svg=di.querySelector('svg'); if(!svg) return;
     var rx=document.createElement('span');
-    rx.className='rx'+(di.classList.contains('ext')?' sm':'');
+    rx.className='rx';
     rx.appendChild(svg.cloneNode(true));
     di.parentNode.appendChild(rx);
   });
