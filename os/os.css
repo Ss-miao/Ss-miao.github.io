@@ -259,6 +259,9 @@ body:not(.in) .dock{transform:translateX(-50%) translateY(20px)}
   background:rgba(255,255,255,.9);box-shadow:0 6px 18px rgba(0,0,0,.35)}
 .wk-play::after{content:"";position:absolute;left:13px;top:10px;border-left:11px solid #151319;
   border-top:7px solid transparent;border-bottom:7px solid transparent}
+.wk-dur{position:absolute;right:7px;bottom:7px;padding:2px 6px;border-radius:5px;
+  font-family:var(--mono);font-size:9.5px;line-height:1.4;letter-spacing:.02em;color:rgba(255,255,255,.94);
+  background:rgba(8,8,12,.66);border:1px solid rgba(255,255,255,.12);backdrop-filter:blur(6px)}
 .wk-nm{display:block;padding:10px 11px 0;font-size:12px;font-weight:600;letter-spacing:-.01em}
 .wk-d{display:block;padding:3px 11px 11px;font-size:10.5px;color:var(--ink-3);line-height:1.5}
 
@@ -266,6 +269,7 @@ body:not(.in) .dock{transform:translateX(-50%) translateY(20px)}
 .app-view .win-body{padding:0}
 .wv{display:flex;flex-direction:column;min-height:100%}
 .wv-video{width:100%;max-height:56vh;background:#08080c;display:block;object-fit:contain}
+.app-view.tall .wv-video{max-height:50vh}
 .wv-poster{position:relative;background:#08080c;display:grid;place-items:center}
 .wv-poster img{width:100%;max-height:56vh;object-fit:contain;display:block;opacity:.94}
 .wv-poster span{position:absolute;bottom:12px;left:50%;transform:translateX(-50%);

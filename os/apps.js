@@ -74,7 +74,8 @@
     var cards = D.works.map(function (w, i) {
       return '<button class="wk-card" data-i="' + i + '" data-cat="' + w.cat + '" type="button">' +
         '<span class="wk-thumb"><img src="' + w.img + '" alt="" loading="lazy">' +
-        (w.video ? '<i class="wk-play"></i>' : '') + '</span>' +
+        (w.video ? '<i class="wk-play"></i>' : '') +
+        (w.dur ? '<i class="wk-dur">' + w.dur + '</i>' : '') + '</span>' +
         '<span class="wk-nm">' + esc(w.t) + '</span>' +
         '<span class="wk-d">' + esc(w.d) + '</span>' +
         '</button>';
@@ -89,17 +90,27 @@
   function openWork(i) {
     var w = D.works[i]; if (!w) return;
     var media = w.video
-      ? '<video class="wv-video" src="' + w.video + '" controls playsinline preload="metadata" poster="' + w.img + '"></video>'
+      ? '<video class="wv-video" src="' + w.video + '" controls playsinline autoplay preload="auto" poster="' + w.img + '"></video>'
       : '<div class="wv-poster"><img src="' + w.img + '" alt=""><span>成片没放在这台机器上</span></div>';
-    WM.open('work-' + i, {
+    var el = WM.open('work-' + i, {
       title: w.t,
       klass: 'app-view',
       width: 880, height: 660,
       html: '<div class="wv">' + media +
-        '<div class="wv-txt"><span class="wv-k">' + (D.workCats.filter(function (c) { return c.k === w.cat; })[0] || {}).t + '</span>' +
+        '<div class="wv-txt"><span class="wv-k">' + (D.workCats.filter(function (c) { return c.k === w.cat; })[0] || {}).t +
+        (w.dur ? ' · ' + w.dur : '') + '</span>' +
         '<h2>' + esc(w.t) + '</h2><p>' + esc(w.d) + '</p>' +
         '<a class="wv-link" href="portfolio/" target="_blank" rel="noopener">在作品集里看全部' + ico('ic-out') + '</a></div></div>'
     });
+    var v = el.querySelector('.wv-video');
+    if (v) {
+      var nat = function () {
+        if (v.videoWidth && v.videoHeight) el.classList.toggle('tall', v.videoHeight > v.videoWidth * 1.1);
+      };
+      v.addEventListener('loadedmetadata', nat);
+      if (v.readyState >= 1) nat();
+      var p = v.play(); if (p && p.catch) p.catch(function () {});
+    }
   }
 
   /* ---------------- 关于 ---------------- */
