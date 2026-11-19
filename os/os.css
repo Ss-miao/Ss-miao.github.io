@@ -83,10 +83,11 @@ svg{display:block}
   border-radius:11px;transition:.14s;color:#fff}
 .desk-ic:hover{background:rgba(255,255,255,.1)}
 .desk-ic:active{transform:scale(.97)}
-.desk-ic .art{width:68px;height:68px;border-radius:16px;position:relative;
-  filter:drop-shadow(0 11px 20px rgba(0,0,0,.55))}
+.desk-ic .art{width:74px;height:74px;position:relative}
+.desk-ic .art img{width:100%;height:100%;display:block;object-fit:contain;
+  filter:drop-shadow(0 9px 16px rgba(0,0,0,.5))}
 .desk-ic .art svg{width:100%;height:100%;display:block}
-.desk-ic:hover .art{filter:drop-shadow(0 13px 24px rgba(0,0,0,.62)) brightness(1.06)}
+.desk-ic:hover .art img{filter:drop-shadow(0 12px 20px rgba(0,0,0,.58)) brightness(1.05)}
 .desk-ic .lb{font-size:11px;line-height:1.3;text-align:center;text-shadow:0 1px 6px rgba(0,0,0,.8);
   max-width:86px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .desk-hint{position:absolute;left:50%;bottom:58px;transform:translateX(-50%);
@@ -151,7 +152,7 @@ body:not(.in) .dock{transform:translateX(-50%) translateY(20px)}
 .dock-item .di{width:52px;height:52px;display:grid;place-items:center;position:relative;z-index:1;
   overflow:visible;background:none;filter:drop-shadow(0 7px 14px rgba(0,0,0,.42))}
 .dock-item .di > svg{width:52px;height:52px;display:block}
-.dock-item .di.img img{width:52px;height:52px;border-radius:13px;object-fit:cover}
+.dock-item .di img{width:52px;height:52px;object-fit:contain;display:block}
 .dock-item:hover{transform:translateY(-8px) scale(1.08)}
 .dock-item:active{transform:translateY(-2px) scale(1.02)}
 .dock-item .tip{position:absolute;bottom:calc(100% + 9px);left:50%;transform:translateX(-50%) translateY(4px);
@@ -163,7 +164,7 @@ body:not(.in) .dock{transform:translateX(-50%) translateY(20px)}
   -webkit-mask-image:linear-gradient(to bottom,rgba(0,0,0,.95),rgba(0,0,0,0) 85%);
   mask-image:linear-gradient(to bottom,rgba(0,0,0,.95),rgba(0,0,0,0) 85%);
   filter:blur(.8px)}
-.dock-item .rx svg{position:absolute;left:0;top:0;width:52px;height:52px;display:block;
+.dock-item .rx svg,.dock-item .rx img{position:absolute;left:0;top:0;width:52px;height:52px;display:block;
   transform:translateY(52px) scaleY(-1);transform-origin:top left}
 .dock-item .rx.sm{width:26px;height:16px;top:53px}
 .dock-item .rx.sm svg{left:0;top:12px;width:26px;height:26px;transform:translateY(26px) scaleY(-1);transform-origin:top left}
@@ -174,8 +175,13 @@ body:not(.in) .dock{transform:translateX(-50%) translateY(20px)}
 
 /* 外链图标：半透明玻璃底，跟彩色 App 图标拉开层次 */
 /* 外链图标：跟 App 图标同一套 squircle，只是底色不同 */
-.di.ext{background:none;box-shadow:none;border-radius:0}
-.di.ext > svg{width:52px;height:52px;display:block;fill:none;stroke:none}
+/* 外链：圆形玻璃书签，跟方形 App 图标区分开 */
+.di.ext{width:48px;height:48px;margin:2px;border-radius:50%;
+  background:rgba(255,255,255,.16);
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.34),inset 0 1px 0 rgba(255,255,255,.5),
+             0 4px 12px rgba(0,0,0,.32);
+  display:grid;place-items:center}
+.di.ext > svg{width:27px;height:27px;display:block;fill:none;stroke:none}
 
 /* ===================================================================
    程序：我的房间
@@ -329,7 +335,7 @@ body:not(.in) .dock{transform:translateX(-50%) translateY(20px)}
   .desktop{top:32px;bottom:74px}
   .desk-icons{right:8px;top:10px;gap:2px}
   .desk-ic{width:84px}
-  .desk-ic .art{width:58px;height:58px;border-radius:14px}
+  .desk-ic .art{width:64px;height:64px}
   .desk-ic .lb{font-size:10px;max-width:74px}
   .desk-hint{display:block;bottom:8px;font-size:9.5px;padding:5px 11px;
     color:rgba(255,255,255,.7)}
@@ -346,6 +352,8 @@ body:not(.in) .dock{transform:translateX(-50%) translateY(20px)}
   .dock-item .rx{display:none}
   .dock-item .di{width:44px;height:44px}
   .dock-item .di svg,.dock-item .di > svg{width:44px;height:44px}
+  .di.ext{width:40px;height:40px;margin:2px}
+  .di.ext > svg{width:23px;height:23px}
   .dock-item:hover{transform:none}
   .dock-item .tip{display:none}
   .dock-sep{display:none}
